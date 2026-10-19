@@ -1,0 +1,21 @@
+# ==============================================================================
+# Cloudflare Pages Redirects & SPA Routing Rules
+# Documentation: https://developers.cloudflare.com/pages/configuration/redirects/
+# ==============================================================================
+
+# 1. Canonical 301 Permanent Redirects for Clean URLs and Legacy Paths
+/water-tank-cleaning-service        /services/water-tank-cleaning            301
+/pipeline-cleaning-service          /services/pipeline-cleaning              301
+/services/pipe-line-cleaning        /services/pipeline-cleaning              301
+/services/underground-tank-cleaning /services/underground-water-tank-cleaning 301
+/areas                              /service-areas                           301
+/areas/                             /service-areas                           301
+/projects                           /portfolio                               301
+/projects/                          /portfolio                               301
+/terms-and-conditions               /terms                                   301
+/services-faq                       /faq                                     301
+/services-faq/                      /faq                                     301
+
+# 2. SPA Fallback: Route all client-side navigation to /index.html with HTTP 200
+# Ensures deep links (e.g., /services/*, /admin, /service-areas/*, /contact) resolve directly without 404
+/*                                  /index.html                              200

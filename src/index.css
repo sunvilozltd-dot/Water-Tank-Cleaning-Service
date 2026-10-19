@@ -1,0 +1,232 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-primary: #040D1A;
+    --bg-secondary: #08162B;
+    --bg-card: #0D203A;
+    --bg-elevated: #132D50;
+    --text-primary: #FFFFFF;
+    --text-secondary: #C2D6EE;
+    --text-muted: #8AA4C4;
+    --accent-blue: #0284C7;
+    --accent-cyan: #06B6D4;
+    --accent-aqua: #38BDF8;
+    --accent-green: #10B981;
+    --border-subtle: #1E3A5F;
+    --border-water: rgba(56, 189, 248, 0.22);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    background-color: #040D1A;
+    color: #FFFFFF;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    touch-action: manipulation;
+    background-color: #040D1A;
+    color: #FFFFFF;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Accessible focus rings with fresh aqua blue */
+  :focus-visible {
+    outline: 2px solid #38BDF8;
+    outline-offset: 2px;
+  }
+
+  /* Reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Prevent mobile Safari automatic zooming on input focus */
+  input, select, textarea {
+    font-size: 1rem;
+  }
+  @media (min-width: 640px) {
+    input, select, textarea {
+      font-size: 0.875rem;
+    }
+  }
+
+  /* Aqua-Tinted Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #040D1A;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #132D50;
+    border-radius: 4px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #0284C7;
+  }
+}
+
+/* ------------------------------------------------------------- */
+/* KEYFRAME ANIMATIONS FOR REALISTIC, GENTLE WATER MOVEMENT      */
+/* ------------------------------------------------------------- */
+
+/* 1. Ticker marquee */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-33.333333%); }
+}
+
+.animate-marquee {
+  display: inline-flex;
+  animation: marquee 35s linear infinite;
+}
+
+/* 2. Slow gentle water wave drift */
+@keyframes wave-flow-slow {
+  0% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-25px, 6px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes wave-flow-reverse {
+  0% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(25px, -6px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+.animate-wave-flow {
+  animation: wave-flow-slow 16s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-wave-flow-reverse {
+  animation: wave-flow-reverse 20s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* 3. Concentric water ripple expansion */
+@keyframes water-ripple-expand {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.animate-water-ripple-1 {
+  animation: water-ripple-expand 9s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+}
+
+.animate-water-ripple-2 {
+  animation: water-ripple-expand 9s cubic-bezier(0.25, 1, 0.5, 1) infinite 3s;
+}
+
+.animate-water-ripple-3 {
+  animation: water-ripple-expand 9s cubic-bezier(0.25, 1, 0.5, 1) infinite 6s;
+}
+
+/* 4. Realistic light caustic shimmer & rays */
+@keyframes caustic-drift {
+  0% {
+    transform: translate(0%, 0%) scale(1);
+    opacity: 0.32;
+  }
+  33% {
+    transform: translate(3%, 2%) scale(1.05);
+    opacity: 0.45;
+  }
+  66% {
+    transform: translate(-2%, 3%) scale(0.98);
+    opacity: 0.28;
+  }
+  100% {
+    transform: translate(0%, 0%) scale(1);
+    opacity: 0.32;
+  }
+}
+
+.animate-caustic-drift {
+  animation: caustic-drift 14s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* 5. Soft specular water highlight gleam */
+@keyframes water-gleam {
+  0%, 100% {
+    opacity: 0.25;
+    transform: translateX(-5%);
+  }
+  50% {
+    opacity: 0.55;
+    transform: translateX(5%);
+  }
+}
+
+.animate-water-gleam {
+  animation: water-gleam 12s ease-in-out infinite;
+}
+
+/* 6. Gentle floating water orb pulse */
+@keyframes water-glow-pulse {
+  0%, 100% {
+    opacity: 0.22;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.38;
+    transform: scale(1.08);
+  }
+}
+
+.animate-water-glow {
+  animation: water-glow-pulse 10s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------- */
+/* WATER-THEMED UTILITY CLASSES                                  */
+/* ------------------------------------------------------------- */
+
+/* Frosted glass card with clean aqua accent */
+.water-glass-card {
+  background: rgba(10, 25, 46, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  box-shadow: 0 10px 30px -10px rgba(2, 132, 199, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.water-glass-card:hover {
+  border-color: rgba(56, 189, 248, 0.42);
+  box-shadow: 0 14px 40px -10px rgba(6, 182, 212, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Frosted text readability shield for hero content */
+.water-text-shield {
+  background: rgba(4, 13, 26, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  box-shadow: 0 16px 40px -10px rgba(2, 8, 20, 0.6);
+}
+
