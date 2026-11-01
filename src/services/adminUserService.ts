@@ -33,10 +33,38 @@ export async function fetchAdminProfile(
   const normalizedEmail = (userEmail || '').trim().toLowerCase();
   const isPrimaryOwner = PRIMARY_OWNER_EMAILS.includes(normalizedEmail);
 
+  // 1. Primary Owner Safety:
+  // If the user has authenticated with Supabase Auth using the verified owner email,
+  // guarantee Super Admin privileges immediately and sync to admin_users table in the background.
+  if (isPrimaryOwner) {
+    try {
+      if (userId) {
+        await supabase
+          .from('admin_users')
+          .upsert({
+            id: userId,
+            email: normalizedEmail,
+            role: 'super_admin',
+            name: 'Sunviloz Super Admin',
+            is_active: true,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'email' });
+      }
+    } catch (upsertErr) {
+      console.warn('[AdminUserService] Primary owner upsert notice:', upsertErr);
+    }
+
+    return {
+      name: 'Sunviloz Super Admin',
+      email: normalizedEmail,
+      role: 'super_admin'
+    };
+  }
+
   try {
     let adminRecord: any = null;
 
-    // 1. Try querying admin_users by UUID first
+    // 2. Try querying admin_users by UUID first
     if (userId) {
       const { data: byId } = await supabase
         .from('admin_users')
@@ -50,7 +78,7 @@ export async function fetchAdminProfile(
       }
     }
 
-    // 2. If not matched by UUID, try querying by email (case-insensitive)
+    // 3. If not matched by UUID, try querying by email (case-insensitive)
     if (!adminRecord && normalizedEmail) {
       const { data: byEmail } = await supabase
         .from('admin_users')
@@ -75,53 +103,19 @@ export async function fetchAdminProfile(
       }
     }
 
-    // 3. If found in database, return verified role
+    // 4. If found in database, return verified role
     if (adminRecord && adminRecord.is_active) {
       return {
         name: adminRecord.name || normalizedEmail.split('@')[0] || 'Administrator',
         email: adminRecord.email,
-        role: adminRecord.role || (isPrimaryOwner ? 'super_admin' : 'admin')
+        role: adminRecord.role || 'admin'
       };
     }
 
-    // 4. Primary Owner Safety Net:
-    // If the user successfully authenticated with Supabase Auth using the designated owner email,
-    // automatically provision their record into admin_users so they are never locked out.
-    if (isPrimaryOwner) {
-      try {
-        await supabase
-          .from('admin_users')
-          .upsert({
-            id: userId,
-            email: normalizedEmail,
-            role: 'super_admin',
-            name: 'Sunviloz Super Admin',
-            is_active: true,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'email' });
-      } catch (upsertErr) {
-        console.warn('[AdminUserService] Primary owner upsert notice:', upsertErr);
-      }
-
-      return {
-        name: 'Sunviloz Super Admin',
-        email: normalizedEmail,
-        role: 'super_admin'
-      };
-    }
-
-    // Not an admin
+    // Not an authorized admin
     return null;
   } catch (err: any) {
     console.error('[AdminUserService] Unexpected error during role verification:', err);
-    // If network or database error, but user is authenticated as the designated owner:
-    if (isPrimaryOwner) {
-      return {
-        name: 'Sunviloz Super Admin',
-        email: normalizedEmail,
-        role: 'super_admin'
-      };
-    }
     return null;
   }
 }

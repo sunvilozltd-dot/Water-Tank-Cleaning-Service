@@ -2,6 +2,7 @@ import { QuoteFormData, QuoteLead, LeadStatus } from '../types';
 import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
 import { safeGetItem, safeSetItem } from '../utils/safeLocalStorage';
 import { getStoredAttribution } from '../utils/utmTracking';
+import { sanitizeInputString, normalizeBangladeshiPhone } from '../utils/validation';
 
 const LOCAL_STORAGE_KEY = 'sunviloz_quote_leads_v1';
 
@@ -15,16 +16,19 @@ export function generateLeadNumber(): string {
  * Save new lead to Supabase (with offline/localStorage resilience and deduplication)
  */
 export async function createLead(data: QuoteFormData, source = 'Website'): Promise<QuoteLead> {
+  const cleanPhone = normalizeBangladeshiPhone(data.phone || '');
+  const cleanName = sanitizeInputString(data.name, 100);
+  const cleanArea = sanitizeInputString(data.area, 100);
+
   // Deduplication check: prevent accidental double-click / rapid retry duplicate records
   try {
     const localLeads = getLocalLeads();
     const nowMs = Date.now();
-    const cleanPhone = (data.phone || '').trim().replace(/\D/g, '');
     const recentDuplicate = localLeads.find(l => {
       if (!l.createdAt || !l.phone) return false;
       const createdMs = new Date(l.createdAt).getTime();
       const isRecent = (nowMs - createdMs) < 20000; // 20 second idempotency window
-      const lCleanPhone = l.phone.trim().replace(/\D/g, '');
+      const lCleanPhone = normalizeBangladeshiPhone(l.phone);
       return isRecent && cleanPhone.length >= 10 && cleanPhone === lCleanPhone;
     });
 
@@ -42,40 +46,44 @@ export async function createLead(data: QuoteFormData, source = 'Website'): Promi
   // Combine extra details into message string for maximum visibility in DB & admin
   const extraDetails: string[] = [];
   if (data.callbackPreference) {
-    extraDetails.push(`Callback: ${data.callbackPreference}`);
+    extraDetails.push(`Callback: ${sanitizeInputString(data.callbackPreference, 50)}`);
   }
   if (data.additionalServices && data.additionalServices.length > 0) {
-    extraDetails.push(`Add-ons: ${data.additionalServices.join(', ')}`);
+    extraDetails.push(`Add-ons: ${data.additionalServices.map(s => sanitizeInputString(s, 50)).join(', ')}`);
   }
   if (data.tankDimensions) {
-    extraDetails.push(`Dimensions: ${data.tankDimensions}`);
+    extraDetails.push(`Dimensions: ${sanitizeInputString(data.tankDimensions, 100)}`);
   }
   if (data.overheadMaterial) {
-    extraDetails.push(`Material: ${data.overheadMaterial}`);
+    extraDetails.push(`Material: ${sanitizeInputString(data.overheadMaterial, 50)}`);
   }
   if (data.manualBuildingDetails) {
-    extraDetails.push(`Building: ${data.manualBuildingDetails}`);
+    extraDetails.push(`Building: ${sanitizeInputString(data.manualBuildingDetails, 100)}`);
   }
   if (data.notes && data.notes.trim()) {
-    extraDetails.push(`Note: ${data.notes.trim()}`);
+    extraDetails.push(`Note: ${sanitizeInputString(data.notes, 500)}`);
   }
   if (data.message && data.message.trim() && data.message !== data.notes) {
-    extraDetails.push(data.message.trim());
+    extraDetails.push(sanitizeInputString(data.message, 500));
   }
 
   const consolidatedMessage = data.message && data.message.includes('\n')
-    ? data.message
-    : (extraDetails.length > 0 ? extraDetails.join(' | ') : (data.message || ''));
+    ? sanitizeInputString(data.message, 1000)
+    : (extraDetails.length > 0 ? extraDetails.join(' | ') : sanitizeInputString(data.message || '', 500));
 
   const attribution = getStoredAttribution();
 
   const newLead: QuoteLead = {
     ...data,
     id,
+    name: cleanName,
+    phone: cleanPhone,
+    area: cleanArea,
     leadNumber,
     createdAt: now,
     updatedAt: now,
     status: 'New',
+    isSyncedToCloud: false,
     source: (data as any).source || (attribution.utm_source ? `${attribution.utm_source}${attribution.utm_medium ? ` (${attribution.utm_medium})` : ''}` : source),
     utm_source: (data as any).utm_source || attribution.utm_source,
     utm_medium: (data as any).utm_medium || attribution.utm_medium,
@@ -83,7 +91,7 @@ export async function createLead(data: QuoteFormData, source = 'Website'): Promi
     utm_term: data.utm_term || attribution.utm_term,
     utm_content: data.utm_content || attribution.utm_content,
     message: consolidatedMessage,
-    whatsapp: data.whatsapp || data.phone
+    whatsapp: normalizeBangladeshiPhone(data.whatsapp || data.phone)
   };
 
   // 1. Always update local storage first (Ensures zero lead loss, offline resilience)
@@ -99,30 +107,30 @@ export async function createLead(data: QuoteFormData, source = 'Website'): Promi
     try {
       const payload: Record<string, any> = {
         lead_number: leadNumber,
-        customer_name: data.name,
-        phone: data.phone,
-        whatsapp: data.whatsapp || data.phone,
-        email: data.email || null,
-        area: data.area,
-        house_number: data.houseNumber || null,
-        road_number: data.roadNumber || null,
-        thana: data.thana || null,
-        postcode: data.postcode || null,
-        landmark: data.landmark || null,
-        address: data.address || [
+        customer_name: cleanName,
+        phone: cleanPhone,
+        whatsapp: newLead.whatsapp,
+        email: data.email ? sanitizeInputString(data.email, 100) : null,
+        area: cleanArea,
+        house_number: data.houseNumber ? sanitizeInputString(data.houseNumber, 50) : null,
+        road_number: data.roadNumber ? sanitizeInputString(data.roadNumber, 50) : null,
+        thana: data.thana ? sanitizeInputString(data.thana, 50) : null,
+        postcode: data.postcode ? sanitizeInputString(data.postcode, 20) : null,
+        landmark: data.landmark ? sanitizeInputString(data.landmark, 100) : null,
+        address: sanitizeInputString(data.address || [
           data.houseNumber ? `বাসা: ${data.houseNumber}` : '',
           data.roadNumber ? `রোড: ${data.roadNumber}` : '',
-          data.area,
+          cleanArea,
           data.thana ? `থানা: ${data.thana}` : '',
           data.postcode ? `পোস্ট কোড: ${data.postcode}` : '',
           data.landmark ? `ল্যান্ডমার্ক: ${data.landmark}` : ''
-        ].filter(Boolean).join(', ') || null,
+        ].filter(Boolean).join(', '), 300) || null,
         service_type: data.serviceType || 'Water Tank Cleaning',
         tank_type: data.tankType || null,
         tank_capacity: data.tankCapacity || null,
         capacity_unknown: Boolean(data.capacityUnknown || data.tankCapacity === 'ধারণক্ষমতা জানা নেই'),
-        building_floors: data.floors || null,
-        flat_count: data.flats || data.numberOfFlats || null,
+        building_floors: data.floors ? sanitizeInputString(data.floors, 30) : null,
+        flat_count: data.flats ? sanitizeInputString(data.flats, 30) : (data.numberOfFlats ? String(data.numberOfFlats) : null),
         additional_pipeline_cleaning: Boolean(data.additionalPipelineCleaning || data.additionalServices?.includes('পাইপলাইন ক্লিনিং')),
         additional_amc: Boolean(data.additionalAmc || data.additionalServices?.includes('বার্ষিক চুক্তি (AMC)')),
         number_of_tanks: data.numberOfTanks || 1,
@@ -140,32 +148,28 @@ export async function createLead(data: QuoteFormData, source = 'Website'): Promi
         lead_status: 'New'
       };
 
-      try {
-        const sessionRes = await supabase.auth.getSession();
-        const isAuthenticatedAdmin = Boolean(sessionRes.data?.session?.user);
-        if (isAuthenticatedAdmin) {
-          const { data: inserted, error } = await supabase
-            .from('leads')
-            .insert(payload)
-            .select()
-            .single();
-          if (!error && inserted?.id) {
-            newLead.id = inserted.id;
-          }
-        } else {
-          // Public anonymous visitor: insert-only conforming with RLS
-          await supabase.from('leads').insert([payload]);
+      const { data: inserted, error: insertError } = await supabase
+        .from('leads')
+        .insert([payload])
+        .select('id, lead_number')
+        .maybeSingle();
+
+      if (!insertError) {
+        newLead.isSyncedToCloud = true;
+        if (inserted?.id) {
+          newLead.id = inserted.id;
         }
-      } catch (insertErr) {
-        // Fallback to plain insert
+        // Sync the cloud status back to local storage
         try {
-          await supabase.from('leads').insert(payload);
+          const currentLocal = getLocalLeads();
+          const updatedLocal = currentLocal.map(l => l.leadNumber === leadNumber ? { ...l, isSyncedToCloud: true, id: newLead.id } : l);
+          safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
         } catch {
           // Ignore
         }
       }
     } catch {
-      // Network error saving lead to Supabase (locally preserved)
+      // Network error saving lead to Supabase (locally preserved, isSyncedToCloud remains false)
     }
   }
 
@@ -534,15 +538,17 @@ export async function saveOrUpdatePartialLead(
   const attribution = getStoredAttribution();
   const leadNumber = generateLeadNumber();
   const id = 'lead_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+  const cleanPhone = normalizeBangladeshiPhone(data.phone);
+  const cleanName = sanitizeInputString(data.name, 100);
 
   const newLead: QuoteLead = {
     ...data,
     id,
     leadNumber,
-    name: data.name.trim(),
-    phone: data.phone.trim(),
-    whatsapp: data.whatsapp || data.phone.trim(),
-    area: data.area || 'Dhaka',
+    name: cleanName,
+    phone: cleanPhone,
+    whatsapp: normalizeBangladeshiPhone(data.whatsapp || cleanPhone),
+    area: sanitizeInputString(data.area, 100) || 'Dhaka',
     serviceType: data.serviceType || 'Water Tank Cleaning',
     tankType: (data.tankType as any) || '',
     tankCapacity: (data.tankCapacity as any) || '',
@@ -551,6 +557,7 @@ export async function saveOrUpdatePartialLead(
     isAbandoned: data.isAbandoned !== undefined ? data.isAbandoned : true,
     completionStep: data.completionStep || 1,
     lastActiveStepName: data.lastActiveStepName || 'Step 1 - Contact Captured',
+    isSyncedToCloud: false,
     source: (data.source as any) || (attribution.utm_source ? `${attribution.utm_source}${attribution.utm_medium ? ` (${attribution.utm_medium})` : ''}` : 'Website Booking Form (Step 1)'),
     utm_source: data.utm_source || attribution.utm_source,
     utm_medium: data.utm_medium || attribution.utm_medium,
@@ -563,14 +570,14 @@ export async function saveOrUpdatePartialLead(
 
   if (isSupabaseConfigured()) {
     try {
-      await supabase.from('leads').insert([{
+      const { error: insertErr } = await supabase.from('leads').insert([{
         lead_number: leadNumber,
-        customer_name: newLead.name,
-        phone: newLead.phone,
+        customer_name: cleanName,
+        phone: cleanPhone,
         whatsapp: newLead.whatsapp,
         area: newLead.area,
         service_type: newLead.serviceType,
-        status: newLead.status,
+        status: 'Incomplete',
         source: newLead.source,
         utm_source: newLead.utm_source || null,
         utm_medium: newLead.utm_medium || null,
@@ -578,8 +585,15 @@ export async function saveOrUpdatePartialLead(
         message: `Step 1 Incomplete Lead: ${newLead.lastActiveStepName}`,
         created_at: now
       }]);
+
+      if (!insertErr) {
+        newLead.isSyncedToCloud = true;
+        const currentLocal = getLocalLeads();
+        const updatedLocal = currentLocal.map(l => l.leadNumber === leadNumber ? { ...l, isSyncedToCloud: true } : l);
+        safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
+      }
     } catch {
-      // Ignore
+      // Offline fallback: lead safely retained in localStorage without pretending to be cloud synced
     }
   }
 

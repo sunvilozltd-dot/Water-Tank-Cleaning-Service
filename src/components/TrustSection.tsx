@@ -50,16 +50,16 @@ export const TrustSection: React.FC<TrustSectionProps> = ({ onOpenQuoteModal }) 
     },
     {
       icon: Clock,
-      titleEn: 'Punctual Dispatch Across Dhaka',
+      titleEn: 'Punctual Dispatch Across Greater Dhaka',
       titleBn: 'নির্ধারিত সময়ে উপস্থিতি',
-      descEn: 'Dedicated teams dispatched to Uttara, Gulshan, Banani, Dhanmondi, Bashundhara, Mirpur, and all zones across Dhaka.',
-      descBn: 'বুকিংয়ের সময় অনুযায়ী আমাদের মোবাইল টিম সময়মতো উপস্থিত হয়ে দ্রুত ও যত্নসহকারে কাজ সুসম্পন্ন করে।'
+      descEn: 'Dedicated teams dispatched to Dhaka, Gazipur, Savar, Narayanganj and surrounding corridors.',
+      descBn: 'ঢাকা, গাজীপুর, সাভার ও নারায়ণগঞ্জসহ সংলগ্ন এলাকার জন্য ডেডিকেটেড মোবাইল টিম দ্রুত উপস্থিত হয়ে সেবা প্রদান করে।'
     },
     {
       icon: Users,
       titleEn: 'Trained & Uniformed Crew',
       titleBn: 'প্রশিক্ষিত ও সুশৃঙ্খল কর্মী',
-      descEn: 'Background-verified technicians equipped with safety helmets, waterproof boots, and specialized lighting.',
+      descEn: 'Experienced technicians equipped with safety gear, waterproof boots, and specialized confined-space lighting.',
       descBn: 'নিরাপত্তা সরঞ্জামসহ প্রশিক্ষিত কারিগরি দল দ্বারা সর্বোচ্চ যত্ন ও নিরাপত্তার সাথে সেবা প্রদান।'
     }
   ];
@@ -76,7 +76,7 @@ export const TrustSection: React.FC<TrustSectionProps> = ({ onOpenQuoteModal }) 
         <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-12">
           <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 inline-flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" aria-hidden="true" />
-            <span>{lang === 'bn' ? 'সেবার মান ও বৈশিষ্ট্য' : 'Verified Service Standards'}</span>
+            <span>{lang === 'bn' ? 'সেবার স্বাস্থ্যবিধি ও মান' : 'Hygiene & Safety Standards'}</span>
           </span>
           <h2 id="trust-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight mt-1.5">
             {lang === 'bn' 

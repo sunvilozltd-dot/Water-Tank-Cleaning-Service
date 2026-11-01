@@ -100,7 +100,31 @@
     <priority>0.75</priority>
   </url>
 
-  <!-- Dhaka Service-Area Landing Pages -->
+  <!-- Dhaka & Regional Service-Area Landing Pages -->
+  <url>
+    <loc>https://sunvilozcleancare.com/service-areas/dhaka</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://sunvilozcleancare.com/service-areas/gazipur</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://sunvilozcleancare.com/service-areas/savar</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://sunvilozcleancare.com/service-areas/narayanganj</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
   <url>
     <loc>https://sunvilozcleancare.com/service-areas/gulshan</loc>
     <lastmod>2026-10-05</lastmod>

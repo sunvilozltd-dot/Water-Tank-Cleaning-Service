@@ -146,6 +146,7 @@ export interface QuoteLead extends QuoteFormData {
   completionStep?: number;
   lastActiveStepName?: string;
   leadStage?: 'first_step_captured' | 'tank_selected' | 'capacity_filled' | 'location_filled' | 'fully_submitted';
+  isSyncedToCloud?: boolean;
 }
 
 export interface PortfolioItem {
@@ -271,7 +272,7 @@ export interface ProcessStep {
 export interface AreaInfo {
   name: string;
   nameBn: string;
-  zone: 'North Dhaka' | 'South Dhaka' | 'Central Dhaka' | 'Suburbs';
+  zone: 'North Dhaka' | 'South Dhaka' | 'Central Dhaka' | 'Suburbs' | 'Greater Dhaka';
   active: boolean;
   typicalResponseTime: string;
 }

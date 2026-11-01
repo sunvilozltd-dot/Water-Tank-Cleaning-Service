@@ -10,6 +10,19 @@ export interface ValidationErrors {
 }
 
 /**
+ * Strips HTML tags, trims whitespace, and limits character length to prevent XSS and DB abuse.
+ */
+export function sanitizeInputString(input?: string | null, maxLength = 500): string {
+  if (!input) return '';
+  // Strip HTML tags and script patterns
+  const stripped = input
+    .replace(/<[^>]*>?/gm, '')
+    .replace(/[<>'"`;\\]/g, ' ')
+    .trim();
+  return stripped.slice(0, maxLength);
+}
+
+/**
  * Validates a Bangladeshi mobile phone number.
  * Accepts:
  * - 01XXXXXXXXX (11 digits starting with 013, 014, 015, 016, 017, 018, 019)

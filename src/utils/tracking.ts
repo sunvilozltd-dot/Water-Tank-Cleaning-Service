@@ -35,13 +35,37 @@ function sanitizeParams(params: Record<string, any>): Record<string, any> {
   return sanitized;
 }
 
+// 3-second deduplication cache to prevent double-firing identical conversion events
+const recentEventTimestamps = new Map<string, number>();
+
+function isDuplicateConversionEvent(eventName: string, params: Record<string, any>): boolean {
+  // Only deduplicate high-value conversion events
+  if (!['lead_saved', 'whatsapp_click', 'phone_click', 'booking_confirmed'].includes(eventName)) {
+    return false;
+  }
+  const key = `${eventName}_${params.lead_number || params.source || ''}`;
+  const now = Date.now();
+  const lastTime = recentEventTimestamps.get(key) || 0;
+  if (now - lastTime < 3500) {
+    return true;
+  }
+  recentEventTimestamps.set(key, now);
+  return false;
+}
+
 /**
  * Dispatches an event to Google Analytics (GA4), Meta Pixel (FB), and local event log.
  * Guaranteed never to crash or block user actions. Never logs sensitive customer PII.
  */
 export function trackEvent(eventName: string, params: Record<string, any> = {}): void {
-  const timestamp = new Date().toISOString();
   const safeParams = sanitizeParams(params);
+
+  // Prevent duplicate firing of conversion events (e.g. accidental double-click)
+  if (isDuplicateConversionEvent(eventName, safeParams)) {
+    return;
+  }
+
+  const timestamp = new Date().toISOString();
 
   // 1. Log sanitized events in dev mode
   try {
@@ -86,6 +110,8 @@ export function trackEvent(eventName: string, params: Record<string, any> = {}):
         (window as any).fbq('track', 'Lead', safeParams);
       } else if (eventName === 'whatsapp_click' || eventName === 'whatsapp_opened') {
         (window as any).fbq('track', 'Contact', { channel: 'whatsapp', ...safeParams });
+      } else if (eventName === 'phone_click') {
+        (window as any).fbq('track', 'Contact', { channel: 'phone', ...safeParams });
       } else if (eventName === 'booking_confirmed') {
         (window as any).fbq('track', 'Schedule', safeParams);
       } else {
@@ -136,6 +162,13 @@ export function trackWhatsAppClick(
   trackEvent('whatsapp_click', {
     lead_number: leadNumber,
     source: finalSource
+  });
+}
+
+export function trackPhoneClick(source = 'general_call'): void {
+  trackEvent('phone_click', {
+    source,
+    channel: 'phone'
   });
 }
 

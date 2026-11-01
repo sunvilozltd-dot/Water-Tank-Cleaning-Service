@@ -75,7 +75,23 @@ export const SeoHead: React.FC<SeoProps> = ({
     }
     canonicalTag.setAttribute('href', canonicalUrl);
 
-    // 4. Update OpenGraph Tags
+    // 4B. Update Hreflang alternates
+    const setHreflang = (lang: string, href: string) => {
+      let tag = document.querySelector(`link[rel="alternate"][hreflang="${lang}"]`);
+      if (!tag) {
+        tag = document.createElement('link');
+        tag.setAttribute('rel', 'alternate');
+        tag.setAttribute('hreflang', lang);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('href', href);
+    };
+
+    setHreflang('bn', canonicalUrl);
+    setHreflang('en', canonicalUrl);
+    setHreflang('x-default', canonicalUrl);
+
+    // 5. Update OpenGraph Tags
     const setMeta = (property: string, content: string) => {
       let tag = document.querySelector(`meta[property="${property}"]`);
       if (!tag) {
@@ -91,7 +107,7 @@ export const SeoHead: React.FC<SeoProps> = ({
     setMeta('og:url', canonicalUrl);
     setMeta('og:type', ogType);
 
-    // 5. Update Google Site Verification if configured
+    // 6. Update Google Site Verification if configured
     if (BUSINESS_CONFIG.googleSiteVerification) {
       let gsvTag = document.querySelector('meta[name="google-site-verification"]');
       if (!gsvTag) {
@@ -102,20 +118,20 @@ export const SeoHead: React.FC<SeoProps> = ({
       gsvTag.setAttribute('content', BUSINESS_CONFIG.googleSiteVerification);
     }
 
-    // 6. JSON-LD Schemas
+    // 7. JSON-LD Schemas
     const localBusinessSchema = {
       '@context': 'https://schema.org',
-      '@type': 'HomeAndConstructionBusiness',
+      '@type': ['LocalBusiness', 'HomeAndConstructionBusiness'],
       name: BUSINESS_CONFIG.name,
-      description: 'Professional water tank cleaning service in Dhaka for rooftop, underground and commercial water storage reservoirs.',
+      description: 'Professional water tank cleaning service in Dhaka, Gazipur, Savar and Narayanganj for rooftop, underground and commercial water storage reservoirs.',
       url: BUSINESS_CONFIG.canonicalBaseUrl,
       telephone: '+88' + BUSINESS_CONFIG.phone,
       contactPoint: {
         '@type': 'ContactPoint',
         telephone: '+88' + BUSINESS_CONFIG.phone,
         contactType: 'customer service',
-        areaServed: 'Dhaka',
-        availableLanguage: ['English', 'Bengali']
+        areaServed: ['Dhaka', 'Gazipur', 'Savar', 'Narayanganj'],
+        availableLanguage: ['Bengali', 'English']
       },
       priceRange: 'BDT 1200 - 15000',
       address: {
@@ -125,7 +141,7 @@ export const SeoHead: React.FC<SeoProps> = ({
         addressCountry: 'BD'
       },
       areaServed: [
-        'Dhaka', 'Kuril', 'Bashundhara', 'Baridhara', 'Gulshan', 'Banani', 
+        'Dhaka', 'Gazipur', 'Savar', 'Narayanganj', 'Kuril', 'Bashundhara', 'Baridhara', 'Gulshan', 'Banani', 
         'Uttara', 'Khilkhet', 'Badda', 'Rampura', 'Mirpur', 'Mohammadpur', 'Dhanmondi'
       ]
     };
@@ -158,10 +174,12 @@ export const SeoHead: React.FC<SeoProps> = ({
           telephone: '+88' + BUSINESS_CONFIG.phone,
           url: BUSINESS_CONFIG.canonicalBaseUrl
         },
-        areaServed: {
-          '@type': 'City',
-          name: 'Dhaka'
-        }
+        areaServed: [
+          { '@type': 'City', name: 'Dhaka' },
+          { '@type': 'City', name: 'Gazipur' },
+          { '@type': 'City', name: 'Savar' },
+          { '@type': 'City', name: 'Narayanganj' }
+        ]
       };
     }
 

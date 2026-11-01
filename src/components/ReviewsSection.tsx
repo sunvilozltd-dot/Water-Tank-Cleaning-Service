@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   Star, 
-  CheckCircle, 
   Plus,
   X,
   MessageSquare
@@ -68,7 +67,7 @@ export const ReviewsSection: React.FC = () => {
               className="bg-[#11151B] rounded-2xl p-6 border border-[#303743] hover:border-[#2585FF]/40 shadow-xl transition-all flex flex-col justify-between"
             >
               <div>
-                {/* Rating stars & verified badge */}
+                {/* Rating stars */}
                 <div className="flex items-center justify-between mb-3.5">
                   <div className="flex items-center gap-1 text-amber-400" aria-label={`${rev.rating} out of 5 stars`}>
                     {Array.from({ length: rev.rating }).map((_, i) => (
@@ -76,10 +75,9 @@ export const ReviewsSection: React.FC = () => {
                     ))}
                     <span className="sr-only">{rev.rating} out of 5 stars</span>
                   </div>
-                  {rev.isVerified && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#28C76F] bg-[#28C76F]/10 px-2 py-0.5 rounded-full border border-[#28C76F]/30">
-                      <CheckCircle className="w-3 h-3 text-[#28C76F]" aria-hidden="true" />
-                      <span>{lang === 'bn' ? 'যাচাইকৃত কাজ' : 'Verified Service'}</span>
+                  {rev.date && (
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      {rev.date}
                     </span>
                   )}
                 </div>

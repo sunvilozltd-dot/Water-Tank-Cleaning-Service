@@ -63,6 +63,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
   const [step, setStep] = useState<number>(1);
   const [capturedLeadId, setCapturedLeadId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const isSubmittingRef = useRef<boolean>(false);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [nameError, setNameError] = useState<string>('');
@@ -400,6 +401,8 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
 
   // STEP 5: Final Submission Handler
   const handleSubmitFinal = async () => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     setErrorMsg('');
 
@@ -444,21 +447,21 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
         preferredDate: preferredDate.trim() || undefined,
         preferredTime: preferredTime.trim() || undefined,
         notes: customerNotes.trim() || undefined,
-        status: 'New', // Confirmed conversion from incomplete!
+        status: 'New', // Confirmed full submission
         isAbandoned: false,
         completionStep: 5,
         lastActiveStepName: 'Completed Booking Request',
         source: (sourceContext || 'Website Booking Form') as any
       };
 
-      // Update lead to Confirmed in database / localStorage
-      const savedLead = await saveOrUpdatePartialLead(capturedLeadId, fullLeadPayload);
+      // Reliably save complete lead to Supabase (and local storage fallback)
+      const savedLead = await createLead(fullLeadPayload as any, sourceContext || 'Website Booking Form');
       const leadNum = savedLead.leadNumber || 'SVC-' + Math.floor(100000 + Math.random() * 900000);
       setConfirmedLeadNumber(leadNum);
 
-      trackLeadSaved('smart_quote_wizard_complete', { phone: normalizedPhone, leadNum });
+      trackLeadSaved(leadNum, { phone: normalizedPhone, leadNum, source: sourceContext });
 
-      // Generate WhatsApp Link to 01609999612
+      // Generate WhatsApp Link to 8801609999612
       const rawNumber = '8801609999612';
       const msg = buildWhatsAppMessage(leadNum);
       const generatedWaUrl = `https://wa.me/${rawNumber}?text=${encodeURIComponent(msg)}`;
@@ -469,11 +472,12 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
       if (onSuccess) onSuccess();
     } catch (err) {
       console.error('Submission error:', err);
-      const rawNumber = '8801609999612';
-      setWhatsappUrl(`https://wa.me/${rawNumber}?text=${encodeURIComponent(buildWhatsAppMessage())}`);
-      setStep(6);
+      setErrorMsg(lang === 'bn' 
+        ? 'তথ্য পাঠাতে কিছুটা সমস্যা হয়েছে। নিচের বাটনে পুনরায় চেষ্টা করুন অথবা সরাসরি WhatsApp-এ বার্তা পাঠান।' 
+        : 'There was an issue sending your details. Please retry below or message directly on WhatsApp.');
     } finally {
       setIsSubmitting(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -1381,6 +1385,35 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
               )}
             </div>
           </div>
+
+          {/* Submission Error Banner with Retry */}
+          {errorMsg && (
+            <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-500/40 text-red-300 text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-between gap-3 animate-shake">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={handleSubmitFinal}
+                  disabled={isSubmitting}
+                  className="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-xs transition-colors cursor-pointer"
+                >
+                  {lang === 'bn' ? 'পুনরায় চেষ্টা করুন' : 'Retry Submission'}
+                </button>
+                <a
+                  href={`https://wa.me/8801609999612?text=${encodeURIComponent(buildWhatsAppMessage())}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg bg-[#28C76F] hover:bg-[#22aa5e] text-white font-bold text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>WhatsApp</span>
+                </a>
+              </div>
+            </div>
+          )}
 
           {/* Final Submit Actions */}
           <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">

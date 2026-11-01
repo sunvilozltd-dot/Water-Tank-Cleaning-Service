@@ -360,6 +360,105 @@ export const LOCATIONS_DATA: LocationPageData[] = [
         answer: 'No. You can use normal household water beforehand to minimize wastage, and our heavy pumps will safely evacuate the remaining sludge water in 15-20 minutes.'
       }
     ]
+  },
+  {
+    slug: 'gazipur',
+    areaName: 'Gazipur',
+    areaNameBn: 'গাজীপুর',
+    zone: 'Greater Dhaka Corridor (Tongi, Chowrasta, Joydebpur)',
+    title: 'Water Tank Cleaning Service in Gazipur | Sunviloz Clean Care',
+    titleBn: 'গাজীপুর এলাকায় আধুনিক পানির ট্যাংক ক্লিনিং সার্ভিস',
+    metaDesc: 'Professional water tank and pipeline cleaning across Gazipur, Tongi, Board Bazar, Chowrasta, and Joydebpur. Mechanized sludge removal.',
+    intro: 'Serving residential apartments, corporate complexes, and commercial properties across Gazipur, Tongi, and Joydebpur with heavy submersible slurry pumps, rotary high-pressure jets, and safe sanitization.',
+    introBn: 'টঙ্গী, গাজীপুর চৌরাস্তা, বোর্ড বাজার ও জয়দেবপুরের আবাসিক ও বাণিজ্যিক ভবনের ওভারহেড এবং আন্ডারগ্রাউন্ড পানির ট্যাংক গভীর পরিষ্কার সেবা প্রদান করে সানভিলোজ ক্লিন কেয়ার।',
+    waterConditionNote: 'Heavy iron deposits, deep borehole sand, and suspended mineral silt typical of Gazipur ground extraction.',
+    waterConditionNoteBn: 'গাজীপুর এলাকার পানিতে আয়রন ও সূক্ষ্ম বালুর উপস্থিতি বেশি থাকে, যা নিয়মিত পরিষ্কার না করলে পাইপে ব্লকেজ ও দুর্গন্ধ সৃষ্টি করে।',
+    coverageDetails: [
+      'Tongi (Station Road, Cherag Ali, Gazipura)',
+      'Gazipur Chowrasta, Board Bazar & Chandana',
+      'Joydebpur & Shibbari residential hubs'
+    ],
+    pricingFactors: [
+      'Residential rooftop standard PVC or RCC tank cleaning based on dimensions',
+      'Large underground water reservoir deep cleaning with submersible pumps',
+      'Annual maintenance contract (AMC) options for apartment committees'
+    ],
+    faqs: [
+      {
+        question: 'Does Sunviloz Clean Care deploy mobile teams to Gazipur?',
+        answer: 'Yes, our mobile crews with specialized jet cleaning and slurry extraction equipment regularly serve Tongi, Chowrasta, Board Bazar, and Joydebpur.'
+      },
+      {
+        question: 'Can you handle iron sediment and sandy sludge in underground tanks?',
+        answer: 'Yes, our heavy submersible pumps extract dense iron mud and sand that cannot be removed by normal domestic bucket cleaning.'
+      }
+    ]
+  },
+  {
+    slug: 'savar',
+    areaName: 'Savar',
+    areaNameBn: 'সাভার',
+    zone: 'West Dhaka Corridor (Savar Municipality, Ashulia, Hemayetpur)',
+    title: 'Water Tank Cleaning Service in Savar | Sunviloz Clean Care',
+    titleBn: 'সাভার ও আশুলিয়া এলাকায় পেশাদার পানির ট্যাংক পরিষ্কার সার্ভিস',
+    metaDesc: 'Reliable water tank cleaning in Savar, Ashulia, Hemayetpur, and EPZ area. Mechanized sludge evacuation and food-grade sanitization.',
+    intro: 'Comprehensive water storage cleaning for residences, housing societies, and commercial establishments throughout Savar, Ashulia, and Hemayetpur.',
+    introBn: 'সাভার পৌরসভা, আশুলিয়া, হেমায়েতপুর ও সংলগ্ন এলাকার আবাসিক ভবন ও প্রতিষ্ঠানের পানির ট্যাংক আধুনিক মেশিনে নিখুঁতভাবে পরিষ্কার করা হয়।',
+    waterConditionNote: 'Algae bloom on sunny rooftop tanks and organic sediment settlement in underground reservoirs.',
+    waterConditionNoteBn: 'খোলা ছাদের ট্যাংকে শ্যাওলা এবং মাটির নিচের রিজার্ভারে কাদা জমা দূরীকরণে শক্তিশালী জেট ওয়াশ ও পাম্প ব্যবহার করা হয়।',
+    coverageDetails: [
+      'Savar Municipality, Thana Road & C&B vicinity',
+      'Ashulia, Baipail & EPZ residential corridor',
+      'Hemayetpur & Jahangirnagar University area'
+    ],
+    pricingFactors: [
+      'Domestic rooftop tank deep sanitization',
+      'High-capacity multi-family underground reserve cleaning',
+      'Optional pipeline hydro-pulse flushing add-on'
+    ],
+    faqs: [
+      {
+        question: 'Can I schedule a water tank cleaning in Savar on weekends?',
+        answer: 'Yes, our teams operate 7 days a week, including Fridays and public holidays, to accommodate building schedules.'
+      },
+      {
+        question: 'How do you clean tanks without damaging waterproofing?',
+        answer: 'Our rotary pressure nozzles are calibrated between 120 and 150 bar, effectively dislodging grime without scratching or stripping waterproofing membranes.'
+      }
+    ]
+  },
+  {
+    slug: 'narayanganj',
+    areaName: 'Narayanganj',
+    areaNameBn: 'নারায়ণগঞ্জ',
+    zone: 'South-East Dhaka Fringe (Chashara, Fatullah, Siddhirganj)',
+    title: 'Water Tank Cleaning Service in Narayanganj | Sunviloz Clean Care',
+    titleBn: 'নারায়ণগঞ্জ শহরে নির্ভরযোগ্য পানির ট্যাংক ক্লিনিং সার্ভিস',
+    metaDesc: 'Expert water tank and pipeline cleaning in Narayanganj, Chashara, Fatullah, and Siddhirganj. Fast mobile crew dispatch.',
+    intro: 'Providing complete mechanized sludge evacuation, rotary jet wall scrubbing, and food-safe sanitization for residences and commercial establishments across Narayanganj.',
+    introBn: 'চাষাড়া, ফতুল্লা, সিদ্ধিরগঞ্জ ও সংলগ্ন এলাকার বাড়ি এবং বাণিজ্যিক প্রতিষ্ঠানের পানির ট্যাংক স্বাস্থ্যসম্মতভাবে পরিষ্কারে সানভিলোজ ক্লিনের দক্ষ টিম প্রস্তুত।',
+    waterConditionNote: 'River basin sediment, pipeline rust residue, and persistent bacteria biofilm in underground tanks.',
+    waterConditionNoteBn: 'ওয়াসা লাইনের মরিচা ও তলদেশের ঘোলা পানি দূর করে জীবাণুমুক্ত নিরাপদ পানি নিশ্চিত করা হয়।',
+    coverageDetails: [
+      'Chashara & Bangabandhu Road central hub',
+      'Fatullah & Panchabati residential area',
+      'Siddhirganj & Signboard corridor'
+    ],
+    pricingFactors: [
+      'Residential rooftop PVC/RCC tank cleaning based on capacity',
+      'Deep underground reserve sludge extraction',
+      'Multi-flat apartment building packages'
+    ],
+    faqs: [
+      {
+        question: 'How long does a typical tank cleaning take in Narayanganj?',
+        answer: 'A standard residential overhead tank takes 45 to 60 minutes. An underground reservoir takes 1.5 to 2.5 hours depending on capacity and sediment thickness.'
+      },
+      {
+        question: 'Is the disinfectant safe for domestic cooking and bathing?',
+        answer: 'Yes, we strictly use approved food-safe disinfectants that leave zero toxic chemical odor or taste.'
+      }
+    ]
   }
 ];
 

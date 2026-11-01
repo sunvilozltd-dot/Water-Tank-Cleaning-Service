@@ -7,7 +7,8 @@ import {
   ArrowRight, 
   PhoneCall,
   MessageCircle,
-  ExternalLink
+  ExternalLink,
+  AlertCircle
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
@@ -47,16 +48,22 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
       featuredSlug: 'gulshan'
     },
     {
-      name: 'Central Dhaka Hub',
-      nameBn: 'সেন্ট্রাল ঢাকা জোন',
-      places: 'ধানমন্ডি, মোহাম্মদপুর, লালমাটিয়া, তেজগাঁও, মহাখালী',
+      name: 'Central & West Dhaka',
+      nameBn: 'সেন্ট্রাল ও পশ্চিম ঢাকা জোন',
+      places: 'ধানমন্ডি, মোহাম্মদপুর, লালমাটিয়া, তেজগাঁও, মহাখালী, মিরপুর',
       featuredSlug: 'dhanmondi'
     },
     {
-      name: 'Old & South Dhaka',
+      name: 'South & East Dhaka',
       nameBn: 'পূর্ব ও দক্ষিণ ঢাকা জোন',
       places: 'বাড্ডা, রামপুরা, বনশ্রী, খিলগাঁও, মালিবাগ, শান্তিনগর, পুরান ঢাকা',
       featuredSlug: 'dhaka'
+    },
+    {
+      name: 'Greater Dhaka Corridor',
+      nameBn: 'বৃহত্তর ঢাকা করিডোর',
+      places: 'গাজীপুর, টঙ্গী, সাভার, আশুলিয়া, হেমায়েতপুর, নারায়ণগঞ্জ',
+      featuredSlug: 'gazipur'
     }
   ];
 
@@ -100,11 +107,11 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
       });
     } else {
       setCheckResult({
-        found: true,
-        name: searchTerm,
+        found: false,
+        name: searchTerm.trim(),
         message: lang === 'bn' 
-          ? `হ্যাঁ! ${searchTerm} এবং এর সংলগ্ন ঢাকা শহরের যেকোনো এলাকায় আমরা পানি ট্যাংক ক্লিনিং সার্ভিস প্রদান করি।`
-          : `Yes! We provide water tank cleaning service in ${searchTerm} and all adjoining areas across Dhaka.`
+          ? `"${searchTerm.trim()}" আমাদের নিয়মিত ভেরিফাইড শিডিউল লিস্টে সরাসরি অন্তর্ভুক্ত নেই। তবে আপনি ঢাকা, গাজীপুর, সাভার বা নারায়ণগঞ্জের আশেপাশে হলে বিশেষ টিম পাঠানো সম্ভব হতে পারে। নিশ্চিত হতে অনুগ্রহ করে সরাসরি কল করুন বা WhatsApp এ যোগাযোগ করুন।`
+          : `"${searchTerm.trim()}" is not on our regular verified schedule list. If you are located in or around Dhaka, Gazipur, Savar, or Narayanganj, special deployment may be arranged. Please call our hotline or message us on WhatsApp to confirm.`
       });
     }
   };
@@ -213,36 +220,74 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
 
           {/* Interactive Result Card */}
           {checkResult && (
-            <div className="mt-4 p-4 rounded-2xl border text-xs sm:text-sm bg-[#171C24] border-[#28C76F]/40 text-white transition-all animate-fadeIn" role="status" aria-live="polite">
+            <div 
+              className={`mt-4 p-4 rounded-2xl border text-xs sm:text-sm bg-[#171C24] transition-all animate-fadeIn ${
+                checkResult.found 
+                  ? 'border-[#28C76F]/40 text-white' 
+                  : 'border-amber-500/40 text-amber-200/90'
+              }`} 
+              role="status" 
+              aria-live="polite"
+            >
               <div className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-[#28C76F] shrink-0 mt-0.5" aria-hidden="true" />
+                {checkResult.found ? (
+                  <CheckCircle2 className="w-5 h-5 text-[#28C76F] shrink-0 mt-0.5" aria-hidden="true" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
+                )}
                 <div className="flex-1">
-                  <div className="font-bold text-[#28C76F] mb-1">
-                    {lang === 'bn' ? `✓ ${checkResult.name}-এ সার্ভিস সক্রিয় আছে!` : `✓ Service Active in ${checkResult.name}!`}
+                  <div className={`font-bold mb-1 ${checkResult.found ? 'text-[#28C76F]' : 'text-amber-400'}`}>
+                    {checkResult.found
+                      ? (lang === 'bn' ? `✓ ${checkResult.name}-এ সার্ভিস সক্রিয় আছে!` : `✓ Service Active in ${checkResult.name}!`)
+                      : (lang === 'bn' ? `অতালিকাভুক্ত এলাকা: ${checkResult.name}` : `Unlisted Area: ${checkResult.name}`)}
                   </div>
                   <p className="text-xs leading-relaxed text-[#B8C0CC]">
                     {checkResult.message}
                   </p>
                   
-                  <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => onAreaSelected(checkResult.name!)}
-                      className="min-h-[36px] py-1.5 px-3.5 rounded-lg bg-[#2585FF] hover:bg-[#1a73e8] text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <span>{lang === 'bn' ? 'এই এলাকার জন্য কোটেশন নিন' : 'Request Quote for this Area'}</span>
-                      <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
+                  <div className="mt-3 flex flex-wrap items-center gap-2.5">
+                    {checkResult.found ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onAreaSelected(checkResult.name!)}
+                          className="min-h-[36px] py-1.5 px-3.5 rounded-lg bg-[#2585FF] hover:bg-[#1a73e8] text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <span>{lang === 'bn' ? 'এই এলাকার জন্য কোটেশন নিন' : 'Request Quote for this Area'}</span>
+                          <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                        </button>
 
-                    {checkResult.slug && (
-                      <button
-                        type="button"
-                        onClick={() => handleNavigate(`/service-areas/${checkResult.slug}`)}
-                        className="min-h-[36px] py-1.5 px-3.5 rounded-lg bg-[#11151B] border border-[#303743] hover:border-[#2585FF] text-white font-semibold text-xs transition-colors flex items-center gap-1.5"
-                      >
-                        <span>{lang === 'bn' ? 'এরিয়া পেজ দেখুন' : 'View Dedicated Page'}</span>
-                        <ExternalLink className="w-3.5 h-3.5 text-[#2585FF]" />
-                      </button>
+                        {checkResult.slug && (
+                          <button
+                            type="button"
+                            onClick={() => handleNavigate(`/service-areas/${checkResult.slug}`)}
+                            className="min-h-[36px] py-1.5 px-3.5 rounded-lg bg-[#11151B] border border-[#303743] hover:border-[#2585FF] text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <span>{lang === 'bn' ? 'এরিয়া পেজ দেখুন' : 'View Dedicated Page'}</span>
+                            <ExternalLink className="w-3.5 h-3.5 text-[#2585FF]" />
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <a
+                          href={`tel:${business.phone}`}
+                          className="min-h-[36px] py-1.5 px-3.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                          <span>{lang === 'bn' ? `হটলাইনে কল করুন (${business.displayPhone})` : `Call Hotline (${business.displayPhone})`}</span>
+                        </a>
+                        <a
+                          href={`https://wa.me/${rawWhatsapp}?text=${encodeURIComponent(`আসসালামু আলাইকুম। আমি ${checkResult.name} এলাকা থেকে বলছি। এখানে ওয়াটার ট্যাংক ক্লিনিং সার্ভিস পাওয়া যাবে কি না জানতে চাই।`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => trackWhatsAppClick({ source: 'unlisted_area_check' })}
+                          className="min-h-[36px] py-1.5 px-3.5 rounded-lg bg-[#28C76F] hover:bg-[#22aa5e] text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>{lang === 'bn' ? 'WhatsApp এ নিশ্চিত হোন' : 'Confirm on WhatsApp'}</span>
+                        </a>
+                      </>
                     )}
                   </div>
                 </div>

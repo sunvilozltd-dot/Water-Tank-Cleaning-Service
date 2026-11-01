@@ -69,6 +69,9 @@ export const DHAKA_AREAS: AreaInfo[] = [
   { name: 'Khilgaon', nameBn: 'খিলগাঁও', zone: 'Central Dhaka', active: true, typicalResponseTime: 'Same Day / Scheduled' },
   { name: 'Old Dhaka (Puran Dhaka)', nameBn: 'পুরান ঢাকা', zone: 'South Dhaka', active: true, typicalResponseTime: 'Prior Booking' },
   { name: 'Shantinagar & Kakrail', nameBn: 'শান্তিনগর ও কাকরাইল', zone: 'Central Dhaka', active: true, typicalResponseTime: 'Same Day / Scheduled' },
+  { name: 'Gazipur (Sadar, Tongi, Chowrasta)', nameBn: 'গাজীপুর (সদর, টঙ্গী, চৌরাস্তা)', zone: 'Greater Dhaka', active: true, typicalResponseTime: 'Scheduled Booking' },
+  { name: 'Savar & Ashulia', nameBn: 'সাভার ও আশুলিয়া', zone: 'Greater Dhaka', active: true, typicalResponseTime: 'Scheduled Booking' },
+  { name: 'Narayanganj & Fatullah', nameBn: 'নারায়ণগঞ্জ ও ফতুল্লা', zone: 'Greater Dhaka', active: true, typicalResponseTime: 'Scheduled Booking' },
 ];
 
 export const SERVICES_DATA: ServiceItem[] = [

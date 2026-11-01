@@ -60,16 +60,33 @@ DROP POLICY IF EXISTS "Public can insert quotation leads" ON public.leads;
 DROP POLICY IF EXISTS "Allow anonymous visitors to insert quotation leads" ON public.leads;
 CREATE POLICY "Allow anonymous visitors to insert quotation leads" 
 ON public.leads FOR INSERT TO anon, authenticated 
-WITH CHECK (length(customer_name) >= 2 AND length(phone) >= 10);
+WITH CHECK (
+    length(trim(customer_name)) >= 2 
+    AND length(regexp_replace(phone, '\D', '', 'g')) >= 10
+);
 
+-- Strict Admin-only access to customer leads (Zero anonymous read access)
 DROP POLICY IF EXISTS "Allow authenticated staff to view and manage leads" ON public.leads;
-CREATE POLICY "Allow authenticated staff to view and manage leads" 
-ON public.leads FOR ALL TO authenticated USING (true) WITH CHECK (true);
-
--- Allow public read for newly created lead confirmation if needed
 DROP POLICY IF EXISTS "Allow anon to select own lead" ON public.leads;
-CREATE POLICY "Allow anon to select own lead" 
-ON public.leads FOR SELECT TO anon, authenticated USING (true);
+DROP POLICY IF EXISTS "Only active admins can view and manage leads" ON public.leads;
+CREATE POLICY "Only active admins can view and manage leads" 
+ON public.leads FOR ALL TO authenticated 
+USING (
+    EXISTS (
+        SELECT 1 FROM public.admin_users 
+        WHERE id = auth.uid() 
+        AND is_active = true 
+        AND role IN ('super_admin', 'admin', 'manager')
+    )
+) 
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM public.admin_users 
+        WHERE id = auth.uid() 
+        AND is_active = true 
+        AND role IN ('super_admin', 'admin', 'manager')
+    )
+);
 
 
 -- 2. AUDIT LOGS TABLE
@@ -90,8 +107,17 @@ CREATE POLICY "Allow insert to audit_logs"
 ON public.audit_logs FOR INSERT TO anon, authenticated WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Allow read audit_logs" ON public.audit_logs;
-CREATE POLICY "Allow read audit_logs" 
-ON public.audit_logs FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Only active admins can view audit_logs" ON public.audit_logs;
+CREATE POLICY "Only active admins can view audit_logs" 
+ON public.audit_logs FOR SELECT TO authenticated 
+USING (
+    EXISTS (
+        SELECT 1 FROM public.admin_users 
+        WHERE id = auth.uid() 
+        AND is_active = true 
+        AND role IN ('super_admin', 'admin')
+    )
+);
 
 
 -- 3. SITE HEADER CONFIGURATION TABLE
