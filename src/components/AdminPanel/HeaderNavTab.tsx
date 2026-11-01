@@ -326,9 +326,8 @@ export const HeaderNavTab: React.FC = () => {
       { id: 'nav-tank-clean', label: 'Water Tank Cleaning', labelBn: 'ওয়াটার ট্যাংক ক্লিনিং', labelEn: 'Water Tank Cleaning', url: '/water-tank-cleaning', openNewTab: false, isVisible: true, sortOrder: 3, parentId: 'nav-services' },
       { id: 'nav-pipe-clean', label: 'Pipeline Cleaning', labelBn: 'পাইপলাইন ক্লিনিং', labelEn: 'Pipeline Cleaning', url: '/pipeline-cleaning', openNewTab: false, isVisible: true, sortOrder: 4, parentId: 'nav-services' },
       { id: 'nav-areas', label: 'Service Areas', labelBn: 'কভারেজ এলাকা', labelEn: 'Service Areas', url: '/service-areas', openNewTab: false, isVisible: true, sortOrder: 5, parentId: null },
-      { id: 'nav-pricing', label: 'Pricing', labelBn: 'রেট কার্ড', labelEn: 'Pricing', url: '#pricing', openNewTab: false, isVisible: true, sortOrder: 6, parentId: null },
-      { id: 'nav-about', label: 'About Us', labelBn: 'আমাদের সম্পর্কে', labelEn: 'About Us', url: '/about', openNewTab: false, isVisible: true, sortOrder: 7, parentId: null },
-      { id: 'nav-contact', label: 'Contact Us', labelBn: 'যোগাযোগ', labelEn: 'Contact Us', url: '/contact', openNewTab: false, isVisible: true, sortOrder: 8, parentId: null }
+      { id: 'nav-about', label: 'About Us', labelBn: 'আমাদের সম্পর্কে', labelEn: 'About Us', url: '/about', openNewTab: false, isVisible: true, sortOrder: 6, parentId: null },
+      { id: 'nav-contact', label: 'Contact Us', labelBn: 'যোগাযোগ', labelEn: 'Contact Us', url: '/contact', openNewTab: false, isVisible: true, sortOrder: 7, parentId: null }
     ];
 
     setSaving(true);

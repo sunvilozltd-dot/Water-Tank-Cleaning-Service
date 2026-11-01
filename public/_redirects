@@ -15,6 +15,8 @@
 /terms-and-conditions               /terms                                   301
 /services-faq                       /faq                                     301
 /services-faq/                      /faq                                     301
+/pricing                            /get-quote                               301
+/pricing/                           /get-quote                               301
 
 # 2. SPA Fallback: Route all client-side navigation to /index.html with HTTP 200
 # Ensures deep links (e.g., /services/*, /admin, /service-areas/*, /contact) resolve directly without 404

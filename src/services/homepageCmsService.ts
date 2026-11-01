@@ -136,9 +136,9 @@ export const DEFAULT_HOMEPAGE_SECTIONS: HomepageSection[] = [
     subtitleBn: 'শ্যাওলা, ওয়াসা পলি ও ব্যাকটেরিয়ার নীরব বিস্তার',
     mediaType: 'image',
     imageUrl: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=800&q=75',
-    buttonText: 'Check Cleaning Prices',
+    buttonText: 'Request a Quote',
     buttonTextBn: 'ট্যাংক পরিষ্কারের কোটেশন জানুন',
-    buttonUrl: '#pricing',
+    buttonUrl: '#quote',
     buttonEvent: 'cta_click',
     settings: {
       bgStyle: 'slate',
@@ -185,22 +185,6 @@ export const DEFAULT_HOMEPAGE_SECTIONS: HomepageSection[] = [
     },
     isEnabled: true,
     sortOrder: 6,
-    status: 'published'
-  },
-  {
-    id: 'sec-pricing',
-    sectionKey: 'pricing',
-    sectionType: 'pricing',
-    title: 'Transparent Pricing & Packages',
-    titleBn: 'সার্ভিস প্যাকেজ ও কোটেশন প্রক্রিয়া',
-    subtitle: 'No hidden charges. Standardized rates across Dhaka.',
-    subtitleBn: 'ট্যাংকের ধরন ও সাইজ অনুযায়ী সম্পূর্ণ স্বচ্ছ কোটেশন',
-    mediaType: 'none',
-    settings: {
-      bgStyle: 'white'
-    },
-    isEnabled: true,
-    sortOrder: 7,
     status: 'published'
   },
   {

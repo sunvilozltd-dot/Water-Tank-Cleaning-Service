@@ -94,17 +94,6 @@ export const DEFAULT_NAV_ITEMS: NavItem[] = [
     parentId: null
   },
   {
-    id: 'nav-pricing',
-    label: 'Pricing',
-    labelBn: 'রেট কার্ড',
-    labelEn: 'Pricing',
-    url: '#pricing',
-    openNewTab: false,
-    isVisible: true,
-    sortOrder: 5,
-    parentId: null
-  },
-  {
     id: 'nav-blog',
     label: 'Cleaning Guide',
     labelBn: 'টিপস ও গাইড',
@@ -112,7 +101,7 @@ export const DEFAULT_NAV_ITEMS: NavItem[] = [
     url: '#blog',
     openNewTab: false,
     isVisible: true,
-    sortOrder: 6,
+    sortOrder: 5,
     parentId: null
   },
   {

@@ -200,10 +200,10 @@ export const Footer: React.FC<FooterProps> = ({
                 <li>
                   <button
                     type="button"
-                    onClick={() => handleLink('/pricing')}
+                    onClick={() => handleLink('/get-quote')}
                     className="hover:text-[#2585FF] transition-colors cursor-pointer"
                   >
-                    {lang === 'bn' ? 'সার্ভিস চার্জ ও প্যাকেজ' : 'Pricing Packages'}
+                    {lang === 'bn' ? 'ফ্রি কোটেশন নিন' : 'Get Free Quote'}
                   </button>
                 </li>
                 <li>

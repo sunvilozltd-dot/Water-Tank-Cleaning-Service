@@ -9,7 +9,6 @@ import { AboutPreviewSection } from './AboutPreviewSection';
 import { WhyChooseUsSection } from './WhyChooseUsSection';
 import { AllServicesFaqSection } from './AllServicesFaqSection';
 import { TrustSection } from './TrustSection';
-import { PricingSection } from './PricingSection';
 import { SmartQuoteWizard } from './SmartQuoteWizard';
 import { ServiceAreaSection } from './ServiceAreaSection';
 import { ReviewsSection } from './ReviewsSection';
@@ -153,7 +152,7 @@ export const HomepageDynamicRenderer: React.FC<HomepageDynamicRendererProps> = (
           case 'beforeAfter':
             return <OurWorkVideosSection key={section.id} />;
           case 'pricing':
-            return <PricingSection key={section.id} onOpenQuoteModal={onOpenQuoteModal} />;
+            return null;
           case 'calculator':
             return (
               <React.Fragment key={section.id}>

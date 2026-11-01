@@ -23,7 +23,6 @@ import { AboutPage } from './pages/AboutPage';
 import { ServicesPage } from './pages/ServicesPage';
 import { WaterTankCleaningPage } from './pages/WaterTankCleaningPage';
 import { PipelineCleaningPage } from './pages/PipelineCleaningPage';
-import { PricingPage } from './pages/PricingPage';
 import { ContactPage } from './pages/ContactPage';
 import { ServiceAreaPage } from './pages/ServiceAreaPage';
 import { LocationDetailPage } from './pages/LocationDetailPage';
@@ -120,6 +119,9 @@ function AppContent() {
       } else if (currentPath === '/services-faq' || currentPath === '/services-faq/') {
         window.history.replaceState(null, '', '/#homepage-all-faq');
         setCurrentPath('/');
+      } else if (currentPath === '/pricing' || currentPath === '/pricing/') {
+        window.history.replaceState(null, '', '/get-quote');
+        setCurrentPath('/get-quote');
       }
     }
   }, [currentPath]);
@@ -223,7 +225,7 @@ function AppContent() {
       );
     }
     if (currentPath === '/pricing') {
-      return <PricingPage onOpenQuoteModal={() => handleOpenQuoteModal()} />;
+      return <GetQuotePage onNavigate={navigate} />;
     }
     if (currentPath === '/contact') {
       return <ContactPage />;

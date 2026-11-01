@@ -373,8 +373,7 @@ VALUES
     ('nav-services', 'Services', 'সার্ভিসসমূহ', 'Services', '/services', false, true, 2),
     ('nav-areas', 'Service Areas', 'কভারেজ এলাকা', 'Service Areas', '/service-areas', false, true, 3),
     ('nav-process', 'Method', 'ক্লিনিং পদ্ধতি', 'Cleaning Method', '#process', false, true, 4),
-    ('nav-pricing', 'Pricing', 'রেট কার্ড', 'Pricing', '#pricing', false, true, 5),
-    ('nav-blog', 'Cleaning Guide', 'টিপস ও গাইড', 'Cleaning Guide', '#blog', false, true, 6),
-    ('nav-contact', 'Contact', 'যোগাযোগ', 'Contact', '/contact', false, true, 7)
+    ('nav-blog', 'Cleaning Guide', 'টিপস ও গাইড', 'Cleaning Guide', '#blog', false, true, 5),
+    ('nav-contact', 'Contact', 'যোগাযোগ', 'Contact', '/contact', false, true, 6)
 ON CONFLICT (id) DO NOTHING;
 
