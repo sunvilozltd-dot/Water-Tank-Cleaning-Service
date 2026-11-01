@@ -17,6 +17,7 @@ import { HeaderNavTab } from '../components/AdminPanel/HeaderNavTab';
 import { TrackingTab } from '../components/AdminPanel/TrackingTab';
 import { SettingsTab } from '../components/AdminPanel/SettingsTab';
 import { AuditLogsTab } from '../components/AdminPanel/AuditLogsTab';
+import { AdminUsersTab } from '../components/AdminPanel/AdminUsersTab';
 
 import { QuoteLead, LeadStatus, ServiceItem, ProjectItem, VideoItem } from '../types';
 import { BlogPost } from '../types/blog';
@@ -217,6 +218,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
           {currentTab === 'settings' && (
             <SettingsTab onGoToHeroVideo={() => setCurrentTab('homepage-cms')} />
           )}
+
+          {currentTab === 'admin-users' && <AdminUsersTab />}
 
           {currentTab === 'audit' && <AuditLogsTab />}
         </main>

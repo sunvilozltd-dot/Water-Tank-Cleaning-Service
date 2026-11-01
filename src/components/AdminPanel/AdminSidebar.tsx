@@ -14,7 +14,8 @@ import {
   Video,
   Paintbrush,
   Camera,
-  HelpCircle
+  HelpCircle,
+  ShieldCheck
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 
@@ -32,6 +33,7 @@ export type AdminTab =
   | 'headernav' 
   | 'tracking' 
   | 'settings' 
+  | 'admin-users'
   | 'audit';
 
 interface AdminSidebarProps {
@@ -85,6 +87,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'headernav', label: 'Header & Navigation Management', icon: <Compass className="w-4 h-4" />, group: 'Site Setup' },
     { id: 'tracking', label: 'Tracking & Analytics', icon: <BarChart3 className="w-4 h-4" />, group: 'Site Setup' },
     { id: 'settings', label: 'Site Settings', icon: <Settings className="w-4 h-4" />, group: 'Site Setup' },
+    { 
+      id: 'admin-users', 
+      label: 'Admin Roles & Access (RBAC)', 
+      icon: <ShieldCheck className="w-4 h-4 text-emerald-400" />, 
+      group: 'Security',
+      highlight: true 
+    },
     { id: 'audit', label: 'Audit Logs', icon: <Activity className="w-4 h-4" />, group: 'Security' },
   ];
 
