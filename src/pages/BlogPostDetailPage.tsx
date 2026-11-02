@@ -77,7 +77,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
   };
 
   const handleCopyLink = () => {
-    const url = typeof window !== 'undefined' ? window.location.href : `https://sunvilozcleancare.com/blog/${slug}`;
+    const url = typeof window !== 'undefined' ? window.location.href : `https://water-tank-cleaning-service.vercel.app/blog/${slug}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -86,7 +86,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
   const shareOnWhatsApp = () => {
     if (!post) return;
     const title = lang === 'bn' && post.titleBn ? post.titleBn : post.title;
-    const url = typeof window !== 'undefined' ? window.location.href : `https://sunvilozcleancare.com/blog/${slug}`;
+    const url = typeof window !== 'undefined' ? window.location.href : `https://water-tank-cleaning-service.vercel.app/blog/${slug}`;
     const text = `${title}\n\nপড়ুন এই গুরুত্বপূর্ণ পরামর্শ: ${url}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -213,7 +213,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
       <SeoHead
         title={`${title} | Sunviloz Clean Care`}
         description={post.seo?.metaDescription || excerpt}
-        canonicalUrl={`https://sunvilozcleancare.com/blog/${post.slug}`}
+        canonicalUrl={`https://water-tank-cleaning-service.vercel.app/blog/${post.slug}`}
         ogType="article"
       />
 

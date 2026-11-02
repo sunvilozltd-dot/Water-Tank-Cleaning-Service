@@ -70,6 +70,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
   const [phoneError, setPhoneError] = useState<string>('');
   const [whatsappUrl, setWhatsappUrl] = useState<string>('');
   const [confirmedLeadNumber, setConfirmedLeadNumber] = useState<string>('');
+  const [isCloudSynced, setIsCloudSynced] = useState<boolean>(true);
 
   // Step 1: Contact Information (First Step)
   const [customerName, setCustomerName] = useState<string>('');
@@ -458,6 +459,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
       const savedLead = await createLead(fullLeadPayload as any, sourceContext || 'Website Booking Form');
       const leadNum = savedLead.leadNumber || 'SVC-' + Math.floor(100000 + Math.random() * 900000);
       setConfirmedLeadNumber(leadNum);
+      setIsCloudSynced(Boolean(savedLead.isSyncedToCloud));
 
       trackLeadSaved(leadNum, { phone: normalizedPhone, leadNum, source: sourceContext });
 
@@ -1463,9 +1465,22 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
 
           <div className="space-y-2 max-w-lg mx-auto">
             {confirmedLeadNumber && (
-              <span className="inline-block px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                {lang === 'bn' ? `রেফারেন্স নম্বর: ${confirmedLeadNumber}` : `Booking Ref: ${confirmedLeadNumber}`}
-              </span>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                  {lang === 'bn' ? `রেফারেন্স নম্বর: ${confirmedLeadNumber}` : `Booking Ref: ${confirmedLeadNumber}`}
+                </span>
+                {isCloudSynced ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>{lang === 'bn' ? 'সার্ভারে সংরক্ষিত' : 'Synced to Cloud'}</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    <AlertCircle className="w-3 h-3" />
+                    <span>{lang === 'bn' ? 'অফলাইন ব্যাকআপ' : 'Local Backup'}</span>
+                  </span>
+                )}
+              </div>
             )}
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
               {lang === 'bn' ? 'আপনার কোটেশন রিকোয়েস্ট সফলভাবে গৃহীত হয়েছে!' : 'Quote Request Received!'}
@@ -1475,6 +1490,19 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                 ? `ধন্যবাদ ${customerName}! আমাদের টেকনিক্যাল টিম আপনার তথ্য পেয়ে গেছে। দ্রুত চূড়ান্ত কোটেশন ও শিডিউলের জন্য নিচের বাটনে ক্লিক করে সরাসরি WhatsApp এ মেসেজ পাঠান।`
                 : `Thank you ${customerName}! Our crew has received your details. For instant confirmation, connect directly via WhatsApp.`}
             </p>
+            {!isCloudSynced && (
+              <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs text-left flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+                <div>
+                  <p className="font-semibold">{lang === 'bn' ? 'অফলাইন ব্যাকআপে সংরক্ষিত' : 'Saved to Local Backup'}</p>
+                  <p className="text-[11px] text-amber-200/80 mt-0.5">
+                    {lang === 'bn' 
+                      ? 'নেটওয়ার্ক সীমাবদ্ধতার কারণে আপনার বুকিংটি লোকাল মেমরিতে সংরক্ষিত আছে। বুকিং শতভাগ নিশ্চিত করতে নিচের WhatsApp বাটনে ট্যাপ করুন।' 
+                      : 'Saved locally due to network conditions. Tap WhatsApp below to confirm your booking instantly with our team.'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Primary Action Buttons */}

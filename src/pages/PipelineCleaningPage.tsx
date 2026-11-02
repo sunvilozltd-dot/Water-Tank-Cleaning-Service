@@ -83,7 +83,7 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
       <SeoHead
         title="Pipeline Cleaning Service in Dhaka | Sunviloz Clean Care"
         description="Non-invasive water pipeline cleaning and hydro-pulse flushing in Dhaka. Remove iron rust and sediment without breaking walls. Call or WhatsApp 01609999612."
-        canonicalUrl="https://sunvilozcleancare.com/services/pipeline-cleaning"
+        canonicalUrl="https://water-tank-cleaning-service.vercel.app/services/pipeline-cleaning"
       />
 
       <Breadcrumbs 

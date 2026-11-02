@@ -34,7 +34,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onOpenQuoteModal }) => {
       <SeoHead
         title="About Us in Dhaka | Sunviloz Clean Care"
         description="Learn about Sunviloz Clean Care, established in 2020 in Dhaka. Specializing in professional water tank and pipeline cleaning with transparent quotations."
-        canonicalUrl="https://sunvilozcleancare.com/about"
+        canonicalUrl="https://water-tank-cleaning-service.vercel.app/about"
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'আমাদের সম্পর্কে' : 'About Us', href: '/about' }]} />
 

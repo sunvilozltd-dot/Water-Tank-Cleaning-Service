@@ -81,7 +81,7 @@ export const INITIAL_FULL_SITE_CONFIG: FullSiteConfig = {
   seo: {
     defaultMetaTitle: 'Professional Water Tank Cleaning Service in Dhaka | Sunviloz Clean Care',
     defaultMetaDescription: 'Professional rooftop & underground water tank cleaning, pipeline cleaning, and sanitization in Dhaka. Transparent pricing, modern equipment, hygienic service.',
-    canonicalBaseUrl: 'https://sunvilozcleancare.com',
+    canonicalBaseUrl: 'https://water-tank-cleaning-service.vercel.app',
     indexingAllowed: true,
     socialOgImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75'
   },

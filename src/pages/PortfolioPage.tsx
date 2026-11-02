@@ -16,7 +16,7 @@ export const PortfolioPage: React.FC<PortfolioPageProps> = ({ onNavigate }) => {
       <SeoHead
         title={lang === 'bn' ? 'কাজের ভিডিও ডকুমেন্টেশন | সানভিলোজ ক্লিন কেয়ার ঢাকা' : 'Our Work Videos - Sunviloz Clean Care Dhaka'}
         description="Watch real cleaning project videos of rooftop and underground water tanks cleaned across Dhaka."
-        canonicalUrl="https://sunvilozcleancare.com/portfolio"
+        canonicalUrl="https://water-tank-cleaning-service.vercel.app/portfolio"
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'কাজের ভিডিও ডকুমেন্টেশন' : 'Work Videos', href: '/portfolio' }]} />
       <OurWorkVideosSection />

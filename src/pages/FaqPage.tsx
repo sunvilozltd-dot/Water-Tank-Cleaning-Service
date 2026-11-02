@@ -12,7 +12,7 @@ export const FaqPage: React.FC = () => {
       <SeoHead
         title="Frequently Asked Questions - Water Tank Cleaning Dhaka"
         description="Find answers to common questions about water tank cleaning process, pricing, time needed, chemicals used, and safety in Dhaka."
-        canonicalUrl="https://sunvilozcleancare.com/faq"
+        canonicalUrl="https://water-tank-cleaning-service.vercel.app/faq"
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'সাধারণ জিজ্ঞাসা' : 'FAQ', href: '/faq' }]} />
       <FaqSection />

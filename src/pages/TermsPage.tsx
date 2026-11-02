@@ -16,7 +16,7 @@ export const TermsPage: React.FC<TermsPageProps> = ({ onNavigate }) => {
       <SeoHead
         title={lang === 'bn' ? 'শর্তাবলী | সানভিলোজ ক্লিন কেয়ার' : 'Terms & Conditions - Sunviloz Clean Care Dhaka'}
         description="Terms and conditions for water tank cleaning services provided by Sunviloz Clean Care in Dhaka."
-        canonicalUrl="https://sunvilozcleancare.com/terms"
+        canonicalUrl="https://water-tank-cleaning-service.vercel.app/terms"
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'শর্তাবলী' : 'Terms & Conditions', href: '/terms' }]} />
 

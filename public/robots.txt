@@ -5,4 +5,4 @@ Disallow: /admin/
 Disallow: /admin/login
 Disallow: /admin/dashboard
 
-Sitemap: https://sunvilozcleancare.com/sitemap.xml
+Sitemap: https://water-tank-cleaning-service.vercel.app/sitemap.xml

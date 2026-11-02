@@ -20,7 +20,7 @@ export const BUSINESS_CONFIG = {
   googleSiteVerification: '',
   googleAnalyticsId: '',
   metaPixelId: '',
-  canonicalBaseUrl: 'https://sunvilozcleancare.com',
+  canonicalBaseUrl: 'https://water-tank-cleaning-service.vercel.app',
 
   // Value propositions
   trustBadges: [
@@ -1078,7 +1078,7 @@ export const REVIEWS_DATA: ReviewItem[] = [
     rating: 5,
     date: '2026-08-14',
     comment: 'Sunviloz Clean Care cleaned both our underground reserve and 2 rooftop tanks in Bashundhara. The team arrived on time with proper high-pressure equipment. The amount of mud they removed was unbelievable. Very polite and professional work.',
-    isVerified: true
+    isVerified: false
   },
   {
     id: 'rev-2',
@@ -1088,7 +1088,7 @@ export const REVIEWS_DATA: ReviewItem[] = [
     rating: 5,
     date: '2026-07-28',
     comment: 'Booked via WhatsApp. They responded within minutes and came the next morning. Cleaned our 1500L PVC tank thoroughly and did not make any mess on the roof. Transparent pricing as discussed.',
-    isVerified: true
+    isVerified: false
   },
   {
     id: 'rev-3',
@@ -1098,7 +1098,7 @@ export const REVIEWS_DATA: ReviewItem[] = [
     rating: 5,
     date: '2026-08-02',
     comment: 'Arranged cleaning for our 6-story residential building. They managed the water drain timing carefully so residents had minimal water downtime. Highly recommended for apartment committees.',
-    isVerified: true
+    isVerified: false
   },
   {
     id: 'rev-4',
@@ -1108,6 +1108,6 @@ export const REVIEWS_DATA: ReviewItem[] = [
     rating: 5,
     date: '2026-06-19',
     comment: 'Cleaned a 15-year-old reserve tank that had thick sludge at the bottom. Used mud pump and suction vacuum. The water is visibly clearer now and the bad smell is completely gone.',
-    isVerified: true
+    isVerified: false
   }
 ];

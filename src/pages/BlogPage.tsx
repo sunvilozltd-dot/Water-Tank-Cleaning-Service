@@ -18,7 +18,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onOpenPostModal, onNavigate 
       <SeoHead
         title="Tips & Guides - Water Tank Cleaning & Hygiene | Sunviloz Dhaka"
         description="Read articles and health guides about water tank sanitation, contamination risks, maintenance frequency, and cleaning guidelines for Dhaka properties."
-        canonicalUrl="https://sunvilozcleancare.com/blog"
+        canonicalUrl="https://water-tank-cleaning-service.vercel.app/blog"
       />
       <Breadcrumbs items={[{ label: 'Tips & Guides', href: '/blog' }]} />
       <BlogSection onNavigate={onNavigate} onOpenPostModal={onOpenPostModal} />

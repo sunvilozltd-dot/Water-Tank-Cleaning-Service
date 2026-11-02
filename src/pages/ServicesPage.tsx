@@ -19,7 +19,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onOpenQuoteModal, on
       <SeoHead
         title={lang === 'bn' ? 'আমাদের সেবাসমূহ | সানভিলোজ ক্লিন কেয়ার ঢাকা' : 'Our Services - Water Tank & Pipeline Cleaning in Dhaka'}
         description="Comprehensive water tank cleaning services including underground reservoir deep wash, rooftop overhead tank sanitization, and pipeline descaling in Dhaka."
-        canonicalUrl="https://sunvilozcleancare.com/services"
+        canonicalUrl="https://water-tank-cleaning-service.vercel.app/services"
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'সার্ভিসসমূহ' : 'Services', href: '/services' }]} />
 

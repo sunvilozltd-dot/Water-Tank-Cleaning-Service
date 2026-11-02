@@ -164,7 +164,7 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
       <SeoHead
         title="Water Tank Cleaning Service in Dhaka | Sunviloz Clean Care"
         description="Professional water tank cleaning service in Dhaka for rooftop and underground water tanks, including sludge, sediment and surface buildup removal. Call or WhatsApp 01609999612."
-        canonicalUrl="https://sunvilozcleancare.com/services/water-tank-cleaning"
+        canonicalUrl="https://water-tank-cleaning-service.vercel.app/services/water-tank-cleaning"
       />
 
       <Breadcrumbs 

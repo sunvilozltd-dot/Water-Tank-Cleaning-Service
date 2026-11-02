@@ -47,7 +47,7 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
       <SeoHead
         title={location.title || `${location.areaName} Water Tank Cleaning Service | Sunviloz Clean Care`}
         description={location.metaDesc || location.metaDescription || location.intro}
-        canonicalUrl={`https://sunvilozcleancare.com/service-areas/${location.slug}`}
+        canonicalUrl={`https://water-tank-cleaning-service.vercel.app/service-areas/${location.slug}`}
       />
 
       <Breadcrumbs 

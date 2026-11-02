@@ -148,28 +148,27 @@ export async function createLead(data: QuoteFormData, source = 'Website'): Promi
         lead_status: 'New'
       };
 
-      const { data: inserted, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('leads')
-        .insert([payload])
-        .select('id, lead_number')
-        .maybeSingle();
+        .insert([payload]);
 
       if (!insertError) {
         newLead.isSyncedToCloud = true;
-        if (inserted?.id) {
-          newLead.id = inserted.id;
-        }
         // Sync the cloud status back to local storage
         try {
           const currentLocal = getLocalLeads();
-          const updatedLocal = currentLocal.map(l => l.leadNumber === leadNumber ? { ...l, isSyncedToCloud: true, id: newLead.id } : l);
+          const updatedLocal = currentLocal.map(l => l.leadNumber === leadNumber ? { ...l, isSyncedToCloud: true } : l);
           safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
         } catch {
           // Ignore
         }
+      } else {
+        console.warn('[LeadService] Lead insert into Supabase returned error:', insertError.message);
+        newLead.isSyncedToCloud = false;
       }
-    } catch {
-      // Network error saving lead to Supabase (locally preserved, isSyncedToCloud remains false)
+    } catch (err: any) {
+      console.warn('[LeadService] Network error saving lead to Supabase:', err?.message || err);
+      newLead.isSyncedToCloud = false;
     }
   }
 
@@ -212,6 +211,7 @@ export async function fetchAllLeads(): Promise<QuoteLead[]> {
           source: item.source || 'Website',
           status: (item.status as LeadStatus) || 'New',
           adminNote: item.admin_note || undefined,
+          isSyncedToCloud: true,
           createdAt: item.created_at,
           updatedAt: item.updated_at
         }));
@@ -220,7 +220,7 @@ export async function fetchAllLeads(): Promise<QuoteLead[]> {
         const merged = [...mapped];
         local.forEach(loc => {
           if (!merged.some(m => m.leadNumber && m.leadNumber === loc.leadNumber)) {
-            merged.push(loc);
+            merged.push({ ...loc, isSyncedToCloud: false });
           }
         });
         return merged;
@@ -230,7 +230,7 @@ export async function fetchAllLeads(): Promise<QuoteLead[]> {
     }
   }
 
-  return getLocalLeads();
+  return getLocalLeads().map(l => ({ ...l, isSyncedToCloud: false }));
 }
 
 /**
@@ -373,6 +373,63 @@ export async function migrateLocalLeadsToSupabase(): Promise<{ total: number; mi
   }
 
   return { total: localLeads.length, migrated, errors };
+}
+
+/**
+ * Specifically syncs any locally saved leads that failed to reach Supabase
+ */
+export async function syncUnsyncedLeadsToSupabase(): Promise<{ synced: number; failed: number }> {
+  if (!isSupabaseConfigured()) {
+    return { synced: 0, failed: 0 };
+  }
+
+  const localLeads = getLocalLeads();
+  let synced = 0;
+  let failed = 0;
+
+  for (let i = 0; i < localLeads.length; i++) {
+    const lead = localLeads[i];
+    if (lead.isSyncedToCloud) continue;
+
+    try {
+      const payload: Record<string, any> = {
+        lead_number: lead.leadNumber || generateLeadNumber(),
+        customer_name: lead.name,
+        phone: lead.phone,
+        whatsapp: lead.whatsapp || lead.phone,
+        email: lead.email || null,
+        area: lead.area,
+        address: lead.address || null,
+        service_type: lead.serviceType || 'Water Tank Cleaning',
+        tank_type: lead.tankType || null,
+        tank_capacity: lead.tankCapacity || null,
+        number_of_tanks: lead.numberOfTanks || 1,
+        number_of_flats: lead.numberOfFlats || null,
+        building_type: lead.buildingType || lead.propertyType || null,
+        preferred_date: lead.preferredDate || null,
+        preferred_time: lead.preferredTime || null,
+        message: lead.message || lead.notes || null,
+        estimated_price: lead.estimatedPrice || null,
+        source: lead.source || 'Website',
+        status: lead.status || 'New',
+        admin_note: lead.adminNote || null,
+        created_at: lead.createdAt || new Date().toISOString()
+      };
+
+      const { error } = await supabase.from('leads').upsert(payload, { onConflict: 'lead_number' });
+      if (!error) {
+        localLeads[i].isSyncedToCloud = true;
+        synced++;
+      } else {
+        failed++;
+      }
+    } catch {
+      failed++;
+    }
+  }
+
+  safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify(localLeads));
+  return { synced, failed };
 }
 
 /**

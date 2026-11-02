@@ -119,7 +119,7 @@ Configure these variables in the **Cloudflare Dashboard** under:
 | `VITE_SUPABASE_ANON_KEY` | **Yes** | Yes (Encrypted) | Public Anonymous API Key (Protected by RLS) |
 | `VITE_GA_MEASUREMENT_ID` | Optional | No | Google Analytics 4 ID (e.g. `G-XXXXXXXXXX`) |
 | `VITE_META_PIXEL_ID` | Optional | No | Meta (Facebook) Pixel ID (e.g. `1234567890`) |
-| `APP_URL` | Optional | No | Canonical Domain (`https://sunvilozcleancare.com`) |
+| `APP_URL` | Optional | No | Canonical Domain (`https://water-tank-cleaning-service.vercel.app`) |
 
 *Note: Never expose the Supabase `service_role` key in frontend environment variables.*
 
