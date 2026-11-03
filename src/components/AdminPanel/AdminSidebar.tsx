@@ -15,7 +15,8 @@ import {
   Paintbrush,
   Camera,
   HelpCircle,
-  ShieldCheck
+  ShieldCheck,
+  Server
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 
@@ -34,7 +35,8 @@ export type AdminTab =
   | 'tracking' 
   | 'settings' 
   | 'admin-users'
-  | 'audit';
+  | 'audit'
+  | 'free-usage';
 
 interface AdminSidebarProps {
   currentTab: AdminTab;
@@ -95,6 +97,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       highlight: true 
     },
     { id: 'audit', label: 'Audit Logs', icon: <Activity className="w-4 h-4" />, group: 'Security' },
+    { 
+      id: 'free-usage', 
+      label: 'Free Tier Usage & Limits', 
+      icon: <Server className="w-4 h-4 text-[#38BDF8]" />, 
+      group: 'Site Setup',
+      highlight: true 
+    },
   ];
 
   return (

@@ -23,7 +23,7 @@ import {
   Clock
 } from 'lucide-react';
 import { QuoteFormData, QuoteLead } from '../types';
-import { createLead, saveOrUpdatePartialLead } from '../services/leadService';
+import { createLead, saveOrUpdatePartialLead, getLeadDraft, saveLeadDraft, clearLeadDraft, generateIdempotencyKey } from '../services/leadService';
 import { trackFormStarted, trackFormStepCompleted, trackLeadSaved, trackWhatsAppClick } from '../utils/tracking';
 import { isValidBangladeshiPhone, normalizeBangladeshiPhone } from '../utils/validation';
 import { calculateQuoteEstimate } from '../utils/pricingCalculator';
@@ -59,9 +59,11 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
   // Step 3: Capacity & Building Info
   // Step 4: Location & Address
   // Step 5: Add-ons, Schedule & Review
-  // Step 6: Submission Success (WhatsApp & Confirmation)
+  // Step 1: Contact Information (First Step with draft restore)
+  const existingDraft = React.useMemo(() => getLeadDraft(), []);
   const [step, setStep] = useState<number>(1);
-  const [capturedLeadId, setCapturedLeadId] = useState<string | null>(null);
+  const [capturedLeadId, setCapturedLeadId] = useState<string | null>(() => existingDraft?.leadId || null);
+  const [ownershipToken, setOwnershipToken] = useState<string | null>(() => existingDraft?.ownershipToken || null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const isSubmittingRef = useRef<boolean>(false);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
@@ -72,9 +74,22 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
   const [confirmedLeadNumber, setConfirmedLeadNumber] = useState<string>('');
   const [isCloudSynced, setIsCloudSynced] = useState<boolean>(true);
 
-  // Step 1: Contact Information (First Step)
-  const [customerName, setCustomerName] = useState<string>('');
-  const [customerPhone, setCustomerPhone] = useState<string>('');
+  // Sync across tabs or autosave events
+  useEffect(() => {
+    const handleIdSync = (e: any) => {
+      if (e.detail?.leadId) {
+        setCapturedLeadId(e.detail.leadId);
+      }
+      if (e.detail?.ownershipToken) {
+        setOwnershipToken(e.detail.ownershipToken);
+      }
+    };
+    window.addEventListener('sunviloz_lead_id_synced', handleIdSync);
+    return () => window.removeEventListener('sunviloz_lead_id_synced', handleIdSync);
+  }, []);
+
+  const [customerName, setCustomerName] = useState<string>(() => existingDraft?.name || '');
+  const [customerPhone, setCustomerPhone] = useState<string>(() => existingDraft?.phone || '');
 
   // Step 2: Tank Type
   const [tankType, setTankType] = useState<TankTypeChoice>(() => {
@@ -212,6 +227,8 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
     // Save lead IMMEDIATELY as Incomplete Lead so drop-offs can be followed up by admin!
     setIsSubmitting(true);
     try {
+      const draft = getLeadDraft();
+      const effectiveIdemKey = draft?.idempotencyKey || generateIdempotencyKey();
       const partialLead = await saveOrUpdatePartialLead(capturedLeadId, {
         name: trimmedName,
         phone: normalized,
@@ -222,10 +239,20 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
         completionStep: 1,
         lastActiveStepName: 'Step 1 - Contact Captured',
         source: (sourceContext || 'Website Booking Wizard') as any
-      });
+      }, ownershipToken, effectiveIdemKey);
 
       if (partialLead?.id) {
         setCapturedLeadId(partialLead.id);
+        const token = (partialLead as any).ownershipToken || ownershipToken;
+        if (token) setOwnershipToken(token);
+        saveLeadDraft({
+          ...(getLeadDraft() || {}),
+          name: trimmedName,
+          phone: normalized,
+          leadId: partialLead.id,
+          ownershipToken: token,
+          idempotencyKey: (partialLead as any).idempotencyKey || effectiveIdemKey
+        });
       }
       trackFormStepCompleted(1, 'contact_captured', { source: sourceContext, phone: normalized });
       setStep(2);
@@ -255,7 +282,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
         serviceType: tankType === 'both' ? 'Both Water Tank Cleaning' : tankType === 'underground' ? 'Underground Water Tank Cleaning' : 'Overhead Tank Cleaning',
         completionStep: 2,
         lastActiveStepName: `Step 2 - Tank Selected (${tankType})`
-      }).catch(() => {});
+      }, ownershipToken).catch(() => {});
     }
 
     setStep(3);
@@ -306,7 +333,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
         flats: showBuildingInfo ? getEffectiveFlats() : undefined,
         completionStep: 3,
         lastActiveStepName: 'Step 3 - Capacity Details Provided'
-      }).catch(() => {});
+      }, ownershipToken).catch(() => {});
     }
 
     setStep(4);
@@ -335,7 +362,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
         landmark: landmark.trim() || undefined,
         completionStep: 4,
         lastActiveStepName: `Step 4 - Location Provided (${area})`
-      }).catch(() => {});
+      }, ownershipToken).catch(() => {});
     }
 
     setStep(5);
@@ -456,10 +483,12 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
       };
 
       // Reliably save complete lead to Supabase (and local storage fallback)
-      const savedLead = await createLead(fullLeadPayload as any, sourceContext || 'Website Booking Form');
+      // Passing capturedLeadId & ownershipToken ensures completing an incomplete lead updates the SAME database record securely!
+      const savedLead = await createLead(fullLeadPayload as any, sourceContext || 'Website Booking Form', capturedLeadId, ownershipToken);
       const leadNum = savedLead.leadNumber || 'SVC-' + Math.floor(100000 + Math.random() * 900000);
       setConfirmedLeadNumber(leadNum);
       setIsCloudSynced(Boolean(savedLead.isSyncedToCloud));
+      clearLeadDraft();
 
       trackLeadSaved(leadNum, { phone: normalizedPhone, leadNum, source: sourceContext });
 
@@ -504,17 +533,17 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
   return (
     <div 
       ref={containerRef}
-      className={`w-full bg-[#08162A]/95 backdrop-blur-xl border border-cyan-500/30 rounded-2xl sm:rounded-3xl shadow-2xl shadow-[#020A16]/90 overflow-hidden transition-all duration-300 relative border-t-2 border-t-cyan-400 ${compact ? 'p-4 sm:p-6' : 'p-6 sm:p-8 lg:p-10'}`}
+      className={`w-full bg-white border border-[#E2E8F0] rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden transition-all duration-300 relative border-t-4 border-t-[#0D9488] ${compact ? 'p-4 sm:p-6' : 'p-6 sm:p-8 lg:p-10'}`}
     >
       {/* Step Progress Indicator (Steps 1 to 5) */}
       {step <= 5 && (
-        <div className="mb-6 sm:mb-8 border-b border-cyan-900/40 pb-5">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-300 mb-2.5">
-            <span className="flex items-center gap-1.5 font-bold text-white">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+        <div className="mb-6 sm:mb-8 border-b border-[#E2E8F0] pb-5">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#64748B] mb-2.5">
+            <span className="flex items-center gap-1.5 font-bold text-[#123047]">
+              <span className="w-2 h-2 rounded-full bg-[#0D9488] animate-pulse" />
               <span>{lang === 'bn' ? `ধাপ 0${step} / 05` : `Step ${step} of 5`}</span>
             </span>
-            <span className="text-[11px] text-cyan-400 font-mono">
+            <span className="text-[11px] text-[#0D9488] font-bold font-mono">
               {step === 1 && (lang === 'bn' ? '১. নাম ও মোবাইল নম্বর' : '1. Name & Mobile')}
               {step === 2 && (lang === 'bn' ? '২. ট্যাংকের ধরন' : '2. Tank Selection')}
               {step === 3 && (lang === 'bn' ? '৩. ধারণক্ষমতা ও বিবরণ' : '3. Capacity Details')}
@@ -524,9 +553,9 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
           </div>
 
           {/* Progress bar */}
-          <div className="w-full h-1.5 bg-[#040D1A] rounded-full overflow-hidden border border-cyan-950">
+          <div className="w-full h-2 bg-[#F5FAFC] rounded-full overflow-hidden border border-[#E2E8F0]">
             <div 
-              className="h-full bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-400 transition-all duration-500 rounded-full shadow-[0_0_8px_rgba(56,189,248,0.5)]"
+              className="h-full bg-gradient-to-r from-[#0D9488] via-[#38BDF8] to-[#0D9488] transition-all duration-500 rounded-full"
               style={{ width: `${(step / 5) * 100}%` }}
             />
           </div>
@@ -535,8 +564,8 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
 
       {/* Global Error Alert Box */}
       {errorMsg && (
-        <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs sm:text-sm flex items-center gap-2.5 animate-fadeIn" role="alert">
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+        <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm flex items-center gap-2.5 animate-fadeIn" role="alert">
+          <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
           <span>{errorMsg}</span>
         </div>
       )}
@@ -548,18 +577,18 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
         <div className="space-y-6 animate-fadeIn">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#E8F5F3] text-[#0D9488] border border-[#0D9488]/30 uppercase tracking-wider">
                 {lang === 'bn' ? 'ধাপ ০১ — দ্রুত শুরু' : 'Step 1 — Quick Start'}
               </span>
-              <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
+              <span className="text-[11px] text-[#16A34A] flex items-center gap-1 font-semibold">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>{lang === 'bn' ? '১০০% তথ্য সুরক্ষিত' : '100% Privacy Protected'}</span>
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#123047]">
               {lang === 'bn' ? 'আপনার নাম ও মোবাইল নম্বর লিখুন' : 'Enter Your Name & Mobile Number'}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300">
+            <p className="text-xs sm:text-sm text-[#64748B]">
               {lang === 'bn' 
                 ? 'মাত্র ১ মিনিটে সঠিক কোটেশন পেতে আপনার নাম এবং যোগাযোগের মোবাইল নম্বর দিয়ে এগিয়ে যান।' 
                 : 'Get an instant accurate estimate in under 1 minute. We will send quotation details to your number.'}
@@ -569,11 +598,11 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
           <div className="space-y-4 pt-1">
             {/* Customer Name */}
             <div>
-              <label className="text-xs font-semibold text-white block mb-1.5">
+              <label className="text-xs font-semibold text-[#172B3A] block mb-1.5">
                 {lang === 'bn' ? 'আপনার পূর্ণ নাম *' : 'Your Full Name *'}
               </label>
               <div className="relative">
-                <User className="w-4 h-4 text-cyan-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <User className="w-4 h-4 text-[#0D9488] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={customerName}
@@ -582,16 +611,16 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                     if (nameError) setNameError('');
                   }}
                   placeholder={lang === 'bn' ? 'উদা: মোঃ আরিফুল ইসলাম' : 'e.g. John Doe / Md. Ariful Islam'}
-                  className={`w-full pl-10 pr-4 py-3 rounded-xl bg-[#06152B] border text-white text-sm focus:outline-none transition-colors ${
+                  className={`w-full pl-10 pr-4 py-3 rounded-xl bg-white border text-[#172B3A] text-sm focus:outline-none transition-colors ${
                     nameError 
-                      ? 'border-rose-500 focus:border-rose-400' 
-                      : 'border-cyan-800/60 focus:border-cyan-400'
+                      ? 'border-red-400 focus:border-red-500' 
+                      : 'border-[#E2E8F0] focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/10'
                   }`}
                   autoFocus
                 />
               </div>
               {nameError && (
-                <p className="text-xs text-rose-400 mt-1 flex items-center gap-1">
+                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3 shrink-0" />
                   <span>{nameError}</span>
                 </p>
@@ -600,11 +629,11 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
 
             {/* Mobile Number */}
             <div>
-              <label className="text-xs font-semibold text-white block mb-1.5">
+              <label className="text-xs font-semibold text-[#172B3A] block mb-1.5">
                 {lang === 'bn' ? 'মোবাইল নম্বর (১১ ডিজিট) *' : 'Mobile Number (11 Digits) *'}
               </label>
               <div className="relative">
-                <Phone className="w-4 h-4 text-emerald-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Phone className="w-4 h-4 text-[#0D9488] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="tel"
                   value={customerPhone}
@@ -613,20 +642,20 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                     if (phoneError) setPhoneError('');
                   }}
                   placeholder="01XXXXXXXXX বা +8801XXXXXXXXX"
-                  className={`w-full pl-10 pr-4 py-3 rounded-xl bg-[#06152B] border text-white text-sm focus:outline-none transition-colors ${
+                  className={`w-full pl-10 pr-4 py-3 rounded-xl bg-white border text-[#172B3A] text-sm focus:outline-none transition-colors ${
                     phoneError 
-                      ? 'border-rose-500 focus:border-rose-400' 
-                      : 'border-cyan-800/60 focus:border-cyan-400'
+                      ? 'border-red-400 focus:border-red-500' 
+                      : 'border-[#E2E8F0] focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/10'
                   }`}
                 />
               </div>
               {phoneError ? (
-                <p className="text-xs text-rose-400 mt-1 flex items-center gap-1">
+                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3 shrink-0" />
                   <span>{phoneError}</span>
                 </p>
               ) : (
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-[11px] text-[#64748B] mt-1">
                   {lang === 'bn' 
                     ? 'WhatsApp সক্রিয় নম্বর হলে কোটেশন ও ফটো পাঠানো অনেক দ্রুত হয়।' 
                     : 'WhatsApp-enabled numbers allow instant quotation photos & updates.'}
@@ -636,8 +665,8 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
           </div>
 
           {/* Privacy & Trust assurance pill */}
-          <div className="p-3 bg-cyan-950/40 border border-cyan-800/30 rounded-xl flex items-center gap-2.5 text-xs text-slate-300">
-            <Lock className="w-4 h-4 text-cyan-400 shrink-0" />
+          <div className="p-3 bg-[#F5FAFC] border border-[#E2E8F0] rounded-xl flex items-center gap-2.5 text-xs text-[#64748B]">
+            <Lock className="w-4 h-4 text-[#0D9488] shrink-0" />
             <span>
               {lang === 'bn' 
                 ? 'আপনার তথ্যের শতভাগ গোপনীয়তা নিশ্চিত করা হয়। কোনো প্রকার স্প্যাম কল দেওয়া হবে না।' 
@@ -651,7 +680,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
               type="button"
               onClick={handleStep1Submit}
               disabled={isSubmitting}
-              className="w-full min-h-[50px] px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xl shadow-cyan-600/30 active:scale-[0.99] disabled:opacity-50"
+              className="w-full min-h-[50px] px-6 py-3.5 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-[#0D9488]/20 active:scale-[0.99] disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
@@ -676,17 +705,17 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
         <div className="space-y-6 animate-fadeIn">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-[#0D9488] uppercase tracking-wider block">
                 {lang === 'bn' ? 'ধাপ ০২ — ট্যাংক নির্বাচন' : 'Step 2 — Tank Selection'}
               </span>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-[#64748B]">
                 ({customerName.trim()})
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#123047]">
               {lang === 'bn' ? 'আপনার কোন ধরনের ট্যাংক পরিষ্কার করতে চান?' : 'Which tank do you need cleaned?'}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300">
+            <p className="text-xs sm:text-sm text-[#64748B]">
               {lang === 'bn' ? 'সঠিক অপশনটি নির্বাচন করুন' : 'Select the appropriate tank option below'}
             </p>
           </div>
@@ -703,25 +732,25 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
               }}
               className={`p-4 sm:p-5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
                 tankType === 'overhead'
-                  ? 'bg-cyan-950/60 border-cyan-400 ring-2 ring-cyan-400/50 shadow-lg shadow-cyan-950/50'
-                  : 'bg-[#06152B] hover:bg-[#081B38] border-cyan-900/50 hover:border-cyan-700/60'
+                  ? 'bg-[#E8F5F3] border-[#0D9488] ring-2 ring-[#0D9488]/30 shadow-md'
+                  : 'bg-[#F5FAFC] hover:bg-white border-[#E2E8F0] hover:border-[#0D9488]/50'
               }`}
             >
               <div>
-                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-400 flex items-center justify-center mb-3">
+                <div className="w-10 h-10 rounded-xl bg-white border border-[#E2E8F0] text-[#0D9488] flex items-center justify-center mb-3 shadow-sm">
                   <Building className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-white mb-1">
+                <h3 className="text-sm sm:text-base font-bold text-[#123047] mb-1">
                   {lang === 'bn' ? 'ওভারহেড ট্যাংক' : 'Overhead Tank'}
                 </h3>
-                <p className="text-xs text-slate-300 leading-snug">
+                <p className="text-xs text-[#64748B] leading-snug">
                   {lang === 'bn' ? 'ছাদের ওপরের পিভিসি বা আরসিসি পানির ট্যাংক' : 'Rooftop PVC or RCC overhead tank'}
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-cyan-900/40 flex items-center justify-between text-xs">
-                <span className="text-cyan-400 font-semibold">{lang === 'bn' ? 'ছাদের ট্যাংক' : 'Rooftop'}</span>
-                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${tankType === 'overhead' ? 'bg-cyan-400 border-cyan-400 text-[#040D1A]' : 'border-slate-600'}`}>
+              <div className="mt-4 pt-3 border-t border-[#E2E8F0] flex items-center justify-between text-xs">
+                <span className="text-[#0D9488] font-bold">{lang === 'bn' ? 'ছাদের ট্যাংক' : 'Rooftop'}</span>
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${tankType === 'overhead' ? 'bg-[#0D9488] border-[#0D9488] text-white' : 'border-[#CBD5E1]'}`}>
                   {tankType === 'overhead' && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
               </div>
@@ -736,25 +765,25 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
               }}
               className={`p-4 sm:p-5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
                 tankType === 'underground'
-                  ? 'bg-cyan-950/60 border-cyan-400 ring-2 ring-cyan-400/50 shadow-lg shadow-cyan-950/50'
-                  : 'bg-[#06152B] hover:bg-[#081B38] border-cyan-900/50 hover:border-cyan-700/60'
+                  ? 'bg-[#E8F5F3] border-[#0D9488] ring-2 ring-[#0D9488]/30 shadow-md'
+                  : 'bg-[#F5FAFC] hover:bg-white border-[#E2E8F0] hover:border-[#0D9488]/50'
               }`}
             >
               <div>
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 flex items-center justify-center mb-3">
+                <div className="w-10 h-10 rounded-xl bg-white border border-[#E2E8F0] text-[#0D9488] flex items-center justify-center mb-3 shadow-sm">
                   <Droplets className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-white mb-1">
+                <h3 className="text-sm sm:text-base font-bold text-[#123047] mb-1">
                   {lang === 'bn' ? 'আন্ডারগ্রাউন্ড ট্যাংক' : 'Underground Tank'}
                 </h3>
-                <p className="text-xs text-slate-300 leading-snug">
+                <p className="text-xs text-[#64748B] leading-snug">
                   {lang === 'bn' ? 'নিচতলা বা ভূগর্ভস্থ রিজার্ভার ট্যাংক' : 'Ground floor or underground reserve'}
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-cyan-900/40 flex items-center justify-between text-xs">
-                <span className="text-emerald-400 font-semibold">{lang === 'bn' ? 'ভূগর্ভস্থ' : 'Underground'}</span>
-                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${tankType === 'underground' ? 'bg-cyan-400 border-cyan-400 text-[#040D1A]' : 'border-slate-600'}`}>
+              <div className="mt-4 pt-3 border-t border-[#E2E8F0] flex items-center justify-between text-xs">
+                <span className="text-[#0D9488] font-bold">{lang === 'bn' ? 'ভূগর্ভস্থ' : 'Underground'}</span>
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${tankType === 'underground' ? 'bg-[#0D9488] border-[#0D9488] text-white' : 'border-[#CBD5E1]'}`}>
                   {tankType === 'underground' && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
               </div>
@@ -769,29 +798,29 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
               }}
               className={`p-4 sm:p-5 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer relative overflow-hidden ${
                 tankType === 'both'
-                  ? 'bg-cyan-950/60 border-cyan-400 ring-2 ring-cyan-400/50 shadow-lg shadow-cyan-950/50'
-                  : 'bg-[#06152B] hover:bg-[#081B38] border-cyan-900/50 hover:border-cyan-700/60'
+                  ? 'bg-[#E8F5F3] border-[#0D9488] ring-2 ring-[#0D9488]/30 shadow-md'
+                  : 'bg-[#F5FAFC] hover:bg-white border-[#E2E8F0] hover:border-[#0D9488]/50'
               }`}
             >
-              <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F59E0B] text-white">
                 {lang === 'bn' ? 'জনপ্রিয় প্যাকেজ' : 'Best Value'}
               </div>
 
               <div>
-                <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/40 text-purple-400 flex items-center justify-center mb-3">
+                <div className="w-10 h-10 rounded-xl bg-white border border-[#E2E8F0] text-[#0D9488] flex items-center justify-center mb-3 shadow-sm">
                   <Layers className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-white mb-1">
+                <h3 className="text-sm sm:text-base font-bold text-[#123047] mb-1">
                   {lang === 'bn' ? 'উভয় ট্যাংক (ছাদ + নিচ)' : 'Both Tanks'}
                 </h3>
-                <p className="text-xs text-slate-300 leading-snug">
+                <p className="text-xs text-[#64748B] leading-snug">
                   {lang === 'bn' ? 'ওভারহেড ও আন্ডারগ্রাউন্ড যৌথ ক্লিনিং' : 'Full overhead + underground system'}
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-cyan-900/40 flex items-center justify-between text-xs">
-                <span className="text-purple-400 font-semibold">{lang === 'bn' ? 'কম্বো সার্ভিস' : 'Combo'}</span>
-                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${tankType === 'both' ? 'bg-cyan-400 border-cyan-400 text-[#040D1A]' : 'border-slate-600'}`}>
+              <div className="mt-4 pt-3 border-t border-[#E2E8F0] flex items-center justify-between text-xs">
+                <span className="text-[#0D9488] font-bold">{lang === 'bn' ? 'কম্বো সার্ভিস' : 'Combo'}</span>
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${tankType === 'both' ? 'bg-[#0D9488] border-[#0D9488] text-white' : 'border-[#CBD5E1]'}`}>
                   {tankType === 'both' && <Check className="w-3 h-3 stroke-[3]" />}
                 </div>
               </div>
@@ -806,7 +835,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                 setErrorMsg('');
                 setStep(1);
               }}
-              className="px-4 py-2.5 rounded-xl border border-cyan-900/60 bg-[#06152B] hover:bg-[#0A2244] text-slate-300 hover:text-white text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-[#E2E8F0] bg-[#F5FAFC] hover:bg-white text-[#123047] text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>{lang === 'bn' ? 'আগের ধাপ' : 'Back'}</span>
@@ -815,7 +844,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
             <button
               type="button"
               onClick={handleStep2Next}
-              className="min-h-[46px] px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-[#040D1A] font-extrabold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-cyan-500/20"
+              className="min-h-[46px] px-6 py-2.5 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white font-extrabold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-[#0D9488]/20"
             >
               <span>{lang === 'bn' ? 'পরবর্তী ধাপ' : 'Next Step'}</span>
               <ArrowRight className="w-4 h-4" />
@@ -830,33 +859,33 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
       {step === 3 && (
         <div className="space-y-6 animate-fadeIn">
           <div className="space-y-1.5">
-            <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider block">
+            <span className="text-xs font-bold text-[#0D9488] uppercase tracking-wider block">
               {lang === 'bn' ? 'ধাপ ০৩ — ধারণক্ষমতা ও বিবরণ' : 'Step 3 — Tank Capacity'}
             </span>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#123047]">
               {lang === 'bn' ? 'ট্যাংকের আনুমানিক ধারণক্ষমতা কত?' : 'Estimated Tank Capacity?'}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300">
+            <p className="text-xs sm:text-sm text-[#64748B]">
               {lang === 'bn' ? 'ধারণক্ষমতা জানা না থাকলে "জানা নেই" বেছে নিন।' : 'If unsure, select "I Don\'t Know" to estimate based on floors.'}
             </p>
           </div>
 
           {/* Section A: Overhead Tank Capacity */}
           {(tankType === 'overhead' || tankType === 'both') && (
-            <div className={`space-y-3 bg-[#06152B] p-4 sm:p-5 rounded-2xl border transition-all ${
+            <div className={`space-y-3 bg-[#F5FAFC] p-4 sm:p-5 rounded-2xl border transition-all ${
               isUndergroundUnknown && tankType === 'both' 
-                ? 'border-cyan-900/40 bg-[#06152B]/70' 
-                : 'border-cyan-900/60'
+                ? 'border-[#E2E8F0] bg-[#F5FAFC]/80' 
+                : 'border-[#E2E8F0]'
             }`}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Building className="w-4 h-4 text-cyan-400" />
-                  <h3 className="text-sm font-bold text-white">
+                  <Building className="w-4 h-4 text-[#0D9488]" />
+                  <h3 className="text-sm font-bold text-[#123047]">
                     {lang === 'bn' ? 'ওভারহেড (ছাদের) ট্যাংকের সাইজ:' : 'Overhead (Rooftop) Tank Size:'}
                   </h3>
                 </div>
                 {isUndergroundUnknown && tankType === 'both' && (
-                  <span className="text-[11px] font-semibold text-amber-300 bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-800/50">
+                  <span className="text-[11px] font-semibold text-[#D97706] bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
                     {lang === 'bn' ? 'আন্ডারগ্রাউন্ডে "জানা নাই" সিলেক্ট থাকায় এটি আর পূরণ করা লাগবে না' : 'Optional because underground is unknown'}
                   </span>
                 )}
@@ -877,8 +906,8 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                     placeholder={lang === 'bn' ? 'হাতে ট্যাংকের সাইজ লিখুন (যেমন: ১,০০০ বা ২০০০ লিটার)' : 'Write tank size (e.g. 1000 or 2000 L)'}
                     className={`w-full px-4 py-2.5 rounded-xl border text-xs sm:text-sm transition-all focus:outline-none ${
                       isOverheadUnknown
-                        ? 'bg-slate-900 text-slate-400 border-slate-800 cursor-not-allowed opacity-80'
-                        : 'bg-[#081B38] text-white border-cyan-800/80 focus:border-cyan-400 placeholder-slate-500'
+                        ? 'bg-slate-100 text-slate-500 border-slate-200 cursor-not-allowed opacity-80'
+                        : 'bg-white text-[#172B3A] border-[#E2E8F0] focus:border-[#0D9488] placeholder-[#64748B]/50'
                     }`}
                   />
                 </div>
@@ -895,12 +924,12 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                   }}
                   className={`px-4 py-2.5 rounded-xl border text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
                     isOverheadUnknown
-                      ? 'bg-amber-500 text-slate-950 border-amber-400 font-extrabold shadow-md shadow-amber-500/20'
-                      : 'bg-[#081B38] text-slate-300 border-cyan-900/80 hover:bg-[#0B254A] hover:text-white'
+                      ? 'bg-[#F59E0B] text-white border-amber-500 font-extrabold shadow-sm'
+                      : 'bg-white text-[#64748B] border-[#E2E8F0] hover:border-[#0D9488] hover:text-[#123047]'
                   }`}
                 >
                   <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] font-bold ${
-                    isOverheadUnknown ? 'border-slate-950 bg-slate-950 text-white' : 'border-slate-400'
+                    isOverheadUnknown ? 'border-white bg-white text-[#F59E0B]' : 'border-[#CBD5E1]'
                   }`}>
                     {isOverheadUnknown ? '✓' : ''}
                   </span>
@@ -912,20 +941,20 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
 
           {/* Section B: Underground Tank Capacity */}
           {(tankType === 'underground' || tankType === 'both') && (
-            <div className={`space-y-3 bg-[#06152B] p-4 sm:p-5 rounded-2xl border transition-all ${
+            <div className={`space-y-3 bg-[#F5FAFC] p-4 sm:p-5 rounded-2xl border transition-all ${
               isOverheadUnknown && tankType === 'both' 
-                ? 'border-cyan-900/40 bg-[#06152B]/70' 
-                : 'border-cyan-900/60'
+                ? 'border-[#E2E8F0] bg-[#F5FAFC]/80' 
+                : 'border-[#E2E8F0]'
             }`}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Droplets className="w-4 h-4 text-emerald-400" />
-                  <h3 className="text-sm font-bold text-white">
+                  <Droplets className="w-4 h-4 text-[#0D9488]" />
+                  <h3 className="text-sm font-bold text-[#123047]">
                     {lang === 'bn' ? 'আন্ডারগ্রাউন্ড রিজার্ভার ট্যাংকের সাইজ:' : 'Underground Reservoir Size:'}
                   </h3>
                 </div>
                 {isOverheadUnknown && tankType === 'both' && (
-                  <span className="text-[11px] font-semibold text-amber-300 bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-800/50">
+                  <span className="text-[11px] font-semibold text-[#D97706] bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
                     {lang === 'bn' ? 'ওভারহেডে "জানা নাই" সিলেক্ট থাকায় এটি আর পূরণ করা লাগবে না' : 'Optional because overhead is unknown'}
                   </span>
                 )}
@@ -946,8 +975,8 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                     placeholder={lang === 'bn' ? 'হাতে ট্যাংকের সাইজ লিখুন (যেমন: ৫,০০০ বা ১০০০০ লিটার)' : 'Write reservoir size (e.g. 5000 or 10000 L)'}
                     className={`w-full px-4 py-2.5 rounded-xl border text-xs sm:text-sm transition-all focus:outline-none ${
                       isUndergroundUnknown
-                        ? 'bg-slate-900 text-slate-400 border-slate-800 cursor-not-allowed opacity-80'
-                        : 'bg-[#081B38] text-white border-cyan-800/80 focus:border-cyan-400 placeholder-slate-500'
+                        ? 'bg-slate-100 text-slate-500 border-slate-200 cursor-not-allowed opacity-80'
+                        : 'bg-white text-[#172B3A] border-[#E2E8F0] focus:border-[#0D9488] placeholder-[#64748B]/50'
                     }`}
                   />
                 </div>
@@ -964,12 +993,12 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                   }}
                   className={`px-4 py-2.5 rounded-xl border text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
                     isUndergroundUnknown
-                      ? 'bg-amber-500 text-slate-950 border-amber-400 font-extrabold shadow-md shadow-amber-500/20'
-                      : 'bg-[#081B38] text-slate-300 border-cyan-900/80 hover:bg-[#0B254A] hover:text-white'
+                      ? 'bg-[#F59E0B] text-white border-amber-500 font-extrabold shadow-sm'
+                      : 'bg-white text-[#64748B] border-[#E2E8F0] hover:border-[#0D9488] hover:text-[#123047]'
                   }`}
                 >
                   <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] font-bold ${
-                    isUndergroundUnknown ? 'border-slate-950 bg-slate-950 text-white' : 'border-slate-400'
+                    isUndergroundUnknown ? 'border-white bg-white text-[#F59E0B]' : 'border-[#CBD5E1]'
                   }`}>
                     {isUndergroundUnknown ? '✓' : ''}
                   </span>
@@ -979,21 +1008,21 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
             </div>
           )}
 
-          {/* Section C: ভবনের বিবরণ (ক্যাপাসিটি নির্ণয়ের জন্য) — ভবনের তলা সংখ্যা: হাতে দিবে, মোট ফ্ল্যাট সংখ্যা: হাতে দিবে */}
+          {/* Section C: ভবনের বিবরণ */}
           <div className={`space-y-4 p-4 sm:p-5 rounded-2xl border transition-all ${
             hasAnyUnknown 
-              ? 'bg-cyan-950/40 border-cyan-500/60 ring-1 ring-cyan-500/30' 
-              : 'bg-[#06152B] border-cyan-900/50'
+              ? 'bg-[#E8F5F3] border-[#0D9488]/40 ring-1 ring-[#0D9488]/20' 
+              : 'bg-[#F5FAFC] border-[#E2E8F0]'
           }`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white">
+                <Building2 className="w-4 h-4 text-[#0D9488]" />
+                <h3 className="text-sm font-bold text-[#123047]">
                   {lang === 'bn' ? 'ভবনের বিবরণ (ক্যাপাসিটি নির্ণয়ের জন্য):' : 'Building Info (for estimation):'}
                 </h3>
               </div>
               {hasAnyUnknown && (
-                <span className="text-[11px] font-bold text-cyan-300 bg-cyan-900/60 px-2.5 py-0.5 rounded-full border border-cyan-700/50">
+                <span className="text-[11px] font-bold text-[#0D9488] bg-white px-2.5 py-0.5 rounded-full border border-[#0D9488]/30">
                   {lang === 'bn' ? 'ট্যাংকের সাইজ অজানা থাকায় এটি আবশ্যক' : 'Required for capacity calculation'}
                 </span>
               )}
@@ -1001,8 +1030,8 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-slate-300 block mb-1 font-semibold">
-                  {lang === 'bn' ? 'ভবনের তলা সংখ্যা:' : 'Total Floors:'} {hasAnyUnknown && <span className="text-rose-400">*</span>}
+                <label className="text-xs text-[#172B3A] block mb-1 font-semibold">
+                  {lang === 'bn' ? 'ভবনের তলা সংখ্যা:' : 'Total Floors:'} {hasAnyUnknown && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="number"
@@ -1015,13 +1044,13 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                     setErrorMsg('');
                   }}
                   placeholder={lang === 'bn' ? 'হাতে তলা লিখুন (যেমন: ৬)' : 'Enter floors (e.g. 6)'}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#081B38] border border-cyan-900 text-white text-xs sm:text-sm focus:outline-none focus:border-cyan-400 placeholder-slate-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E2E8F0] text-[#172B3A] text-xs sm:text-sm focus:outline-none focus:border-[#0D9488] placeholder-[#64748B]/50"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-300 block mb-1 font-semibold">
-                  {lang === 'bn' ? 'মোট ফ্ল্যাট সংখ্যা:' : 'Total Flats:'} {hasAnyUnknown && <span className="text-rose-400">*</span>}
+                <label className="text-xs text-[#172B3A] block mb-1 font-semibold">
+                  {lang === 'bn' ? 'মোট ফ্ল্যাট সংখ্যা:' : 'Total Flats:'} {hasAnyUnknown && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="number"
@@ -1034,7 +1063,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                     setErrorMsg('');
                   }}
                   placeholder={lang === 'bn' ? 'হাতে মোট ফ্ল্যাট লিখুন (যেমন: ১২)' : 'Enter flats (e.g. 12)'}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#081B38] border border-cyan-900 text-white text-xs sm:text-sm focus:outline-none focus:border-cyan-400 placeholder-slate-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#E2E8F0] text-[#172B3A] text-xs sm:text-sm focus:outline-none focus:border-[#0D9488] placeholder-[#64748B]/50"
                 />
               </div>
             </div>
@@ -1048,7 +1077,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                 setErrorMsg('');
                 setStep(2);
               }}
-              className="px-4 py-2.5 rounded-xl border border-cyan-900/60 bg-[#06152B] hover:bg-[#0A2244] text-slate-300 hover:text-white text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-[#E2E8F0] bg-[#F5FAFC] hover:bg-white text-[#123047] text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>{lang === 'bn' ? 'আগের ধাপ' : 'Back'}</span>
@@ -1057,7 +1086,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
             <button
               type="button"
               onClick={handleStep3Next}
-              className="min-h-[46px] px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-[#040D1A] font-extrabold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-cyan-500/20"
+              className="min-h-[46px] px-6 py-2.5 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white font-extrabold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-[#0D9488]/20"
             >
               <span>{lang === 'bn' ? 'পরবর্তী ধাপ' : 'Next Step'}</span>
               <ArrowRight className="w-4 h-4" />
@@ -1072,20 +1101,20 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
       {step === 4 && (
         <div className="space-y-6 animate-fadeIn">
           <div className="space-y-1.5">
-            <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider block">
+            <span className="text-xs font-bold text-[#0D9488] uppercase tracking-wider block">
               {lang === 'bn' ? 'ধাপ ০৪ — এলাকা ও ঠিকানা' : 'Step 4 — Service Area'}
             </span>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#123047]">
               {lang === 'bn' ? 'আপনার এলাকা ও ঠিকানা দিন' : 'Enter Your Location in Dhaka'}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300">
+            <p className="text-xs sm:text-sm text-[#64748B]">
               {lang === 'bn' ? 'ঢাকায় আমাদের মোবাইল টিম দ্রুত পৌঁছানোর জন্য সঠিক এলাকা নির্বাচন করুন।' : 'We provide water tank cleaning across all zones in Dhaka.'}
             </p>
           </div>
 
           {/* Quick Select Area Chips */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-white block">
+            <label className="text-xs font-semibold text-[#172B3A] block">
               {lang === 'bn' ? 'জনপ্রিয় এলাকা নির্বাচন করুন:' : 'Select Area:'}
             </label>
             <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -1100,8 +1129,8 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                   }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                     selectedArea === area
-                      ? 'bg-cyan-500 text-[#040D1A] font-bold shadow-md shadow-cyan-500/20'
-                      : 'bg-[#06152B] text-slate-300 hover:bg-[#092040] border border-cyan-900/60'
+                      ? 'bg-[#0D9488] text-white font-bold shadow-sm'
+                      : 'bg-[#F5FAFC] text-[#172B3A] hover:bg-white border border-[#E2E8F0]'
                   }`}
                 >
                   {area}
@@ -1115,8 +1144,8 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                 }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   selectedArea === 'অন্যান্য'
-                    ? 'bg-cyan-500 text-[#040D1A] font-bold'
-                    : 'bg-[#06152B] text-slate-300 hover:bg-[#092040] border border-cyan-900/60'
+                    ? 'bg-[#0D9488] text-white font-bold'
+                    : 'bg-[#F5FAFC] text-[#172B3A] hover:bg-white border border-[#E2E8F0]'
                 }`}
               >
                 {lang === 'bn' ? 'অন্যান্য এলাকা' : 'Other Area'}
@@ -1127,11 +1156,11 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
           {/* Custom Area Input */}
           {(selectedArea === 'অন্যান্য' || !selectedArea) && (
             <div>
-              <label className="text-xs text-slate-300 block mb-1">
+              <label className="text-xs text-[#172B3A] block mb-1">
                 {lang === 'bn' ? 'আপনার এলাকার নাম লিখুন *' : 'Enter Area Name *'}
               </label>
               <div className="relative">
-                <MapPin className="w-4 h-4 text-cyan-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <MapPin className="w-4 h-4 text-[#0D9488] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={customArea}
@@ -1140,7 +1169,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                     setErrorMsg('');
                   }}
                   placeholder={lang === 'bn' ? 'উদা: বসুন্ধরা আবাসিক, মিরপুর-১০, উত্তরা সেক্টর-৪' : 'e.g. Uttara Sector 7, Bashundhara R/A'}
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#06152B] border border-cyan-900 text-white text-xs focus:outline-none focus:border-cyan-400"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-[#E2E8F0] text-[#172B3A] text-xs focus:outline-none focus:border-[#0D9488]"
                 />
               </div>
             </div>
@@ -1149,7 +1178,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
           {/* Detailed Address Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div>
-              <label className="text-xs text-slate-300 block mb-1">
+              <label className="text-xs text-[#172B3A] block mb-1">
                 {lang === 'bn' ? 'বাসা / হোল্ডিং নং (ঐচ্ছিক):' : 'House / Holding No (Optional):'}
               </label>
               <input
@@ -1157,12 +1186,12 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                 value={houseNumber}
                 onChange={(e) => setHouseNumber(e.target.value)}
                 placeholder={lang === 'bn' ? 'বাসা নং' : 'House #'}
-                className="w-full px-3 py-2 rounded-xl bg-[#06152B] border border-cyan-900/60 text-white text-xs focus:outline-none focus:border-cyan-400"
+                className="w-full px-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-[#172B3A] text-xs focus:outline-none focus:border-[#0D9488]"
               />
             </div>
 
             <div>
-              <label className="text-xs text-slate-300 block mb-1">
+              <label className="text-xs text-[#172B3A] block mb-1">
                 {lang === 'bn' ? 'রোড / ব্লক / লেন (ঐচ্ছিক):' : 'Road / Block (Optional):'}
               </label>
               <input
@@ -1170,12 +1199,12 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                 value={roadNumber}
                 onChange={(e) => setRoadNumber(e.target.value)}
                 placeholder={lang === 'bn' ? 'রোড / ব্লক নং' : 'Road # / Block'}
-                className="w-full px-3 py-2 rounded-xl bg-[#06152B] border border-cyan-900/60 text-white text-xs focus:outline-none focus:border-cyan-400"
+                className="w-full px-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-[#172B3A] text-xs focus:outline-none focus:border-[#0D9488]"
               />
             </div>
 
             <div>
-              <label className="text-xs text-slate-300 block mb-1">
+              <label className="text-xs text-[#172B3A] block mb-1">
                 {lang === 'bn' ? 'থানা (ঐচ্ছিক):' : 'Thana (Optional):'}
               </label>
               <input
@@ -1183,12 +1212,12 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                 value={thana}
                 onChange={(e) => setThana(e.target.value)}
                 placeholder={lang === 'bn' ? 'থানা' : 'Thana'}
-                className="w-full px-3 py-2 rounded-xl bg-[#06152B] border border-cyan-900/60 text-white text-xs focus:outline-none focus:border-cyan-400"
+                className="w-full px-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-[#172B3A] text-xs focus:outline-none focus:border-[#0D9488]"
               />
             </div>
 
             <div>
-              <label className="text-xs text-slate-300 block mb-1">
+              <label className="text-xs text-[#172B3A] block mb-1">
                 {lang === 'bn' ? 'পোস্টাল কোড (ঐচ্ছিক):' : 'Postal Code (Optional):'}
               </label>
               <input
@@ -1196,12 +1225,12 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                 value={postcode}
                 onChange={(e) => setPostcode(e.target.value)}
                 placeholder={lang === 'bn' ? 'যেমন: ১২১২, ১২৩০' : 'e.g. 1212, 1230'}
-                className="w-full px-3 py-2 rounded-xl bg-[#06152B] border border-cyan-900/60 text-white text-xs focus:outline-none focus:border-cyan-400"
+                className="w-full px-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-[#172B3A] text-xs focus:outline-none focus:border-[#0D9488]"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="text-xs text-slate-300 block mb-1">
+              <label className="text-xs text-[#172B3A] block mb-1">
                 {lang === 'bn' ? 'ল্যান্ডমার্ক বা নিকটবর্তী স্থান (ঐচ্ছিক):' : 'Landmark (Optional):'}
               </label>
               <input
@@ -1209,7 +1238,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                 value={landmark}
                 onChange={(e) => setLandmark(e.target.value)}
                 placeholder={lang === 'bn' ? 'মসজিদের পাশে / স্কুলের বিপরীতে' : 'Near Mosque / Opposite School'}
-                className="w-full px-3 py-2 rounded-xl bg-[#06152B] border border-cyan-900/60 text-white text-xs focus:outline-none focus:border-cyan-400"
+                className="w-full px-3 py-2 rounded-xl bg-white border border-[#E2E8F0] text-[#172B3A] text-xs focus:outline-none focus:border-[#0D9488]"
               />
             </div>
           </div>
@@ -1222,7 +1251,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                 setErrorMsg('');
                 setStep(3);
               }}
-              className="px-4 py-2.5 rounded-xl border border-cyan-900/60 bg-[#06152B] hover:bg-[#0A2244] text-slate-300 hover:text-white text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-[#E2E8F0] bg-[#F5FAFC] hover:bg-white text-[#123047] text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>{lang === 'bn' ? 'আগের ধাপ' : 'Back'}</span>
@@ -1231,7 +1260,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
             <button
               type="button"
               onClick={handleStep4Next}
-              className="min-h-[46px] px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-[#040D1A] font-extrabold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-cyan-500/20"
+              className="min-h-[46px] px-6 py-2.5 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white font-extrabold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-[#0D9488]/20"
             >
               <span>{lang === 'bn' ? 'পরবর্তী ধাপ' : 'Next Step'}</span>
               <ArrowRight className="w-4 h-4" />
@@ -1246,13 +1275,13 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
       {step === 5 && (
         <div className="space-y-6 animate-fadeIn">
           <div className="space-y-1.5">
-            <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider block">
+            <span className="text-xs font-bold text-[#0D9488] uppercase tracking-wider block">
               {lang === 'bn' ? 'ধাপ ০৫ — অতিরিক্ত সেবা ও নিশ্চিতকরণ' : 'Step 5 — Add-ons & Review'}
             </span>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#123047]">
               {lang === 'bn' ? 'আপনার রিকোয়েস্ট পর্যালোচনা করুন' : 'Review & Confirm Booking'}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300">
+            <p className="text-xs sm:text-sm text-[#64748B]">
               {lang === 'bn' 
                 ? 'ঐচ্ছিক সেবা নির্বাচন করুন এবং পছন্দমতো শিডিউলের তারিখ দিন।' 
                 : 'Select any add-on services and confirm your booking request.'}
@@ -1261,7 +1290,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
 
           {/* Optional Additional Services */}
           <div className="space-y-3">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block">
+            <label className="text-xs font-bold uppercase tracking-wider text-[#64748B] block">
               {lang === 'bn' ? 'অতিরিক্ত সেবা যোগ করুন (ঐচ্ছিক):' : 'Optional Additional Services:'}
             </label>
 
@@ -1272,19 +1301,19 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                 onClick={() => setPipelineCleaning(!pipelineCleaning)}
                 className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
                   pipelineCleaning
-                    ? 'bg-cyan-950/60 border-cyan-400 ring-1 ring-cyan-400'
-                    : 'bg-[#06152B] hover:bg-[#092040] border-cyan-900/60'
+                    ? 'bg-[#E8F5F3] border-[#0D9488] ring-1 ring-[#0D9488]'
+                    : 'bg-[#F5FAFC] hover:bg-white border-[#E2E8F0]'
                 }`}
               >
-                <div className={`w-5 h-5 rounded-md border shrink-0 mt-0.5 flex items-center justify-center ${pipelineCleaning ? 'bg-cyan-400 border-cyan-400 text-[#040D1A]' : 'border-slate-600'}`}>
+                <div className={`w-5 h-5 rounded-md border shrink-0 mt-0.5 flex items-center justify-center ${pipelineCleaning ? 'bg-[#0D9488] border-[#0D9488] text-white' : 'border-[#CBD5E1]'}`}>
                   {pipelineCleaning && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-                    <Wrench className="w-3.5 h-3.5 text-cyan-400" />
+                  <h4 className="text-xs sm:text-sm font-bold text-[#123047] flex items-center gap-1.5">
+                    <Wrench className="w-3.5 h-3.5 text-[#0D9488]" />
                     <span>{lang === 'bn' ? 'পানির পাইপলাইন পরিষ্কার' : 'Pipeline Cleaning'}</span>
                   </h4>
-                  <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">
+                  <p className="text-[11px] text-[#64748B] mt-0.5 leading-snug">
                     {lang === 'bn' ? 'দেয়াল না ভেঙে লাইনের আয়রন ও মরিচা ফ্লাশিং' : 'Non-invasive hydro-pulse descaling'}
                   </p>
                 </div>
@@ -1296,19 +1325,19 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                 onClick={() => setAnnualContract(!annualContract)}
                 className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
                   annualContract
-                    ? 'bg-emerald-950/60 border-emerald-400 ring-1 ring-emerald-400'
-                    : 'bg-[#06152B] hover:bg-[#092040] border-cyan-900/60'
+                    ? 'bg-[#E8F5F3] border-[#0D9488] ring-1 ring-[#0D9488]'
+                    : 'bg-[#F5FAFC] hover:bg-white border-[#E2E8F0]'
                 }`}
               >
-                <div className={`w-5 h-5 rounded-md border shrink-0 mt-0.5 flex items-center justify-center ${annualContract ? 'bg-emerald-400 border-emerald-400 text-[#040D1A]' : 'border-slate-600'}`}>
+                <div className={`w-5 h-5 rounded-md border shrink-0 mt-0.5 flex items-center justify-center ${annualContract ? 'bg-[#0D9488] border-[#0D9488] text-white' : 'border-[#CBD5E1]'}`}>
                   {annualContract && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-                    <CalendarCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <h4 className="text-xs sm:text-sm font-bold text-[#123047] flex items-center gap-1.5">
+                    <CalendarCheck className="w-3.5 h-3.5 text-[#0D9488]" />
                     <span>{lang === 'bn' ? 'বার্ষিক চুক্তি (AMC Package)' : 'Annual Contract (AMC)'}</span>
                   </h4>
-                  <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">
+                  <p className="text-[11px] text-[#64748B] mt-0.5 leading-snug">
                     {lang === 'bn' ? 'বছরে ২-৪ বার নিয়মিত পরিষ্কারে বিশেষ ছাড়' : 'Year-round scheduled maintenance'}
                   </p>
                 </div>
@@ -1317,26 +1346,26 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
           </div>
 
           {/* Preferred Date & Time (Optional) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#06152B] p-4 rounded-xl border border-cyan-900/50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#F5FAFC] p-4 rounded-xl border border-[#E2E8F0]">
             <div>
-              <label className="text-xs text-slate-300 block mb-1">
+              <label className="text-xs text-[#172B3A] block mb-1 font-semibold">
                 {lang === 'bn' ? 'পছন্দের তারিখ (ঐচ্ছিক):' : 'Preferred Date (Optional):'}
               </label>
               <input
                 type="date"
                 value={preferredDate}
                 onChange={(e) => setPreferredDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-[#081B38] border border-cyan-900 text-white text-xs focus:outline-none focus:border-cyan-400"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-[#E2E8F0] text-[#172B3A] text-xs focus:outline-none focus:border-[#0D9488]"
               />
             </div>
             <div>
-              <label className="text-xs text-slate-300 block mb-1">
+              <label className="text-xs text-[#172B3A] block mb-1 font-semibold">
                 {lang === 'bn' ? 'পছন্দের সময় (ঐচ্ছিক):' : 'Preferred Time (Optional):'}
               </label>
               <select
                 value={preferredTime}
                 onChange={(e) => setPreferredTime(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-[#081B38] border border-cyan-900 text-white text-xs focus:outline-none focus:border-cyan-400"
+                className="w-full px-3 py-2 rounded-lg bg-white border border-[#E2E8F0] text-[#172B3A] text-xs focus:outline-none focus:border-[#0D9488]"
               >
                 <option value="">{lang === 'bn' ? 'যেকোনো সময় (Flexible)' : 'Anytime (Flexible)'}</option>
                 <option value="Morning (8:00 AM - 12:00 PM)">{lang === 'bn' ? 'সকাল (৮:০০ - ১২:০০)' : 'Morning (8am - 12pm)'}</option>
@@ -1347,41 +1376,41 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
           </div>
 
           {/* Quick Summary Card & Estimated Price */}
-          <div className="bg-[#06152B] p-4 sm:p-5 rounded-2xl border border-cyan-900/60 space-y-2.5">
+          <div className="bg-[#F5FAFC] p-4 sm:p-5 rounded-2xl border border-[#E2E8F0] space-y-2.5">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
+              <h4 className="text-xs font-bold text-[#0D9488] uppercase tracking-wider">
                 {lang === 'bn' ? 'সার্ভিস রিকোয়েস্ট সারসংক্ষেপ:' : 'Quotation Summary:'}
               </h4>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-[#64748B] font-medium">
                 {customerName.trim()} ({normalizeBangladeshiPhone(customerPhone)})
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-300">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#172B3A]">
               <div>
-                <span className="text-cyan-500 mr-1">•</span>
-                <span className="text-white font-medium">{lang === 'bn' ? 'ট্যাংক:' : 'Tank:'}</span>{' '}
+                <span className="text-[#0D9488] mr-1">•</span>
+                <span className="font-semibold text-[#123047]">{lang === 'bn' ? 'ট্যাংক:' : 'Tank:'}</span>{' '}
                 {tankType === 'overhead' ? 'ওভারহেড ট্যাংক' : tankType === 'underground' ? 'আন্ডারগ্রাউন্ড রিজার্ভ ট্যাংক' : 'উভয় ট্যাংক'}
               </div>
               <div>
-                <span className="text-cyan-500 mr-1">•</span>
-                <span className="text-white font-medium">{lang === 'bn' ? 'ক্যাপাসিটি:' : 'Capacity:'}</span>{' '}
+                <span className="text-[#0D9488] mr-1">•</span>
+                <span className="font-semibold text-[#123047]">{lang === 'bn' ? 'ক্যাপাসিটি:' : 'Capacity:'}</span>{' '}
                 {tankType === 'both' ? `ছাদ: ${getOverheadCapacityString()}, নিচ: ${getUndergroundCapacityString()}` : (tankType === 'overhead' ? getOverheadCapacityString() : getUndergroundCapacityString())}
               </div>
               <div>
-                <span className="text-cyan-500 mr-1">•</span>
-                <span className="text-white font-medium">{lang === 'bn' ? 'এলাকা:' : 'Area:'}</span> {getEffectiveArea()}
+                <span className="text-[#0D9488] mr-1">•</span>
+                <span className="font-semibold text-[#123047]">{lang === 'bn' ? 'এলাকা:' : 'Area:'}</span> {getEffectiveArea()}
               </div>
               {(customFloors || customFlats) && (
                 <div>
-                  <span className="text-cyan-500 mr-1">•</span>
-                  <span className="text-white font-medium">{lang === 'bn' ? 'ভবন:' : 'Building:'}</span>{' '}
+                  <span className="text-[#0D9488] mr-1">•</span>
+                  <span className="font-semibold text-[#123047]">{lang === 'bn' ? 'ভবন:' : 'Building:'}</span>{' '}
                   {[getEffectiveFloors(), getEffectiveFlats()].filter(Boolean).join(', ')}
                 </div>
               )}
               {estimateResult.hasSufficientInfo && estimateResult.minPrice && (
-                <div className="text-emerald-400 font-bold">
-                  <span className="text-emerald-500 mr-1">•</span>
+                <div className="text-[#16A34A] font-bold">
+                  <span className="text-[#16A34A] mr-1">•</span>
                   <span>{lang === 'bn' ? 'আনুমানিক শুরু:' : 'Est. Start:'}</span> ৳{estimateResult.minPrice.toLocaleString()} {lang === 'bn' ? 'থেকে' : 'start'}
                 </div>
               )}
@@ -1390,9 +1419,9 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
 
           {/* Submission Error Banner with Retry */}
           {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-500/40 text-red-300 text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-between gap-3 animate-shake">
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-between gap-3 animate-shake">
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+                <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -1408,7 +1437,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                   href={`https://wa.me/8801609999612?text=${encodeURIComponent(buildWhatsAppMessage())}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg bg-[#28C76F] hover:bg-[#22aa5e] text-white font-bold text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                  className="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
                   <span>WhatsApp</span>
@@ -1425,7 +1454,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                 setErrorMsg('');
                 setStep(4);
               }}
-              className="min-h-[46px] px-5 py-2.5 rounded-xl border border-cyan-900/60 bg-[#06152B] hover:bg-[#0A2244] text-slate-300 hover:text-white text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              className="min-h-[46px] px-5 py-2.5 rounded-xl border border-[#E2E8F0] bg-[#F5FAFC] hover:bg-white text-[#123047] text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>{lang === 'bn' ? 'আগের ধাপ' : 'Back'}</span>
@@ -1435,7 +1464,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
               type="button"
               onClick={handleSubmitFinal}
               disabled={isSubmitting}
-              className="flex-1 sm:flex-initial min-h-[50px] px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xl shadow-cyan-600/30 active:scale-[0.99] disabled:opacity-50"
+              className="flex-1 sm:flex-initial min-h-[50px] px-8 py-3 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white font-extrabold text-sm sm:text-base transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-[#0D9488]/20 active:scale-[0.99] disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
@@ -1459,43 +1488,43 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
       {step === 6 && (
         <div className="space-y-6 text-center py-4 sm:py-6 animate-fadeIn">
           {/* Success Badge */}
-          <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 flex items-center justify-center mx-auto shadow-xl">
-            <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+          <div className="w-16 h-16 rounded-2xl bg-[#E8F5F3] border border-[#0D9488]/30 text-[#0D9488] flex items-center justify-center mx-auto shadow-md">
+            <CheckCircle2 className="w-8 h-8 text-[#0D9488]" />
           </div>
 
           <div className="space-y-2 max-w-lg mx-auto">
             {confirmedLeadNumber && (
               <div className="flex flex-wrap items-center justify-center gap-2">
-                <span className="inline-block px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#E8F5F3] text-[#0D9488] border border-[#0D9488]/30">
                   {lang === 'bn' ? `রেফারেন্স নম্বর: ${confirmedLeadNumber}` : `Booking Ref: ${confirmedLeadNumber}`}
                 </span>
                 {isCloudSynced ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-[#16A34A] border border-emerald-200">
                     <CheckCircle2 className="w-3 h-3" />
                     <span>{lang === 'bn' ? 'সার্ভারে সংরক্ষিত' : 'Synced to Cloud'}</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-[#D97706] border border-amber-200">
                     <AlertCircle className="w-3 h-3" />
                     <span>{lang === 'bn' ? 'অফলাইন ব্যাকআপ' : 'Local Backup'}</span>
                   </span>
                 )}
               </div>
             )}
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#123047]">
               {lang === 'bn' ? 'আপনার কোটেশন রিকোয়েস্ট সফলভাবে গৃহীত হয়েছে!' : 'Quote Request Received!'}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">
               {lang === 'bn' 
                 ? `ধন্যবাদ ${customerName}! আমাদের টেকনিক্যাল টিম আপনার তথ্য পেয়ে গেছে। দ্রুত চূড়ান্ত কোটেশন ও শিডিউলের জন্য নিচের বাটনে ক্লিক করে সরাসরি WhatsApp এ মেসেজ পাঠান।`
                 : `Thank you ${customerName}! Our crew has received your details. For instant confirmation, connect directly via WhatsApp.`}
             </p>
             {!isCloudSynced && (
-              <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs text-left flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+              <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-[#D97706] text-xs text-left flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 text-[#D97706] mt-0.5" />
                 <div>
                   <p className="font-semibold">{lang === 'bn' ? 'অফলাইন ব্যাকআপে সংরক্ষিত' : 'Saved to Local Backup'}</p>
-                  <p className="text-[11px] text-amber-200/80 mt-0.5">
+                  <p className="text-[11px] text-amber-700 mt-0.5">
                     {lang === 'bn' 
                       ? 'নেটওয়ার্ক সীমাবদ্ধতার কারণে আপনার বুকিংটি লোকাল মেমরিতে সংরক্ষিত আছে। বুকিং শতভাগ নিশ্চিত করতে নিচের WhatsApp বাটনে ট্যাপ করুন।' 
                       : 'Saved locally due to network conditions. Tap WhatsApp below to confirm your booking instantly with our team.'}
@@ -1513,7 +1542,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackWhatsAppClick({ source: 'quote_wizard_success' })}
-              className="min-h-[50px] px-6 py-3.5 rounded-xl bg-[#28C76F] hover:bg-[#22aa5e] active:bg-[#1c9250] text-white font-extrabold text-sm sm:text-base transition-all shadow-xl shadow-[#28C76F]/25 flex items-center justify-center gap-2 cursor-pointer"
+              className="min-h-[50px] px-6 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] active:bg-[#1c9250] text-white font-extrabold text-sm sm:text-base transition-all shadow-lg shadow-[#25D366]/20 flex items-center justify-center gap-2 cursor-pointer"
             >
               <MessageCircle className="w-5 h-5 text-white" />
               <span>{lang === 'bn' ? 'WhatsApp এ মেসেজ পাঠান (01609-999612)' : 'Send to WhatsApp (01609-999612)'}</span>
@@ -1522,9 +1551,9 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
             {/* Direct Phone Call Button */}
             <a
               href={`tel:${business.phone}`}
-              className="min-h-[46px] px-6 py-3 rounded-xl bg-[#06152B] hover:bg-[#0A2244] text-white border border-cyan-900 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="min-h-[46px] px-6 py-3 rounded-xl bg-[#123047] hover:bg-[#1b4363] text-white font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
             >
-              <Phone className="w-4 h-4 text-cyan-400" />
+              <Phone className="w-4 h-4 text-[#38BDF8]" />
               <span>{lang === 'bn' ? `জরুরি হেল্পলাইনে কল করুন: ${business.displayPhone}` : `Call Hotline: ${business.displayPhone}`}</span>
             </a>
 
@@ -1532,7 +1561,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
               <button
                 type="button"
                 onClick={onCloseModal}
-                className="mt-2 text-xs text-slate-400 hover:text-white underline cursor-pointer py-1"
+                className="mt-2 text-xs text-[#64748B] hover:text-[#123047] underline cursor-pointer py-1"
               >
                 {lang === 'bn' ? 'উইন্ডো বন্ধ করুন' : 'Close Window'}
               </button>

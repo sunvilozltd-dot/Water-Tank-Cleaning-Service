@@ -248,12 +248,12 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
         
         {/* Section Heading & Subtitle */}
         <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-100 text-[#0B2545] text-xs font-extrabold uppercase tracking-wider mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-700" aria-hidden="true" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F5F3] text-[#0D9488] text-xs font-extrabold uppercase tracking-wider mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-[#0D9488]" aria-hidden="true" />
             <span>{lang === 'bn' ? 'কোটেশন রিকোয়েস্ট' : 'Request a Quotation'}</span>
           </div>
           
-          <h2 id="quote-section-heading" className="text-2xl sm:text-3xl md:text-4xl font-black text-[#0B2545] tracking-tight">
+          <h2 id="quote-section-heading" className="text-2xl sm:text-3xl md:text-4xl font-black text-[#123047] tracking-tight">
             {lang === 'bn' 
               ? 'ট্যাংকের বিবরণ দিয়ে ফ্রি কোটেশন গ্রহণ করুন' 
               : 'Provide Details to Receive Your Tank Cleaning Quotation'}
@@ -280,7 +280,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                 <span className="inline-block px-3 py-1 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-900 font-mono font-bold text-xs">
                   রেফারেন্স আইডি: {inquiryId}
                 </span>
-                <h3 className="text-2xl sm:text-3xl font-black text-[#0B2545]">
+                <h3 className="text-2xl sm:text-3xl font-black text-[#123047]">
                   {lang === 'bn' ? 'ধন্যবাদ! আপনার রিকোয়েস্ট গৃহীত হয়েছে' : 'Thank You!'}
                 </h3>
                 <p className="text-sm sm:text-base text-slate-600 max-w-xl mx-auto leading-relaxed">
@@ -344,8 +344,8 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
               
               {/* STEP 1: SERVICE SELECTION */}
               <div className="space-y-3">
-                <label htmlFor="quote-service-select" className="text-xs sm:text-sm font-extrabold text-[#0B2545] flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-[#0B2545] text-white text-[11px] flex items-center justify-center font-mono">1</span>
+                <label htmlFor="quote-service-select" className="text-xs sm:text-sm font-extrabold text-[#123047] flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#123047] text-white text-[11px] flex items-center justify-center font-mono">1</span>
                   <span>{lang === 'bn' ? 'সার্ভিস নির্বাচন করুন *' : 'Select Service *'}</span>
                 </label>
                 <select
@@ -355,7 +355,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                     handleStart();
                     setFormData(prev => ({ ...prev, serviceType: e.target.value }));
                   }}
-                  className="w-full min-h-[48px] px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none transition-all"
+                  className="w-full min-h-[48px] px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 bg-slate-50/50 hover:bg-white focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none transition-all"
                 >
                   {SERVICE_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>
@@ -367,8 +367,8 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
 
               {/* STEP 2: TANK INFORMATION */}
               <div className="space-y-4 pt-2 border-t border-slate-100">
-                <div className="text-xs sm:text-sm font-extrabold text-[#0B2545] flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-[#0B2545] text-white text-[11px] flex items-center justify-center font-mono">2</span>
+                <div className="text-xs sm:text-sm font-extrabold text-[#123047] flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#123047] text-white text-[11px] flex items-center justify-center font-mono">2</span>
                   <span>{lang === 'bn' ? 'ট্যাংক ও ভবনের তথ্য' : 'Tank & Property Details'}</span>
                 </div>
 
@@ -382,7 +382,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                       id="quote-tank-type"
                       value={formData.tankType}
                       onChange={(e) => setFormData(prev => ({ ...prev, tankType: e.target.value as any }))}
-                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none"
                     >
                       <option value="Rooftop Tank">{lang === 'bn' ? 'ছাদের ট্যাংক (Rooftop Tank)' : 'Rooftop Tank'}</option>
                       <option value="Underground Tank">{lang === 'bn' ? 'আন্ডারগ্রাউন্ড রিজার্ভার (Underground Tank)' : 'Underground Tank'}</option>
@@ -400,7 +400,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                       id="quote-tank-capacity"
                       value={formData.tankCapacity}
                       onChange={(e) => setFormData(prev => ({ ...prev, tankCapacity: e.target.value as any }))}
-                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none"
                     >
                       <option value="Under 1,000 Liters">১,০০০ লিটার পর্যন্ত</option>
                       <option value="1,000 2,000 Liters">১,০০০ - ২,০০০ লিটার</option>
@@ -419,7 +419,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                       id="quote-tank-count"
                       value={formData.numberOfTanks}
                       onChange={(e) => setFormData(prev => ({ ...prev, numberOfTanks: parseInt(e.target.value, 10) || 1 }))}
-                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none"
                     >
                       <option value={1}>১টি ট্যাংক (1 Tank)</option>
                       <option value={2}>২টি ট্যাংক (2 Tanks)</option>
@@ -438,7 +438,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                       id="quote-building-type"
                       value={formData.buildingType}
                       onChange={(e) => setFormData(prev => ({ ...prev, buildingType: e.target.value }))}
-                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none"
                     >
                       {BUILDING_TYPES.map(b => (
                         <option key={b} value={b}>{b}</option>
@@ -455,7 +455,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                       id="quote-tank-material"
                       value={formData.overheadMaterial}
                       onChange={(e) => setFormData(prev => ({ ...prev, overheadMaterial: e.target.value }))}
-                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none"
                     >
                       <option value="PVC">PVC / প্লাস্টিক ট্যাংক</option>
                       <option value="RCC">RCC / কংক্রিট ঢালাই ট্যাংক</option>
@@ -473,7 +473,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                       id="quote-last-clean"
                       value={formData.lastCleaningDate}
                       onChange={(e) => setFormData(prev => ({ ...prev, lastCleaningDate: e.target.value }))}
-                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none"
                     >
                       {LAST_CLEANING_OPTIONS.map(opt => (
                         <option key={opt} value={opt}>{opt}</option>
@@ -493,7 +493,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, pipelineCleaning: 'Yes' }))}
                         className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-                          formData.pipelineCleaning === 'Yes' ? 'bg-[#0B2545] text-white' : 'bg-slate-200 text-slate-700'
+                          formData.pipelineCleaning === 'Yes' ? 'bg-[#0D9488] text-white' : 'bg-slate-200 text-slate-700'
                         }`}
                       >
                         হ্যাঁ (Yes)
@@ -502,7 +502,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, pipelineCleaning: 'No' }))}
                         className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-                          formData.pipelineCleaning === 'No' ? 'bg-[#0B2545] text-white' : 'bg-slate-200 text-slate-700'
+                          formData.pipelineCleaning === 'No' ? 'bg-[#0D9488] text-white' : 'bg-slate-200 text-slate-700'
                         }`}
                       >
                         না (No)
@@ -519,7 +519,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, tankAccessible: 'Yes' }))}
                         className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-                          formData.tankAccessible === 'Yes' ? 'bg-[#0B2545] text-white' : 'bg-slate-200 text-slate-700'
+                          formData.tankAccessible === 'Yes' ? 'bg-[#0D9488] text-white' : 'bg-slate-200 text-slate-700'
                         }`}
                       >
                         হ্যাঁ (Yes)
@@ -528,7 +528,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, tankAccessible: 'No' }))}
                         className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-                          formData.tankAccessible === 'No' ? 'bg-[#0B2545] text-white' : 'bg-slate-200 text-slate-700'
+                          formData.tankAccessible === 'No' ? 'bg-[#0D9488] text-white' : 'bg-slate-200 text-slate-700'
                         }`}
                       >
                         না (No)
@@ -541,8 +541,8 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
               {/* STEP 3: PHOTO UPLOAD */}
               <div className="space-y-3 pt-2 border-t border-slate-100">
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="text-xs sm:text-sm font-extrabold text-[#0B2545] flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-[#0B2545] text-white text-[11px] flex items-center justify-center font-mono">3</span>
+                  <div className="text-xs sm:text-sm font-extrabold text-[#123047] flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-[#123047] text-white text-[11px] flex items-center justify-center font-mono">3</span>
                     <span>{lang === 'bn' ? 'ট্যাংকের ছবি সংযুক্ত করুন (ঐচ্ছিক)' : 'Upload Photos (Optional)'}</span>
                   </div>
                   <span className="text-[11px] text-slate-500 font-medium">
@@ -592,8 +592,8 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
 
               {/* STEP 4: ADDRESS DETAILS */}
               <div className="space-y-4 pt-2 border-t border-slate-100">
-                <div className="text-xs sm:text-sm font-extrabold text-[#0B2545] flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-[#0B2545] text-white text-[11px] flex items-center justify-center font-mono">4</span>
+                <div className="text-xs sm:text-sm font-extrabold text-[#123047] flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#123047] text-white text-[11px] flex items-center justify-center font-mono">4</span>
                   <span>{lang === 'bn' ? 'সার্ভিস নেওয়ার ঠিকানা *' : 'Service Address *'}</span>
                 </div>
 
@@ -613,7 +613,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                       }}
                       className={`w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border ${
                         errors.area ? 'border-red-500 bg-red-50/30' : 'border-slate-300 bg-slate-50'
-                      } focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none`}
+                      } focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none`}
                     >
                       <option value="">{lang === 'bn' ? '-- এলাকা বেছে নিন --' : '-- Select Dhaka Area --'}</option>
                       {DHAKA_AREAS.map(a => (
@@ -639,7 +639,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                       placeholder={lang === 'bn' ? 'যেমন: বাড়ি ১২, রোড ৫, সেক্টর ৩' : 'e.g. House 12, Road 5, Sector 3'}
                       value={formData.address}
                       onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -647,8 +647,8 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
 
               {/* STEP 5: CONTACT INFORMATION */}
               <div className="space-y-4 pt-2 border-t border-slate-100">
-                <div className="text-xs sm:text-sm font-extrabold text-[#0B2545] flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-[#0B2545] text-white text-[11px] flex items-center justify-center font-mono">5</span>
+                <div className="text-xs sm:text-sm font-extrabold text-[#123047] flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#123047] text-white text-[11px] flex items-center justify-center font-mono">5</span>
                   <span>{lang === 'bn' ? 'যোগাযোগের তথ্য *' : 'Contact Information *'}</span>
                 </div>
 
@@ -670,7 +670,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                       }}
                       className={`w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border ${
                         errors.name ? 'border-red-500 bg-red-50/30' : 'border-slate-300 bg-slate-50'
-                      } focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none`}
+                      } focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none`}
                     />
                     {errors.name && (
                       <p className="text-[11px] text-red-600 font-semibold mt-1 flex items-center gap-1">
@@ -697,7 +697,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                       }}
                       className={`w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border ${
                         errors.phone ? 'border-red-500 bg-red-50/30' : 'border-slate-300 bg-slate-50'
-                      } focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none`}
+                      } focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none`}
                     />
                     {errors.phone && (
                       <p className="text-[11px] text-red-600 font-semibold mt-1 flex items-center gap-1">
@@ -725,7 +725,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                               setFormData(prev => ({ ...prev, whatsapp: prev.phone }));
                             }
                           }}
-                          className="rounded text-[#0B2545] focus:ring-[#0B2545]"
+                          className="rounded text-[#123047] focus:ring-[#0D9488]"
                         />
                         <span>{lang === 'bn' ? 'মোবাইল নম্বরের অনুরূপ' : 'Same as phone'}</span>
                       </label>
@@ -737,7 +737,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                       disabled={sameAsPhone}
                       value={sameAsPhone ? formData.phone : formData.whatsapp}
                       onChange={(e) => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
-                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 disabled:opacity-70 focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 disabled:opacity-70 focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none"
                     />
                   </div>
 
@@ -751,7 +751,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                       placeholder="name@example.com"
                       value={formData.email}
                       onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none"
+                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -767,7 +767,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                     placeholder={lang === 'bn' ? 'যেমন: শুক্রবার সকালে কাজ করানো সুবিধাজনক, পানির লাইনে আয়রন বেশি ইত্যাদি...' : 'e.g. Friday preferred, narrow tank manhole...'}
                     value={formData.notes}
                     onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                    className="w-full p-3 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0B2545] focus:outline-none resize-none"
+                    className="w-full p-3 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none resize-none"
                   />
                 </div>
               </div>
@@ -786,14 +786,14 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full min-h-[52px] px-8 py-3.5 rounded-2xl bg-[#0B2545] hover:bg-[#071E3D] text-white font-extrabold text-base shadow-lg hover:shadow-xl transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="w-full min-h-[52px] px-8 py-3.5 rounded-2xl bg-[#0D9488] hover:bg-[#0F766E] text-white font-extrabold text-base shadow-lg hover:shadow-xl shadow-[#0D9488]/20 transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   {isSubmitting ? (
                     <span>{lang === 'bn' ? 'রিকোয়েস্ট পাঠানো হচ্ছে...' : 'Submitting Inquiry...'}</span>
                   ) : (
                     <>
                       <span>{lang === 'bn' ? 'কোটেশন রিকোয়েস্ট পাঠান' : 'Submit Details for Quotation'}</span>
-                      <Send className="w-4 h-4 text-cyan-300" aria-hidden="true" />
+                      <Send className="w-4 h-4 text-white" aria-hidden="true" />
                     </>
                   )}
                 </button>

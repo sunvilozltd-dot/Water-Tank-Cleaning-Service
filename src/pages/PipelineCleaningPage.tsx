@@ -3,21 +3,18 @@ import { SeoHead } from '../components/SeoHead';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { SmartQuoteWizard } from '../components/SmartQuoteWizard';
 import { SendTankPhotoCta } from '../components/SendTankPhotoCta';
+import { OptimizedImage } from '../components/OptimizedImage';
 import { 
-  ShieldCheck, 
+  Wrench, 
   CheckCircle2, 
   ArrowRight, 
   Phone, 
-  MessageCircle, 
-  Wrench, 
-  Droplets,
+  MessageCircle,
   CalendarCheck,
   ChevronDown,
-  Layers,
-  MapPin,
-  Check,
-  AlertTriangle,
-  Sparkles
+  Sparkles,
+  Droplets,
+  ShieldCheck
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
@@ -28,12 +25,13 @@ interface PipelineCleaningPageProps {
   onNavigate?: (path: string) => void;
 }
 
-export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({ 
+export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
   onOpenQuoteModal,
-  onNavigate 
+  onNavigate
 }) => {
   const { lang } = useLanguage();
   const { business } = useSiteConfig();
+
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const toggleFaq = (index: number) => {
@@ -53,66 +51,66 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
   };
 
   const rawNumber = (business.whatsappNumber || '8801609999612').replace(/[^0-9]/g, '');
-  const whatsappUrl = `https://wa.me/${rawNumber}?text=${encodeURIComponent('আসসালামু আলাইকুম। আমি পানির পাইপলাইন পরিষ্কার সার্ভিস (Pipeline Cleaning Service) সম্পর্কে জানতে ও বুকিং করতে চাই।')}`;
+  const whatsappUrl = `https://wa.me/${rawNumber}?text=${encodeURIComponent('আসসালামু আলাইকুম। আমি ওয়াটার পাইপলাইন ক্লিনিং সার্ভিস (Water Pipeline Cleaning Service) সম্পর্কে জানতে ও বুকিং করতে চাই।')}`;
 
   const pipelineFaqs = [
     {
-      qBn: 'পাইপলাইন পরিষ্কার করতে দেয়াল বা টাইলস কি ভাঙতে হবে?',
-      aBn: 'একেবারেই না। আমাদের পদ্ধতিতে দেয়াল বা টাইলসের কোনো ক্ষতি না করে বিদ্যমান ট্যাপ, অ্যাঙ্গেল স্টপ কক এবং মেইন লাইনে সরাসরি মেশিন সংযুক্ত করে উচ্চচাপে ফ্লাশিং সম্পন্ন করা হয়।'
+      qBn: 'পাইপলাইন পরিষ্কার করতে দেয়াল বা টাইলস কি ভাঙতে হয়?',
+      aBn: 'না, একদমই কোনো ভাঙচুর করতে হয় না। আমাদের আধুনিক হাইড্রো-পালস বা এয়ার-ওয়াটার কম্প্রেশন প্রযুক্তি ট্যাপের মুখ থেকে সরাসরি লাইনের ভেতর কাজ করে।'
     },
     {
-      qBn: 'পাইপে জমে থাকা আয়রন ও মরিচা কীভাবে দূর করা হয়?',
-      aBn: 'এয়ার-ওয়াটার পালস বা হাইড্রো-পালস প্রেসারাইজড ফ্লো তৈরি করে পাইপের ভেতরের আস্তরণে জমে থাকা আয়রন ও মরিচাকে আলগা করে তীব্র বেগে ড্রেইন আউট করা হয়।'
+      qBn: 'পাইপলাইন ফ্লাশিংয়ে কত সময় লাগে?',
+      aBn: 'একটি সাধারণ ৩-৪ বাথরুমের আবাসিক ফ্ল্যাটের সম্পূর্ণ পাইপলাইন ফ্লাশিং করতে ২ থেকে ৩ ঘণ্টার মতো সময় প্রয়োজন হয়।'
     },
     {
-      qBn: 'ক্লিনিংয়ের পর শাওয়ার ও ট্যাপের পানির স্পিড কি বাড়বে?',
-      aBn: 'হ্যাঁ। পাইপলাইনের ব্লকেজ ও স্লাগ দূর হয়ে গেলে ট্যাপ, বাথটাব এবং শাওয়ারে পানির প্রবাহ তার স্বাভাবিক বেগ ফিরে পায়।'
+      qBn: 'কী ধরনের পাইপলাইন পরিষ্কার করা সম্ভব?',
+      aBn: 'আমরা সিপিভিসি (CPVC), পিপিআর (PPR), পিভিসি এবং পুরোনো ভবনের জিআই (GI) পাইপলাইনের আয়রন ও মরিচা নিরাপদে দূর করি।'
     },
     {
-      qBn: 'সিপিভিসি, পিপিআর ও জিআই পাইপের ক্ষেত্রে কি এটি নিরাপদ?',
-      aBn: 'হ্যাঁ। আমরা পাইপের উপাদান এবং বয়স অনুযায়ী প্রেসার নিয়ন্ত্রণ করি, ফলে পিভিসি, সিপিভিসি, পিপিআর কিংবা পুরোনো জিআই লাইনে কোনো ফাটল সৃষ্টি হয় না।'
+      qBn: 'ক্লিনিংয়ের পর কি লালচে বা আয়রনযুক্ত পানির সমস্যা দূর হবে?',
+      aBn: 'হ্যাঁ, পাইপের অভ্যন্তরীণ গায়ে লেগে থাকা ভারী আয়রন ও শ্যাওলার আস্তরণ ফ্লাশিং আউট হওয়ার কারণে স্বচ্ছ পানি নিশ্চিত হয়।'
     },
     {
-      qBn: 'পাইপলাইন ক্লিনিং করতে কত সময় লাগে?',
-      aBn: 'সাধারণতঃ একটি স্ট্যান্ডার্ড ফ্ল্যাট বা বাড়ির অভ্যন্তরীণ পাইপলাইন ফ্লাশিংয়ে ৩ থেকে ৪ ঘণ্টা সময় লাগে। সম্পূর্ণ বিল্ডিংয়ের ক্ষেত্রে সমন্বয় করে কাজ করা হয়।'
+      qBn: 'সার্ভিস চার্জ কীভাবে নির্ধারিত হয়?',
+      aBn: 'বাথরুম ও কিচেন লাইনের সংখ্যা এবং পাইপের ধরনের ওপর নির্ভর করে স্বচ্ছ ও সাশ্রয়ী রেটে চার্জ নির্ধারণ করা হয়।'
     }
   ];
 
   return (
-    <main className="min-h-screen bg-[#080A0D] text-white py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-16">
+    <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-16">
       <SeoHead
-        title="Pipeline Cleaning Service in Dhaka | Sunviloz Clean Care"
-        description="Non-invasive water pipeline cleaning and hydro-pulse flushing in Dhaka. Remove iron rust and sediment without breaking walls. Call or WhatsApp 01609999612."
+        title="Water Pipeline Cleaning Service in Dhaka | Sunviloz Clean Care"
+        description="Non-invasive water pipe descaling and hydro-pulse line flushing across Dhaka. Remove iron, rust and sludge without breaking walls. Call 01609999612."
         canonicalUrl="https://water-tank-cleaning-service.vercel.app/services/pipeline-cleaning"
       />
 
-      <Breadcrumbs 
+      <Breadcrumbs
         items={[
           { label: lang === 'bn' ? 'সার্ভিসসমূহ' : 'Services', href: '/services' },
-          { label: lang === 'bn' ? 'পানির পাইপলাইন পরিষ্কার সার্ভিস' : 'Pipeline Cleaning Service', href: '/services/pipeline-cleaning' }
-        ]} 
+          { label: lang === 'bn' ? 'পাইপলাইন পরিষ্কার সার্ভিস' : 'Pipeline Cleaning', href: '/services/pipeline-cleaning' }
+        ]}
       />
 
       {/* Hero */}
-      <section className="bg-[#11151B] border border-[#303743] rounded-3xl p-6 sm:p-10 lg:p-12 shadow-2xl relative overflow-hidden">
+      <section className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-10 lg:p-12 shadow-md relative overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
           <div className="lg:col-span-7 space-y-6">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2585FF]/15 border border-[#2585FF]/30 text-xs font-bold text-[#2585FF] uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E8F5F3] border border-[#0D9488]/30 text-xs font-bold text-[#0D9488] uppercase tracking-wider">
                 <Wrench className="w-3.5 h-3.5" />
                 <span>{lang === 'bn' ? 'বিশেষায়িত পাইপলাইন ফ্লাশিং' : 'Non-Invasive Pipe Descaling'}</span>
               </div>
-              <span className="px-3 py-1 rounded-full bg-[#28C76F]/15 border border-[#28C76F]/30 text-xs font-extrabold text-[#28C76F] font-mono">
+              <span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-extrabold text-[#16A34A] font-mono">
                 {lang === 'bn' ? 'শুরু মাত্র ৳ ১,৫০০' : 'Starting from BDT 1,500'}
               </span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#123047] tracking-tight leading-tight">
               {lang === 'bn' ? 'পেশাদার পানির পাইপলাইন পরিষ্কার ও ফ্লাশিং সার্ভিস' : 'Professional Water Pipeline Cleaning Service in Dhaka'}
             </h1>
 
-            <p className="text-sm sm:text-base text-[#B8C0CC] leading-relaxed max-w-2xl">
+            <p className="text-sm sm:text-base text-[#64748B] leading-relaxed max-w-2xl">
               {lang === 'bn'
                 ? 'বাসা ও বাণিজ্যিক ভবনের পানির পাইপলাইনে জমে থাকা আয়রন, মরিচা ও ক্ষতিকর স্লাগ দেয়াল বা টাইলস অক্ষত রেখে আধুনিক হাইড্রো-পালস প্রেসারাইজড পদ্ধতিতে অপসারণ।'
                 : 'Advanced non-invasive air-water pulse flushing technology to clear heavy rust scale, bio-sludge, and mineral deposits from internal water pipes without damaging walls or tiles.'}
@@ -125,7 +123,7 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
                   trackEvent('pipeline_page_quote_click', { source: 'hero_primary' });
                   onOpenQuoteModal('Pipeline Cleaning Service');
                 }}
-                className="px-6 py-3.5 bg-[#2585FF] hover:bg-[#1a73e8] active:bg-[#1557b0] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#2585FF]/20 transition-all flex items-center gap-2 cursor-pointer"
+                className="px-6 py-3.5 bg-[#0D9488] hover:bg-[#0F766E] active:bg-[#0f6861] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#0D9488]/20 transition-all flex items-center gap-2 cursor-pointer"
               >
                 <CalendarCheck className="w-4 h-4" />
                 <span>{lang === 'bn' ? 'কোটেশন ও বুকিং করুন' : 'Book & Get Quote'}</span>
@@ -136,35 +134,36 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackWhatsAppClick({ source: 'pipeline_hero' })}
-                className="px-6 py-3.5 bg-[#28C76F]/15 hover:bg-[#28C76F]/25 text-[#28C76F] border border-[#28C76F]/40 font-bold text-sm rounded-xl transition-all flex items-center gap-2"
+                className="px-6 py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center gap-2"
               >
-                <MessageCircle className="w-4 h-4 text-[#28C76F]" />
+                <MessageCircle className="w-4 h-4 text-white" />
                 <span>WhatsApp: {business.whatsappNumber || '01609999612'}</span>
               </a>
 
               <a
                 href={`tel:${business.phone}`}
-                className="px-5 py-3.5 bg-[#202630] hover:bg-[#2a3240] text-white font-semibold text-sm rounded-xl border border-[#303743] transition-colors flex items-center gap-2"
+                className="px-5 py-3.5 bg-[#123047] hover:bg-[#1b4363] text-white font-semibold text-sm rounded-xl transition-colors flex items-center gap-2 shadow-sm"
               >
-                <Phone className="w-4 h-4 text-[#2585FF]" />
+                <Phone className="w-4 h-4 text-[#38BDF8]" />
                 <span>{business.displayPhone || business.phone}</span>
               </a>
             </div>
           </div>
 
           <div className="lg:col-span-5">
-            <div className="relative aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden border border-[#303743] shadow-xl bg-[#080A0D] group">
-              <img
-                src="https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75"
+            <div className="relative aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-md bg-[#F5FAFC] group">
+              <OptimizedImage
+                src="https://images.unsplash.com/photo-1585704032915-c3400ca199e7"
                 alt="Water Pipeline Cleaning Service in Dhaka"
-                width="800"
-                height="600"
+                width={800}
+                height={600}
+                aspectRatio="4/3"
+                priority={true}
                 className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
-                loading="eager"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#080A0D]/90 via-transparent to-transparent flex items-end p-5">
-                <span className="text-xs font-semibold text-[#B8C0CC] flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#28C76F]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#123047]/80 via-transparent to-transparent flex items-end p-5 pointer-events-none">
+                <span className="text-xs font-semibold text-white flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#25D366]" />
                   <span>দেয়াল না ভেঙে হাইড্রো-পালস ফ্লাশিং</span>
                 </span>
               </div>
@@ -177,10 +176,10 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
       {/* Benefits */}
       <section className="space-y-6">
         <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#123047]">
             {lang === 'bn' ? 'পাইপলাইন ফ্লাশিংয়ের মূল সুবিধাসমূহ' : 'Key Advantages'}
           </h2>
-          <p className="text-sm text-[#B8C0CC] mt-2">
+          <p className="text-sm text-[#64748B] mt-2">
             ট্যাংক পরিষ্কারের পাশাপাশি পাইপলাইন পরিষ্কার রাখলে ট্যাপে সম্পূর্ণ ফ্রেশ পানি পাওয়া যায়।
           </p>
         </div>
@@ -204,32 +203,32 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
               desc: 'কন্ট্রোল্ড প্রেসার প্রযুক্তির কারণে সিপিভিসি, পিপিআর ও জিআই পাইপে নিরাপদ।'
             }
           ].map((item, idx) => (
-            <div key={idx} className="p-6 rounded-2xl bg-[#171C24] border border-[#303743] space-y-3">
-              <CheckCircle2 className="w-5 h-5 text-[#28C76F]" />
-              <h3 className="font-bold text-white text-base">{item.title}</h3>
-              <p className="text-xs sm:text-sm text-[#B8C0CC] leading-relaxed">{item.desc}</p>
+            <div key={idx} className="p-6 rounded-2xl bg-white border border-[#E2E8F0] space-y-3 shadow-sm hover:shadow-md transition-all">
+              <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
+              <h3 className="font-bold text-[#123047] text-base">{item.title}</h3>
+              <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Pipe Types We Clean */}
-      <section className="bg-[#11151B] border border-[#303743] rounded-3xl p-6 sm:p-10 space-y-6">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+      <section className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-10 space-y-6 shadow-sm">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-[#123047]">
           যেসব পাইপলাইন সিস্টেমে আমরা কাজ করি
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <div className="p-5 rounded-2xl bg-[#171C24] border border-[#303743]">
-            <h3 className="font-bold text-white text-base mb-1">CPVC & PPR পাইপলাইন</h3>
-            <p className="text-xs text-[#B8C0CC]">আধুনিক বাথরুম ও কিচেনের প্লাস্টিক ফিটিংস লাইনে নিরাপদ পালস ফ্লাশিং।</p>
+          <div className="p-5 rounded-2xl bg-[#F5FAFC] border border-[#E2E8F0]">
+            <h3 className="font-bold text-[#123047] text-base mb-1">CPVC & PPR পাইপলাইন</h3>
+            <p className="text-xs text-[#64748B]">আধুনিক বাথরুম ও কিচেনের প্লাস্টিক ফিটিংস লাইনে নিরাপদ পালস ফ্লাশিং।</p>
           </div>
-          <div className="p-5 rounded-2xl bg-[#171C24] border border-[#303743]">
-            <h3 className="font-bold text-white text-base mb-1">জিআই (GI) পাইপলাইন</h3>
-            <p className="text-xs text-[#B8C0CC]">পুরোনো ভবনের লোহার পাইপে জমে থাকা অভ্যন্তরীণ ভারী মরিচার স্তর অপসারণ।</p>
+          <div className="p-5 rounded-2xl bg-[#F5FAFC] border border-[#E2E8F0]">
+            <h3 className="font-bold text-[#123047] text-base mb-1">জিআই (GI) পাইপলাইন</h3>
+            <p className="text-xs text-[#64748B]">পুরোনো ভবনের লোহার পাইপে জমে থাকা অভ্যন্তরীণ ভারী মরিচার স্তর অপসারণ।</p>
           </div>
-          <div className="p-5 rounded-2xl bg-[#171C24] border border-[#303743]">
-            <h3 className="font-bold text-white text-base mb-1">মেইন রাইজার ও ড্রপ লাইন</h3>
-            <p className="text-xs text-[#B8C0CC]">ছাদের ট্যাংক থেকে বাথরুমে পানি নামার উল্লম্ব ফিডার লাইনের সামগ্রিক ফ্লাশিং।</p>
+          <div className="p-5 rounded-2xl bg-[#F5FAFC] border border-[#E2E8F0]">
+            <h3 className="font-bold text-[#123047] text-base mb-1">মেইন রাইজার ও ড্রপ লাইন</h3>
+            <p className="text-xs text-[#64748B]">ছাদের ট্যাংক থেকে বাথরুমে পানি নামার উল্লম্ব ফিডার লাইনের সামগ্রিক ফ্লাশিং।</p>
           </div>
         </div>
       </section>
@@ -237,10 +236,10 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
       {/* Quote / Calculator */}
       <div id="quote" className="space-y-4">
         <div className="text-center max-w-xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#123047]">
             পাইপলাইন সার্ভিসের খরচ ও কোটেশন
           </h2>
-          <p className="text-xs sm:text-sm text-[#B8C0CC] mt-1">
+          <p className="text-xs sm:text-sm text-[#64748B] mt-1">
             আপনার ফ্ল্যাটের বাথরুম ও কিচেন সংখ্যা অনুযায়ী সহজ পদক্ষেপে কোটেশন জেনে নিন।
           </p>
         </div>
@@ -250,10 +249,10 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
       {/* FAQs */}
       <section id="faq" className="space-y-8">
         <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#123047]">
             সচরাচর জিজ্ঞাসিত প্রশ্নাবলী — পাইপলাইন ক্লিনিং
           </h2>
-          <p className="text-sm text-[#B8C0CC] mt-2">
+          <p className="text-sm text-[#64748B] mt-2">
             পানির পাইপলাইন ফ্লাশিং পদ্ধতি, খরচ ও সময়সূচি সংক্রান্ত প্রয়োজনীয় তথ্য।
           </p>
         </div>
@@ -264,25 +263,25 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
             return (
               <div 
                 key={index}
-                className="bg-[#171C24] border border-[#303743] rounded-xl overflow-hidden"
+                className="bg-white border border-[#E2E8F0] rounded-xl overflow-hidden shadow-sm"
               >
                 <button
                   type="button"
                   onClick={() => toggleFaq(index)}
-                  className="w-full p-4 sm:p-5 text-left font-bold text-sm sm:text-base text-white hover:text-[#2585FF] flex items-center justify-between gap-4 transition-colors cursor-pointer"
+                  className="w-full p-4 sm:p-5 text-left font-bold text-sm sm:text-base text-[#123047] hover:text-[#0D9488] flex items-center justify-between gap-4 transition-colors cursor-pointer"
                   aria-expanded={isOpen}
                 >
                   <span className="flex items-center gap-3">
-                    <span className="text-[#2585FF] text-xs font-mono font-bold">Q{index + 1}.</span>
+                    <span className="text-[#0D9488] text-xs font-mono font-bold">Q{index + 1}.</span>
                     <span>{faq.qBn}</span>
                   </span>
                   <ChevronDown 
-                    className={`w-4 h-4 text-[#B8C0CC] transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-[#2585FF]' : ''}`} 
+                    className={`w-4 h-4 text-[#64748B] transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-[#0D9488]' : ''}`} 
                   />
                 </button>
 
                 {isOpen && (
-                  <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#B8C0CC] leading-relaxed border-t border-[#303743]/50">
+                  <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#64748B] leading-relaxed border-t border-[#E2E8F0]">
                     <p>{faq.aBn}</p>
                   </div>
                 )}
@@ -296,11 +295,11 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
       <SendTankPhotoCta source="pipeline_page" />
 
       {/* Bottom CTA */}
-      <section className="bg-gradient-to-r from-[#171C24] via-[#1c232e] to-[#171C24] border border-[#2585FF]/40 rounded-3xl p-6 sm:p-10 lg:p-12 text-center space-y-6 shadow-2xl">
+      <section className="bg-[#123047] rounded-3xl p-6 sm:p-10 lg:p-12 text-center space-y-6 shadow-xl text-white">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
           কম পানির স্পিড বা ময়লা পানির সমস্যায় ভুগছেন?
         </h2>
-        <p className="text-sm text-[#B8C0CC] max-w-2xl mx-auto leading-relaxed">
+        <p className="text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed">
           কোনো ভাঙচুর ছাড়া মাত্র কয়েক ঘণ্টার ফ্লাশিংয়ে আপনার ভবনের পানির পাইপলাইন ফিরে পাবে পূর্ণ সতেজতা।
         </p>
 
@@ -310,16 +309,16 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackWhatsAppClick({ source: 'pipeline_bottom_cta' })}
-            className="px-8 py-3.5 bg-[#28C76F] hover:bg-[#22ab5f] text-slate-950 font-extrabold text-sm sm:text-base rounded-xl transition-all shadow-lg shadow-[#28C76F]/20 flex items-center gap-2"
+            className="px-8 py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold text-sm sm:text-base rounded-xl transition-all shadow-lg shadow-[#25D366]/20 flex items-center gap-2"
           >
-            <MessageCircle className="w-5 h-5 text-slate-950" />
+            <MessageCircle className="w-5 h-5 text-white" />
             <span>WhatsApp-এ সরাসরি বুকিং করুন</span>
           </a>
 
           <button
             type="button"
             onClick={() => onOpenQuoteModal('Pipeline Cleaning Service')}
-            className="px-7 py-3.5 bg-[#2585FF] hover:bg-[#1a73e8] text-white font-bold text-sm sm:text-base rounded-xl transition-all shadow-lg shadow-[#2585FF]/20"
+            className="px-7 py-3.5 bg-[#0D9488] hover:bg-[#0F766E] text-white font-bold text-sm sm:text-base rounded-xl transition-all shadow-lg shadow-[#0D9488]/20 cursor-pointer"
           >
             <span>অনলাইন কোটেশন ফর্ম</span>
           </button>
@@ -328,7 +327,7 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
 
       {/* Related Services */}
       <section className="space-y-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-[#123047]">
           সম্পর্কিত অন্যান্য সেবা
         </h2>
 
@@ -336,14 +335,14 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
           <button
             type="button"
             onClick={() => handleNavigate('/water-tank-cleaning-service')}
-            className="p-5 rounded-2xl bg-[#171C24] border border-[#303743] hover:border-[#2585FF]/50 text-left transition-all group flex items-start gap-4 cursor-pointer"
+            className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
-            <Droplets className="w-8 h-8 text-[#2585FF] shrink-0" />
+            <Droplets className="w-8 h-8 text-[#0D9488] shrink-0" />
             <div>
-              <h3 className="font-bold text-white group-hover:text-[#2585FF] transition-colors text-base">
+              <h3 className="font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors text-base">
                 Water Tank Cleaning Service
               </h3>
-              <p className="text-xs text-[#B8C0CC] mt-1">
+              <p className="text-xs text-[#64748B] mt-1">
                 ছাদ ও ভূগর্ভস্থ পানির ট্যাংকের গভীর পরিষ্কার ও স্যানিটাইজেশন।
               </p>
             </div>
@@ -352,14 +351,14 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
           <button
             type="button"
             onClick={() => handleNavigate('/services/home-deep-cleaning')}
-            className="p-5 rounded-2xl bg-[#171C24] border border-[#303743] hover:border-[#2585FF]/50 text-left transition-all group flex items-start gap-4 cursor-pointer"
+            className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
-            <Sparkles className="w-8 h-8 text-[#28C76F] shrink-0" />
+            <Sparkles className="w-8 h-8 text-[#16A34A] shrink-0" />
             <div>
-              <h3 className="font-bold text-white group-hover:text-[#2585FF] transition-colors text-base">
+              <h3 className="font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors text-base">
                 Professional Deep Cleaning
               </h3>
-              <p className="text-xs text-[#B8C0CC] mt-1">
+              <p className="text-xs text-[#64748B] mt-1">
                 সম্পূর্ণ বাড়ির ফ্লোর স্ক্রাবিং ও গভীর পরিচ্ছন্নতা সেবা।
               </p>
             </div>
@@ -368,14 +367,14 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
           <button
             type="button"
             onClick={() => handleNavigate('/services/bathroom-cleaning-service')}
-            className="p-5 rounded-2xl bg-[#171C24] border border-[#303743] hover:border-[#2585FF]/50 text-left transition-all group flex items-start gap-4 cursor-pointer"
+            className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
-            <Droplets className="w-8 h-8 text-cyan-400 shrink-0" />
+            <Droplets className="w-8 h-8 text-[#38BDF8] shrink-0" />
             <div>
-              <h3 className="font-bold text-white group-hover:text-[#2585FF] transition-colors text-base">
+              <h3 className="font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors text-base">
                 Bathroom Deep Cleaning
               </h3>
-              <p className="text-xs text-[#B8C0CC] mt-1">
+              <p className="text-xs text-[#64748B] mt-1">
                 টাইলসের হলুদ আয়রন দাগ ও বাথরুম স্যানিটারি সামগ্রী ক্লিনিং।
               </p>
             </div>

@@ -12,7 +12,7 @@ export const PortfolioPage: React.FC<PortfolioPageProps> = ({ onNavigate }) => {
   const { lang } = useLanguage();
 
   return (
-    <main className="min-h-screen bg-[#080A0D] text-white py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-12">
+    <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-12">
       <SeoHead
         title={lang === 'bn' ? 'কাজের ভিডিও ডকুমেন্টেশন | সানভিলোজ ক্লিন কেয়ার ঢাকা' : 'Our Work Videos - Sunviloz Clean Care Dhaka'}
         description="Watch real cleaning project videos of rooftop and underground water tanks cleaned across Dhaka."

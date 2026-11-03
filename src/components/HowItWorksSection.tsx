@@ -55,14 +55,14 @@ export const HowItWorksSection: React.FC<HowItWorksProps> = ({ onBookCleaning = 
         
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-100 text-cyan-900 text-xs font-bold uppercase tracking-wider border border-cyan-200 mb-3">
-            <Clock className="w-3.5 h-3.5 text-cyan-800" aria-hidden="true" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F5F3] text-[#0D9488] text-xs font-bold uppercase tracking-wider border border-[#0D9488]/30 mb-3">
+            <Clock className="w-3.5 h-3.5 text-[#0D9488]" aria-hidden="true" />
             {t('how.tag')}
           </span>
-          <h2 id="how-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0B2B5C] tracking-tight">
+          <h2 id="how-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#123047] tracking-tight">
             {t('how.h2')}
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed">
+          <p className="mt-3 text-sm sm:text-base text-[#64748B] leading-relaxed">
             {t('how.sub')}
           </p>
         </div>
@@ -70,26 +70,25 @@ export const HowItWorksSection: React.FC<HowItWorksProps> = ({ onBookCleaning = 
         {/* 3 Step Cards with connecting progression line */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative max-w-5xl mx-auto">
           {steps.map((step, idx) => {
-            const IconComp = step.icon;
             return (
               <div 
                 key={idx}
-                className="relative bg-slate-50/70 rounded-3xl p-6 sm:p-8 border border-slate-200 text-center flex flex-col items-center hover:bg-white hover:shadow-lg transition-all"
+                className="relative bg-white rounded-3xl p-6 sm:p-8 border border-[#E2E8F0] text-center flex flex-col items-center hover:shadow-lg transition-all"
               >
                 {/* Number Badge */}
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0B2545] to-[#0284C7] text-white font-black text-xl flex items-center justify-center shadow-lg shadow-blue-900/15 mb-4" aria-hidden="true">
+                <div className="w-14 h-14 rounded-2xl bg-[#123047] text-white font-black text-xl flex items-center justify-center shadow-lg shadow-[#123047]/15 mb-4" aria-hidden="true">
                   {step.num}
                 </div>
-                <span className="text-xs font-extrabold text-cyan-700 uppercase tracking-widest mb-1">
+                <span className="text-xs font-extrabold text-[#0D9488] uppercase tracking-widest mb-1">
                   ধাপ ০{idx + 1}
                 </span>
-                <h3 className="text-xl font-bold text-slate-900 mb-1">
+                <h3 className="text-xl font-bold text-[#172B3A] mb-1">
                   {lang === 'bn' ? step.titleBn : step.title}
                 </h3>
-                <p className="text-xs font-semibold text-slate-700 mb-2">
+                <p className="text-xs font-semibold text-[#64748B] mb-2">
                   {lang === 'bn' ? step.subtitleBn : step.subtitle}
                 </p>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">
                   {lang === 'bn' ? step.descBn : step.desc}
                 </p>
               </div>
@@ -102,11 +101,11 @@ export const HowItWorksSection: React.FC<HowItWorksProps> = ({ onBookCleaning = 
           <button
             type="button"
             onClick={onBookCleaning}
-            className="min-h-[48px] inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-[#0B2545] to-[#0284C7] hover:from-[#082046] hover:to-[#0369a1] text-white font-extrabold text-sm sm:text-base shadow-lg transition-all active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0B2545]"
+            className="min-h-[48px] inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white font-extrabold text-sm sm:text-base shadow-lg shadow-[#0D9488]/20 transition-all active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0D9488]"
           >
-            <CalendarCheck className="w-5 h-5 text-cyan-300" aria-hidden="true" />
+            <CalendarCheck className="w-5 h-5 text-white" aria-hidden="true" />
             <span>{t('how.cta')}</span>
-            <ArrowRight className="w-4 h-4 text-cyan-200" aria-hidden="true" />
+            <ArrowRight className="w-4 h-4 text-white" aria-hidden="true" />
           </button>
         </div>
 

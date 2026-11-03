@@ -15,7 +15,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onOpenQuoteModal, on
   const { lang } = useLanguage();
 
   return (
-    <main className="min-h-screen bg-[#080A0D] text-white py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-12">
+    <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-12">
       <SeoHead
         title={lang === 'bn' ? 'আমাদের সেবাসমূহ | সানভিলোজ ক্লিন কেয়ার ঢাকা' : 'Our Services - Water Tank & Pipeline Cleaning in Dhaka'}
         description="Comprehensive water tank cleaning services including underground reservoir deep wash, rooftop overhead tank sanitization, and pipeline descaling in Dhaka."
@@ -24,7 +24,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onOpenQuoteModal, on
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'সার্ভিসসমূহ' : 'Services', href: '/services' }]} />
 
       <ServicesSection onOpenQuoteModal={onOpenQuoteModal} onNavigate={onNavigate} />
-      <SolutionProcessSection />
+      <SolutionProcessSection onBookService={onOpenQuoteModal} />
       <FinalCtaSection onOpenQuoteModal={onOpenQuoteModal} />
     </main>
   );

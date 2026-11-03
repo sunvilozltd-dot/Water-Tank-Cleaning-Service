@@ -14,7 +14,7 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onOpenPostModal, onNavigate 
   const { lang } = useLanguage();
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
+    <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
       <SeoHead
         title="Tips & Guides - Water Tank Cleaning & Hygiene | Sunviloz Dhaka"
         description="Read articles and health guides about water tank sanitation, contamination risks, maintenance frequency, and cleaning guidelines for Dhaka properties."

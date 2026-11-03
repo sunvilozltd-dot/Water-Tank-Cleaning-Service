@@ -1,42 +1,27 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
-  Droplets, 
-  Wrench, 
-  Building,
   ArrowRight, 
   MessageCircle, 
-  CalendarCheck, 
-  ShieldCheck,
-  CheckCircle2,
-  Layers,
-  Sparkles
+  CalendarCheck
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { useServices } from '../utils/servicesStore';
-import { ServiceItem } from '../types';
 import { trackWhatsAppClick, trackEvent } from '../utils/tracking';
+import { OptimizedImage } from './OptimizedImage';
 
 interface PopularServicesSectionProps {
   onOpenQuoteModal: (serviceName?: string) => void;
   onNavigate?: (path: string) => void;
 }
 
-const ICON_MAP: Record<string, any> = {
-  Building,
-  Droplets,
-  Wrench,
-  Layers,
-  Sparkles
-};
-
 export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({
   onOpenQuoteModal,
   onNavigate
 }) => {
   const { lang } = useLanguage();
-  const { business, images, updateSiteImages } = useSiteConfig();
-  const { homepageServices, updateService } = useServices();
+  const { business, images } = useSiteConfig();
+  const { homepageServices } = useServices();
 
   const getWhatsAppUrl = (serviceName: string) => {
     const rawNumber = (business.whatsappNumber || '8801609999612').replace(/[^0-9]/g, '');
@@ -76,38 +61,33 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({
     );
   }).slice(0, 3);
 
-  // If none matched, fallback to first 3
   const displayedPopular = primaryServices.length > 0 ? primaryServices : homepageServices.slice(0, 3);
 
   return (
     <section 
       id="popular-services" 
       aria-labelledby="popular-services-heading"
-      className="py-14 sm:py-20 bg-gradient-to-b from-[#06152B] via-[#071932] to-[#051122] border-b border-cyan-900/35 relative overflow-hidden"
+      className="py-14 sm:py-20 bg-[#F5FAFC] border-b border-[#E2E8F0] relative overflow-hidden"
     >
-      {/* Decorative ambient water glows */}
-      <div className="absolute top-1/2 -right-36 w-96 h-96 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" aria-hidden="true" />
-      <div className="absolute top-1/3 -left-36 w-96 h-96 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" aria-hidden="true" />
-
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Heading */}
         <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest text-cyan-400 uppercase mb-2.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" aria-hidden="true" />
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest text-[#0D9488] uppercase mb-2.5 bg-[#E8F5F3] px-3.5 py-1 rounded-full border border-[#0D9488]/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0D9488] animate-pulse" aria-hidden="true" />
             <span>{lang === 'bn' ? 'আমাদের সক্রিয় বিশেষায়িত সেবাসমূহ' : 'Our Specialized Services'}</span>
           </div>
           
           <h2 
             id="popular-services-heading" 
-            className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight"
+            className="text-2xl sm:text-3xl md:text-4xl font-black text-[#123047] tracking-tight"
           >
             {lang === 'bn' ? 'পেশাদার পানির ট্যাংক ও পাইপলাইন ক্লিনিং' : 'Professional Water Tank & Pipeline Cleaning'}
           </h2>
           
-          <div className="w-20 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent mx-auto my-3.5 rounded-full" />
+          <div className="w-20 h-1 bg-gradient-to-r from-transparent via-[#0D9488] to-transparent mx-auto my-3.5 rounded-full" />
           
-          <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+          <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">
             {lang === 'bn'
               ? 'বাসা, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের নিরাপদ ও বিশুদ্ধ পানি নিশ্চিত করতে আমাদের ৩টি প্রধান সক্রিয় সেবা।'
               : 'Our focused water hygiene services for residences, apartments, and commercial buildings across Dhaka.'}
@@ -134,35 +114,35 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({
                   if ((e.target as HTMLElement).closest('button, a')) return;
                   handleNavigateDetail(service.slug);
                 }}
-                className="group water-glass-card rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-cyan-500/15 border border-cyan-800/35 hover:border-cyan-400/50 cursor-pointer bg-[#07162B]/90"
+                className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-xl border border-[#E2E8F0] hover:border-[#0D9488]/40 cursor-pointer"
               >
                 <div>
                   {/* Service Image matching full width of card box */}
                   <div 
                     onClick={() => handleNavigateDetail(service.slug)}
-                    className="relative w-full aspect-[16/10] sm:aspect-video overflow-hidden bg-[#07162B] cursor-pointer"
+                    className="relative w-full aspect-[16/10] sm:aspect-video overflow-hidden bg-[#F5FAFC] cursor-pointer"
                   >
-                    <img
+                    <OptimizedImage
                       src={cardImage}
                       alt={title}
-                      width="800"
-                      height="500"
-                      loading={index === 0 ? 'eager' : 'lazy'}
-                      decoding="async"
+                      width={800}
+                      height={500}
+                      aspectRatio="16/10"
+                      priority={index === 0}
                       className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-500"
                     />
                   </div>
 
-                  {/* Service Titles - Headings only, no description */}
+                  {/* Service Titles */}
                   <div 
                     onClick={() => handleNavigateDetail(service.slug)}
                     className="p-5 sm:p-6 pb-2 space-y-1.5 cursor-pointer"
                   >
-                    <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-cyan-300 transition-colors leading-snug">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors leading-snug">
                       {titleEn}
                     </h3>
                     {service.titleBn && (
-                      <p className="text-sm font-semibold text-cyan-400">
+                      <p className="text-sm font-semibold text-[#0D9488]">
                         {service.titleBn}
                       </p>
                     )}
@@ -171,31 +151,34 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({
 
                 {/* CTAs */}
                 <div className="p-5 sm:p-6 pt-2 mt-auto">
-                  <div className="pt-4 border-t border-cyan-900/40 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                  <div className="pt-4 border-t border-[#E2E8F0] flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                    {/* Primary Booking / Quote CTA: Fresh Teal #0D9488 */}
                     <button
                       type="button"
                       onClick={() => handleBooking(title)}
-                      className="flex-1 min-h-[42px] px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 text-white font-bold text-xs tracking-wide shadow-md shadow-cyan-600/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 min-h-[42px] px-3.5 py-2 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] active:scale-95 text-white font-bold text-xs tracking-wide shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <CalendarCheck className="w-3.5 h-3.5" aria-hidden="true" />
                       <span>{lang === 'bn' ? 'কোটেশন নিন' : 'Get Quote'}</span>
                     </button>
 
+                    {/* Details Link button */}
                     <button
                       type="button"
                       onClick={() => handleNavigateDetail(service.slug)}
-                      className="min-h-[42px] px-3 py-2 rounded-xl bg-[#091D38] hover:bg-[#0E2A50] text-cyan-200 border border-cyan-700/40 hover:border-cyan-400/60 font-semibold text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                      className="min-h-[42px] px-3.5 py-2 rounded-xl bg-[#F5FAFC] hover:bg-[#E8F5F3] text-[#123047] border border-[#E2E8F0] font-semibold text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer"
                     >
                       <span>{lang === 'bn' ? 'বিস্তারিত' : 'Details'}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
 
+                    {/* WhatsApp button: #25D366 */}
                     <a
                       href={getWhatsAppUrl(title)}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => trackWhatsAppClick(`Card - ${service.title}`)}
-                      className="min-h-[42px] px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all shadow-md shrink-0 cursor-pointer"
+                      className="min-h-[42px] px-3 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white flex items-center justify-center transition-all shadow-xs shrink-0 cursor-pointer"
                       title="WhatsApp"
                       aria-label={`WhatsApp for ${title}`}
                     >

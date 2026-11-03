@@ -26,15 +26,15 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   lang = 'en' 
 }) => {
   return (
-    <nav aria-label="Breadcrumb" className="py-2.5 px-4 max-w-7xl mx-auto w-full text-xs text-slate-400">
+    <nav aria-label="Breadcrumb" className="py-2.5 px-4 max-w-7xl mx-auto w-full text-xs text-[#64748B]">
       <ol className="flex items-center space-x-1.5 flex-wrap">
         <li>
           <button
             onClick={() => onNavigate('/')}
-            className="flex items-center hover:text-blue-400 transition font-medium focus-visible:outline-2 focus-visible:outline-[#0B2545] cursor-pointer"
+            className="flex items-center hover:text-[#0D9488] transition font-medium focus-visible:outline-2 focus-visible:outline-[#0D9488] cursor-pointer"
             title="Home"
           >
-            <Home className="w-3.5 h-3.5 mr-1 text-slate-400" />
+            <Home className="w-3.5 h-3.5 mr-1 text-[#64748B]" />
             <span>{lang === 'bn' ? 'হোম' : 'Home'}</span>
           </button>
         </li>
@@ -45,15 +45,15 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
 
           return (
             <li key={path + idx} className="flex items-center space-x-1.5">
-              <ChevronRight className="w-3 h-3 text-slate-400 shrink-0" aria-hidden="true" />
+              <ChevronRight className="w-3 h-3 text-[#64748B]/60 shrink-0" aria-hidden="true" />
               {isLast ? (
-                <span className="font-semibold text-slate-200 truncate max-w-[200px] sm:max-w-none" aria-current="page">
+                <span className="font-semibold text-[#123047] truncate max-w-[200px] sm:max-w-none" aria-current="page">
                   {label}
                 </span>
               ) : (
                 <button
                   onClick={() => onNavigate(path)}
-                  className="hover:text-blue-400 transition font-medium focus-visible:outline-2 focus-visible:outline-[#0B2545] truncate max-w-[150px] sm:max-w-none cursor-pointer"
+                  className="hover:text-[#0D9488] transition font-medium focus-visible:outline-2 focus-visible:outline-[#0D9488] truncate max-w-[150px] sm:max-w-none cursor-pointer"
                 >
                   {label}
                 </button>

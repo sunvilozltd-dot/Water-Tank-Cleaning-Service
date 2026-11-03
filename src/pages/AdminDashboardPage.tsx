@@ -18,6 +18,7 @@ import { TrackingTab } from '../components/AdminPanel/TrackingTab';
 import { SettingsTab } from '../components/AdminPanel/SettingsTab';
 import { AuditLogsTab } from '../components/AdminPanel/AuditLogsTab';
 import { AdminUsersTab } from '../components/AdminPanel/AdminUsersTab';
+import { FreeUsageMonitoringTab } from '../components/AdminPanel/FreeUsageMonitoringTab';
 
 import { QuoteLead, LeadStatus, ServiceItem, ProjectItem, VideoItem } from '../types';
 import { BlogPost } from '../types/blog';
@@ -139,6 +140,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
       <SeoHead
         title="Admin Dashboard - Sunviloz Clean Care"
         description="Admin dashboard to manage Customize Homepage Hero Video, quote leads, and services."
+        noIndex={true}
       />
 
       <AdminHeader 
@@ -222,6 +224,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
           {currentTab === 'admin-users' && <AdminUsersTab />}
 
           {currentTab === 'audit' && <AuditLogsTab />}
+
+          {currentTab === 'free-usage' && <FreeUsageMonitoringTab />}
         </main>
       </div>
 

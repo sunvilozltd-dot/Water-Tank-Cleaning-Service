@@ -26,6 +26,8 @@ export interface ExtensibleServiceItem extends ServiceItem {
   show_in_quote_form: boolean;
   seo_title?: string;
   meta_description?: string;
+  processSteps?: string[];
+  processStepsBn?: string[];
   created_at: string;
   updated_at: string;
   formConfig?: ServiceFormConfig;

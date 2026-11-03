@@ -82,7 +82,7 @@ export const ProblemSection: React.FC<ProblemSectionProps> = ({ onCheckPrice = (
             <AlertTriangle className="w-3.5 h-3.5 text-amber-700" aria-hidden="true" />
             {t('problem.tag')}
           </span>
-          <h2 id="problem-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0B2B5C] tracking-tight">
+          <h2 id="problem-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#123047] tracking-tight">
             {t('problem.h2')}
           </h2>
           <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed">
@@ -166,7 +166,7 @@ export const ProblemSection: React.FC<ProblemSectionProps> = ({ onCheckPrice = (
                 className="absolute top-0 bottom-0 w-1 bg-white shadow-2xl flex items-center justify-center pointer-events-none"
                 style={{ left: `${sliderPos}%` }}
               >
-                <div className="w-8 h-8 rounded-full bg-white text-[#0B2B5C] font-bold text-xs shadow-xl flex items-center justify-center border-2 border-cyan-500" aria-hidden="true">
+                <div className="w-8 h-8 rounded-full bg-white text-[#123047] font-bold text-xs shadow-xl flex items-center justify-center border-2 border-[#0D9488]" aria-hidden="true">
                   ↔
                 </div>
               </div>
@@ -187,15 +187,15 @@ export const ProblemSection: React.FC<ProblemSectionProps> = ({ onCheckPrice = (
             return (
               <div 
                 key={i}
-                className="p-5 rounded-2xl bg-slate-50 border border-slate-200 hover:border-blue-300 hover:bg-blue-50/30 transition-all group"
+                className="p-5 rounded-2xl bg-[#F5FAFC] border border-[#E2E8F0] hover:border-[#0D9488]/40 hover:bg-white transition-all group"
               >
-                <div className="w-10 h-10 rounded-xl bg-blue-100/70 text-[#0B2B5C] group-hover:bg-[#0B2B5C] group-hover:text-cyan-300 transition-colors flex items-center justify-center mb-3" aria-hidden="true">
+                <div className="w-10 h-10 rounded-xl bg-[#E8F5F3] text-[#0D9488] group-hover:bg-[#123047] group-hover:text-white transition-colors flex items-center justify-center mb-3" aria-hidden="true">
                   <IconComponent className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-bold text-slate-900 group-hover:text-[#0B2B5C] transition-colors">
+                <h3 className="text-base font-bold text-[#172B3A] group-hover:text-[#0D9488] transition-colors">
                   {lang === 'bn' ? item.titleBn : item.titleEn}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-600 mt-1.5 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#64748B] mt-1.5 leading-relaxed">
                   {lang === 'bn' ? item.descBn : item.descEn}
                 </p>
               </div>
@@ -208,10 +208,10 @@ export const ProblemSection: React.FC<ProblemSectionProps> = ({ onCheckPrice = (
           <button
             type="button"
             onClick={onCheckPrice}
-            className="min-h-[44px] inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#0B2B5C] hover:bg-[#0E3A75] text-white font-bold text-sm sm:text-base shadow-md hover:shadow-lg transition-all transform active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0B2B5C]"
+            className="min-h-[44px] inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white font-bold text-sm sm:text-base shadow-md hover:shadow-lg transition-all transform active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0D9488]"
           >
             <span>{t('problem.cta')}</span>
-            <ArrowRight className="w-4 h-4 text-cyan-300" aria-hidden="true" />
+            <ArrowRight className="w-4 h-4 text-white" aria-hidden="true" />
           </button>
         </div>
 

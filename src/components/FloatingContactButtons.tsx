@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageCircle, Send, X, PhoneCall, CalendarCheck } from 'lucide-react';
+import { MessageCircle, X, PhoneCall, CalendarCheck } from 'lucide-react';
 import { BUSINESS_CONFIG } from '../data/config';
 import { useLanguage } from '../context/LanguageContext';
 import { trackEvent } from '../utils/tracking';
@@ -23,25 +23,25 @@ export const FloatingContactButtons: React.FC<FloatingContactButtonsProps> = ({
       {/* Expanded quick contact tray */}
       {isOpen && (
         <div 
-          className="bg-[#08172C]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-cyan-500/30 p-3 flex flex-col gap-2 animate-fadeIn mb-1 min-w-[220px]"
+          className="bg-white/98 backdrop-blur-md rounded-2xl shadow-xl border border-[#E2E8F0] p-3 flex flex-col gap-2 animate-fadeIn mb-1 min-w-[220px] text-[#172B3A]"
           role="dialog"
           aria-label="Direct contact options"
         >
-          {/* WhatsApp Direct */}
+          {/* WhatsApp Direct (#25D366) */}
           <a
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackEvent('whatsapp_click', { source: 'floating_widget' })}
-            className="flex items-center gap-2.5 py-2.5 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-colors min-h-[44px]"
+            className="flex items-center gap-2.5 py-2.5 px-3 rounded-xl bg-[#E8F5F3] hover:bg-[#d8ece9] text-[#123047] border border-[#0D9488]/20 text-xs font-bold transition-colors min-h-[44px]"
           >
-            <div className="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0" aria-hidden="true">
+            <div className="w-7 h-7 rounded-lg bg-[#25D366] text-white flex items-center justify-center shrink-0" aria-hidden="true">
               <MessageCircle className="w-4 h-4 text-white" />
             </div>
             <span>{lang === 'bn' ? 'WhatsApp-এ আলাপ' : 'Chat on WhatsApp'}</span>
           </a>
 
-          {/* Quick Quote Request */}
+          {/* Quick Quote Request (#0D9488) */}
           {onOpenQuoteModal && (
             <button
               type="button"
@@ -49,34 +49,34 @@ export const FloatingContactButtons: React.FC<FloatingContactButtonsProps> = ({
                 setIsOpen(false);
                 onOpenQuoteModal();
               }}
-              className="flex items-center gap-2.5 py-2.5 px-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition-colors min-h-[44px] text-left cursor-pointer"
+              className="flex items-center gap-2.5 py-2.5 px-3 rounded-xl bg-[#E8F5F3] hover:bg-[#d8ece9] text-[#123047] border border-[#0D9488]/20 text-xs font-bold transition-colors min-h-[44px] text-left cursor-pointer"
             >
-              <div className="w-7 h-7 rounded-lg bg-cyan-500 text-white flex items-center justify-center shrink-0" aria-hidden="true">
+              <div className="w-7 h-7 rounded-lg bg-[#0D9488] text-white flex items-center justify-center shrink-0" aria-hidden="true">
                 <CalendarCheck className="w-4 h-4 text-white" />
               </div>
               <span>{lang === 'bn' ? 'কোটেশন রিকোয়েস্ট' : 'Request Free Quote'}</span>
             </button>
           )}
 
-          {/* Direct Phone Call */}
+          {/* Direct Phone Call (#123047) */}
           <a
             href={`tel:${BUSINESS_CONFIG.phone}`}
             onClick={() => trackEvent('phone_click', { source: 'floating_widget' })}
-            className="flex items-center gap-2.5 py-2.5 px-3 rounded-xl bg-[#061426] hover:bg-[#0A1E38] text-white border border-cyan-900/40 text-xs font-bold transition-colors min-h-[44px]"
+            className="flex items-center gap-2.5 py-2.5 px-3 rounded-xl bg-[#F5FAFC] hover:bg-[#E8F5F3] text-[#123047] border border-[#E2E8F0] text-xs font-bold transition-colors min-h-[44px]"
           >
-            <div className="w-7 h-7 rounded-lg bg-[#040D1A] text-cyan-400 flex items-center justify-center shrink-0" aria-hidden="true">
-              <PhoneCall className="w-4 h-4 text-cyan-400" />
+            <div className="w-7 h-7 rounded-lg bg-[#123047] text-white flex items-center justify-center shrink-0" aria-hidden="true">
+              <PhoneCall className="w-4 h-4 text-[#38BDF8]" />
             </div>
             <span>{BUSINESS_CONFIG.displayPhone}</span>
           </a>
         </div>
       )}
 
-      {/* Main trigger button */}
+      {/* Main trigger button (#25D366) */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-13 h-13 rounded-full bg-[#28C76F] hover:bg-[#22aa5e] text-white flex items-center justify-center shadow-2xl transition-all transform active:scale-95 cursor-pointer ring-4 ring-[#28C76F]/20 focus-visible:outline-2 focus-visible:outline-[#28C76F]"
+        className="w-13 h-13 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white flex items-center justify-center shadow-lg transition-all transform active:scale-95 cursor-pointer ring-4 ring-[#25D366]/20 focus-visible:outline-2 focus-visible:outline-[#25D366]"
         aria-label={isOpen ? "Close direct contact options" : "Open direct WhatsApp and phone contact options"}
         aria-expanded={isOpen}
       >

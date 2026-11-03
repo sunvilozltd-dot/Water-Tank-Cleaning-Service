@@ -34,8 +34,8 @@ export interface HeaderConfig {
   showShadow: boolean;
   headerBgColor: string; // '#ffffff'
   menuTextColor: string; // '#334155'
-  menuActiveColor: string; // '#0B2545'
-  menuHoverColor: string; // '#0284C7'
+  menuActiveColor: string; // '#123047'
+  menuHoverColor: string; // '#0D9488'
   updatedAt?: string;
 }
 

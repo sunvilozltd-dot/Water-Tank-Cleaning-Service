@@ -75,7 +75,7 @@ export const SeoHead: React.FC<SeoProps> = ({
     }
     canonicalTag.setAttribute('href', canonicalUrl);
 
-    // 4B. Update Hreflang alternates
+    // 4B. Update Hreflang alternates (Only for valid existent URLs)
     const setHreflang = (lang: string, href: string) => {
       let tag = document.querySelector(`link[rel="alternate"][hreflang="${lang}"]`);
       if (!tag) {
@@ -87,8 +87,11 @@ export const SeoHead: React.FC<SeoProps> = ({
       tag.setAttribute('href', href);
     };
 
+    // Remove legacy conflicting 'en' hreflang pointing to same URL
+    const legacyEnTag = document.querySelector('link[rel="alternate"][hreflang="en"]');
+    if (legacyEnTag) legacyEnTag.remove();
+
     setHreflang('bn', canonicalUrl);
-    setHreflang('en', canonicalUrl);
     setHreflang('x-default', canonicalUrl);
 
     // 5. Update OpenGraph Tags

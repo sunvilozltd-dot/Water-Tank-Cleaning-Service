@@ -70,53 +70,52 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
   const handleNavigate = (path: string) => {
     if (onNavigate) {
       onNavigate(path);
-    } else {
+    } else if (typeof window !== 'undefined') {
       window.history.pushState({}, '', path);
       window.dispatchEvent(new PopStateEvent('popstate'));
+      window.scrollTo(0, 0);
     }
   };
 
-  const handleCopyLink = () => {
-    const url = typeof window !== 'undefined' ? window.location.href : `https://water-tank-cleaning-service.vercel.app/blog/${slug}`;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+  const handleCopyLink = async () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      } catch (err) {
+        console.error('Failed to copy', err);
+      }
+    }
   };
 
   const shareOnWhatsApp = () => {
     if (!post) return;
-    const title = lang === 'bn' && post.titleBn ? post.titleBn : post.title;
-    const url = typeof window !== 'undefined' ? window.location.href : `https://water-tank-cleaning-service.vercel.app/blog/${slug}`;
-    const text = `${title}\n\nপড়ুন এই গুরুত্বপূর্ণ পরামর্শ: ${url}`;
+    const titleText = lang === 'bn' && post.titleBn ? post.titleBn : post.title;
+    const url = window.location.href;
+    const text = `${titleText}\n${url}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   if (!post) {
     return (
-      <main className="min-h-screen bg-slate-950 text-slate-100 py-16 px-4 sm:px-6 max-w-4xl mx-auto space-y-6 text-center">
-        <SeoHead
-          title="Article Not Found - Sunviloz Clean Care"
-          description="The requested water tank cleaning guide or hygiene article was not found."
-        />
-        <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 text-slate-500 flex items-center justify-center mx-auto">
-          <BookOpen className="w-8 h-8" />
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
-          {lang === 'bn' ? 'আর্টিকেলটি পাওয়া যায়নি' : 'Article Not Found'}
+      <main className="min-h-screen bg-transparent text-[#172B3A] py-16 px-4 text-center max-w-xl mx-auto space-y-4">
+        <h1 className="text-2xl font-bold text-[#123047]">
+          {lang === 'bn' ? 'আর্টিকেলটি খুঁজে পাওয়া যায়নি' : 'Article Not Found'}
         </h1>
-        <p className="text-slate-400 text-sm max-w-md mx-auto">
+        <p className="text-sm text-[#64748B]">
           {lang === 'bn' 
             ? 'আপনি যে আর্টিকেলটি খুঁজছেন তা মুছে ফেলা হয়েছে অথবা লিংকটি পরিবর্তিত হয়েছে।' 
-            : 'The requested guide could not be located. It might have been updated or moved.'}
+            : 'The requested guide could not be located. It may have moved or been updated.'}
         </p>
-        <div>
+        <div className="pt-2">
           <button
             type="button"
             onClick={() => handleNavigate('/blog')}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow cursor-pointer transition-colors"
+            className="px-5 py-2.5 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs font-bold transition-all shadow-md inline-flex items-center gap-2 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>{lang === 'bn' ? 'সকল Tips & Guides দেখুন' : 'Browse All Tips & Guides'}</span>
+            <span>{lang === 'bn' ? 'সকল টিপস ও গাইড দেখুন' : 'Return to All Articles'}</span>
           </button>
         </div>
       </main>
@@ -139,8 +138,8 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
       if (trimmed.startsWith('## ') || trimmed.startsWith('### ')) {
         const cleanHeading = trimmed.replace(/^#{2,3}\s+/, '');
         return (
-          <h3 key={idx} className="text-lg sm:text-xl font-bold text-white mt-6 mb-3 tracking-tight flex items-center gap-2">
-            <span className="w-1.5 h-5 bg-blue-500 rounded-full" aria-hidden="true" />
+          <h3 key={idx} className="text-lg sm:text-xl font-bold text-[#123047] mt-6 mb-3 tracking-tight flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-[#0D9488] rounded-full" aria-hidden="true" />
             <span>{cleanHeading}</span>
           </h3>
         );
@@ -150,12 +149,12 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
       if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
         const items = trimmed.split('\n').filter(Boolean);
         return (
-          <ul key={idx} className="space-y-2 my-4 pl-4 border-l-2 border-blue-500/30">
+          <ul key={idx} className="space-y-2 my-4 pl-4 border-l-2 border-[#0D9488]/30">
             {items.map((item, itemIdx) => {
               const cleanItem = item.replace(/^[\*\-]\s+/, '');
               return (
-                <li key={itemIdx} className="text-sm sm:text-base text-slate-300 leading-relaxed flex items-start gap-2">
-                  <span className="text-blue-400 font-bold shrink-0">•</span>
+                <li key={itemIdx} className="text-sm sm:text-base text-[#172B3A] leading-relaxed flex items-start gap-2">
+                  <span className="text-[#0D9488] font-bold shrink-0">•</span>
                   <span>{cleanItem}</span>
                 </li>
               );
@@ -172,8 +171,8 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
             {items.map((item, itemIdx) => {
               const cleanItem = item.replace(/^\d+\.\s+/, '');
               return (
-                <li key={itemIdx} className="text-sm sm:text-base text-slate-300 leading-relaxed flex items-start gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                  <span className="w-6 h-6 rounded-lg bg-blue-600/20 text-blue-400 font-bold text-xs flex items-center justify-center shrink-0 border border-blue-500/30">
+                <li key={itemIdx} className="text-sm sm:text-base text-[#172B3A] leading-relaxed flex items-start gap-3 bg-[#F5FAFC] p-3 rounded-xl border border-[#E2E8F0]">
+                  <span className="w-6 h-6 rounded-lg bg-[#E8F5F3] text-[#0D9488] font-bold text-xs flex items-center justify-center shrink-0 border border-[#0D9488]/30">
                     {itemIdx + 1}
                   </span>
                   <span>{cleanItem}</span>
@@ -186,7 +185,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
 
       // Standard paragraph
       return (
-        <p key={idx} className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+        <p key={idx} className="text-sm sm:text-base text-[#172B3A] leading-relaxed font-normal">
           {trimmed}
         </p>
       );
@@ -194,10 +193,10 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
   };
 
   return (
-    <article className="min-h-screen bg-[#080A0D] text-white py-6 sm:py-10 px-4 sm:px-6 relative">
+    <article className="min-h-screen bg-transparent text-[#172B3A] py-6 sm:py-10 px-4 sm:px-6 relative">
       {/* Top Fixed Reading Progress Bar */}
       <div 
-        className="fixed top-0 left-0 right-0 h-1 z-50 bg-slate-900/40 backdrop-blur-xs overflow-hidden"
+        className="fixed top-0 left-0 right-0 h-1 z-50 bg-slate-200/50 backdrop-blur-xs overflow-hidden"
         role="progressbar"
         aria-valuenow={Math.round(pageProgress)}
         aria-valuemin={0}
@@ -205,7 +204,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
         aria-label="Article reading progress"
       >
         <div 
-          className="h-full bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 transition-all duration-100 ease-out shadow-xs"
+          className="h-full bg-gradient-to-r from-[#0D9488] via-[#38BDF8] to-[#0D9488] transition-all duration-100 ease-out shadow-xs"
           style={{ width: `${pageProgress}%` }}
         />
       </div>
@@ -231,7 +230,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
           <button
             type="button"
             onClick={() => handleNavigate('/blog')}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition-colors cursor-pointer w-fit"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#64748B] hover:text-[#123047] transition-colors cursor-pointer w-fit"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>{lang === 'bn' ? 'সকল Tips & Guides' : 'All Tips & Guides'}</span>
@@ -241,34 +240,34 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
         {/* Article Header */}
         <header className="space-y-4">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="px-3 py-1 bg-emerald-600 text-white text-xs font-extrabold rounded-lg tracking-wide shadow-sm">
+            <span className="px-3 py-1 bg-[#E8F5F3] text-[#0D9488] border border-[#0D9488]/30 text-xs font-extrabold rounded-lg tracking-wide shadow-sm">
               {category}
             </span>
-            <span className="text-slate-600">•</span>
-            <span className="text-xs text-slate-400 flex items-center gap-1 font-medium">
-              <Clock className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="text-[#CBD5E1]">•</span>
+            <span className="text-xs text-[#64748B] flex items-center gap-1 font-medium">
+              <Clock className="w-3.5 h-3.5 text-[#0D9488]" />
               <span>{readTime}</span>
             </span>
-            <span className="text-slate-600">•</span>
-            <span className="text-xs text-slate-400 flex items-center gap-1 font-medium">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-[#CBD5E1]">•</span>
+            <span className="text-xs text-[#64748B] flex items-center gap-1 font-medium">
+              <Calendar className="w-3.5 h-3.5 text-[#64748B]" />
               <span>{post.publishedAt}</span>
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-snug">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#123047] tracking-tight leading-snug">
             {title}
           </h1>
 
           {/* Author info and social actions */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-[#E2E8F0]">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-full bg-blue-600/20 border border-blue-500/40 text-blue-400 flex items-center justify-center font-bold text-xs">
+              <div className="w-9 h-9 rounded-full bg-[#E8F5F3] border border-[#0D9488]/30 text-[#0D9488] flex items-center justify-center font-bold text-xs">
                 <User className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-xs font-bold text-white block">{post.author}</span>
-                <span className="text-[10px] text-slate-400 block">{lang === 'bn' ? 'পানি ও হাইজিন স্পেশালিস্ট' : 'Water Hygiene Specialist'}</span>
+                <span className="text-xs font-bold text-[#123047] block">{post.author}</span>
+                <span className="text-[10px] text-[#64748B] block">{lang === 'bn' ? 'পানি ও হাইজিন স্পেশালিস্ট' : 'Water Hygiene Specialist'}</span>
               </div>
             </div>
 
@@ -276,7 +275,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
               <button
                 type="button"
                 onClick={shareOnWhatsApp}
-                className="px-3 py-1.5 rounded-lg bg-[#28C76F] hover:bg-[#22aa5e] text-white text-xs font-bold flex items-center gap-1.5 shadow transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold flex items-center gap-1.5 shadow transition-colors cursor-pointer"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
                 <span>WhatsApp</span>
@@ -285,9 +284,9 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-lg bg-white hover:bg-[#F5FAFC] text-[#123047] text-xs font-semibold flex items-center gap-1.5 border border-[#E2E8F0] shadow-sm transition-colors cursor-pointer"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-[#16A34A]" /> : <Share2 className="w-3.5 h-3.5" />}
                 <span>{copied ? (lang === 'bn' ? 'কপি হয়েছে!' : 'Copied!') : (lang === 'bn' ? 'লিংক কপি' : 'Copy Link')}</span>
               </button>
             </div>
@@ -296,7 +295,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
 
         {/* Hero Cover Image */}
         {post.imageUrl && (
-          <div className="rounded-3xl overflow-hidden aspect-video bg-slate-900 border border-slate-800 shadow-2xl relative">
+          <div className="rounded-3xl overflow-hidden aspect-video bg-[#F5FAFC] border border-[#E2E8F0] shadow-md relative">
             <img
               src={post.imageUrl}
               alt={title}
@@ -308,21 +307,21 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
 
         {/* Lead Excerpt Highlight Box */}
         {excerpt && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-blue-950/40 border border-blue-900/50 text-blue-200 text-sm sm:text-base font-medium leading-relaxed">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#E8F5F3] border border-[#0D9488]/30 text-[#123047] text-sm sm:text-base font-medium leading-relaxed">
             {excerpt}
           </div>
         )}
 
         {/* Article Body */}
-        <section className="space-y-5 bg-slate-900/50 p-6 sm:p-8 rounded-3xl border border-slate-800/80 shadow-md">
+        <section className="space-y-5 bg-white p-6 sm:p-8 rounded-3xl border border-[#E2E8F0] shadow-sm">
           {renderFormattedContent(content)}
         </section>
 
         {/* Service Booking & Inquiry Banner */}
-        <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-slate-900 border border-blue-800/60 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="bg-[#123047] rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-1.5 text-center md:text-left">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-600/30 text-blue-300 text-xs font-extrabold uppercase tracking-wider mb-1">
-              <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0D9488]/30 text-teal-300 text-xs font-extrabold uppercase tracking-wider mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-teal-300" />
               <span>{lang === 'bn' ? 'সানভিলোজ স্পেশালিস্ট কেয়ার' : 'Sunviloz Specialist Care'}</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white">
@@ -339,16 +338,16 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
             <button
               type="button"
               onClick={() => onOpenQuoteModal ? onOpenQuoteModal('Water Tank Cleaning Service') : handleNavigate('/get-quote')}
-              className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              className="px-5 py-3 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white font-bold text-xs sm:text-sm shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
               <span>{lang === 'bn' ? 'তাৎক্ষণিক কোটেশন নিন' : 'Get Free Quote'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <a
               href={`tel:${business.phone}`}
-              className="px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 border border-slate-700"
+              className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 border border-white/20"
             >
-              <Phone className="w-4 h-4 text-cyan-400" />
+              <Phone className="w-4 h-4 text-[#38BDF8]" />
               <span>{business.displayPhone}</span>
             </a>
           </div>
@@ -356,16 +355,16 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
 
         {/* Related Tips & Guides */}
         {otherPosts.length > 0 && (
-          <section className="space-y-4 pt-6 border-t border-slate-800">
+          <section className="space-y-4 pt-6 border-t border-[#E2E8F0]">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-blue-400" />
+              <h3 className="text-lg sm:text-xl font-bold text-[#123047] flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-[#0D9488]" />
                 <span>{lang === 'bn' ? 'আরও অন্যান্য Tips & Guides' : 'More Tips & Guides'}</span>
               </h3>
               <button
                 type="button"
                 onClick={() => handleNavigate('/blog')}
-                className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 cursor-pointer"
+                className="text-xs font-bold text-[#0D9488] hover:text-[#0F766E] transition-colors flex items-center gap-1 cursor-pointer"
               >
                 <span>{lang === 'bn' ? 'সবগুলো দেখুন' : 'View All'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -380,19 +379,19 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
                   <div
                     key={other.id}
                     onClick={() => handleNavigate(`/blog/${other.slug}`)}
-                    className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition-all flex flex-col justify-between p-4 cursor-pointer group shadow-sm"
+                    className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden hover:border-[#0D9488]/50 transition-all flex flex-col justify-between p-4 cursor-pointer group shadow-sm hover:shadow-md"
                   >
                     <div>
-                      <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">
+                      <span className="text-[10px] font-bold text-[#0D9488] uppercase tracking-wider block mb-1">
                         {otherCategory}
                       </span>
-                      <h4 className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors line-clamp-2 leading-snug">
+                      <h4 className="text-sm font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors line-clamp-2 leading-snug">
                         {otherTitle}
                       </h4>
                     </div>
-                    <div className="pt-3 mt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="pt-3 mt-3 border-t border-[#E2E8F0] flex items-center justify-between text-[11px] text-[#64748B]">
                       <span>{other.readTime}</span>
-                      <span className="text-blue-400 font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                      <span className="text-[#0D9488] font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                         <span>{lang === 'bn' ? 'পড়ুন' : 'Read'}</span>
                         <ArrowRight className="w-3 h-3" />
                       </span>

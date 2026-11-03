@@ -41,7 +41,6 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
     if (post) {
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
-      // Reset reading progress on new post open
       setReadingProgress(0);
     }
     return () => {
@@ -92,7 +91,7 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto animate-fadeIn"
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto animate-fadeIn"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -100,32 +99,32 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
       role="dialog"
       aria-labelledby="blog-modal-title"
     >
-      <div className="relative w-full max-w-3xl bg-[#171C24] text-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] my-auto border border-[#303743]">
+      <div className="relative w-full max-w-3xl bg-white text-[#172B3A] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] my-auto border border-[#E2E8F0]">
         
         {/* Sticky Fixed Header with Reading Progress Bar */}
-        <div className="sticky top-0 z-40 bg-[#171C24]/95 backdrop-blur-md px-4 sm:px-6 py-3.5 border-b border-[#303743] flex items-center justify-between gap-3 shrink-0 relative">
+        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 sm:px-6 py-3.5 border-b border-[#E2E8F0] flex items-center justify-between gap-3 shrink-0 relative">
           <div className="flex items-center gap-2">
-            <span className="inline-block px-2.5 py-0.5 bg-[#2585FF]/20 text-[#2585FF] border border-[#2585FF]/30 text-[11px] font-bold rounded-md">
+            <span className="inline-block px-2.5 py-0.5 bg-[#E8F5F3] text-[#0D9488] border border-[#0D9488]/30 text-[11px] font-bold rounded-md">
               {category}
             </span>
-            <span className="text-xs text-[#303743] hidden sm:inline">•</span>
-            <span className="text-xs text-[#B8C0CC] font-medium hidden sm:inline flex items-center gap-1">
-              <Clock className="w-3 h-3 text-[#B8C0CC]" aria-hidden="true" />
+            <span className="text-xs text-[#E2E8F0] hidden sm:inline">•</span>
+            <span className="text-xs text-[#64748B] font-medium hidden sm:inline flex items-center gap-1">
+              <Clock className="w-3 h-3 text-[#64748B]" aria-hidden="true" />
               <span>{readTime}</span>
             </span>
           </div>
 
           <div className="flex items-center gap-3">
             {/* Reading Progress Percentage Indicator */}
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700/80 text-[11px] font-mono text-cyan-300 font-bold shadow-xs">
-              <BookOpen className="w-3 h-3 text-cyan-400" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F5FAFC] border border-[#E2E8F0] text-[11px] font-mono text-[#0D9488] font-bold shadow-xs">
+              <BookOpen className="w-3 h-3 text-[#0D9488]" />
               <span>{Math.round(readingProgress)}%</span>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-[#202630] hover:bg-[#2a3240] text-[#B8C0CC] hover:text-white flex items-center justify-center transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-[#2585FF]"
+              className="w-8 h-8 rounded-full bg-[#F5FAFC] hover:bg-[#E8F5F3] text-[#64748B] hover:text-[#123047] flex items-center justify-center transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0D9488]"
               aria-label="Close article modal"
             >
               <X className="w-4 h-4" />
@@ -134,67 +133,90 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
 
           {/* Scroll-based reading progress bar track */}
           <div 
-            className="absolute bottom-0 left-0 right-0 h-1 bg-[#202630] overflow-hidden" 
+            className="absolute bottom-0 left-0 right-0 h-1 bg-[#E2E8F0] overflow-hidden" 
             role="progressbar" 
             aria-valuenow={Math.round(readingProgress)} 
             aria-valuemin={0} 
             aria-valuemax={100}
-            aria-label="Reading progress"
           >
             <div 
-              className="h-full bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 transition-all duration-100 ease-out shadow-sm"
+              className="h-full bg-[#0D9488] transition-all duration-150"
               style={{ width: `${readingProgress}%` }}
             />
           </div>
         </div>
 
-        {/* Modal Scrollable Content Container */}
+        {/* Scrollable Content Body */}
         <div 
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="p-4 sm:p-8 overflow-y-auto flex-1 space-y-6 scroll-smooth"
+          className="overflow-y-auto px-4 sm:px-8 py-6 space-y-6"
         >
           
+          {/* Article Featured Image */}
           {post.imageUrl && (
-            <div className="rounded-2xl overflow-hidden aspect-video bg-[#080A0D] border border-[#303743]">
-              <img
-                src={post.imageUrl}
+            <div className="relative aspect-video rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-md bg-[#F5FAFC]">
+              <img 
+                src={post.imageUrl} 
                 alt={title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover" 
                 loading="lazy"
               />
             </div>
           )}
 
+          {/* Article Title */}
           <div>
-            <h2 id="blog-modal-title" className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+            <h1 id="blog-modal-title" className="text-xl sm:text-2xl md:text-3xl font-black text-[#123047] leading-tight">
               {title}
-            </h2>
-            <div className="flex items-center gap-3 mt-2 text-xs text-[#B8C0CC]">
+            </h1>
+            <div className="flex flex-wrap items-center gap-4 text-xs text-[#64748B] mt-2.5">
               <span>{post.publishedAt}</span>
               <span>•</span>
-              <span>{post.author}</span>
+              <span>{lang === 'bn' ? 'সানভিলোজ ক্লিন কেয়ার টেকনিক্যাল টিম' : 'Sunviloz Clean Care Technical Team'}</span>
             </div>
           </div>
 
-          <div className="text-sm sm:text-base text-[#B8C0CC] space-y-4 leading-relaxed font-normal">
-            {content.split('\n\n').map((paragraph, idx) => (
-              <p key={idx} className="leading-relaxed">
-                {paragraph}
-              </p>
-            ))}
+          {/* Article Paragraphs */}
+          <div className="space-y-4 text-sm sm:text-base text-[#172B3A] leading-relaxed border-t border-[#E2E8F0] pt-6 font-normal">
+            {content.split('\n\n').map((paragraph, index) => {
+              if (paragraph.startsWith('### ') || paragraph.startsWith('## ')) {
+                return (
+                  <h3 key={index} className="text-lg sm:text-xl font-bold text-[#123047] pt-2">
+                    {paragraph.replace(/^#+\s*/, '')}
+                  </h3>
+                );
+              }
+              if (paragraph.startsWith('- ') || paragraph.startsWith('* ')) {
+                const items = paragraph.split('\n').filter(Boolean);
+                return (
+                  <ul key={index} className="list-disc list-inside space-y-1.5 pl-2 text-[#172B3A]">
+                    {items.map((item, itemIdx) => (
+                      <li key={itemIdx} className="leading-relaxed">
+                        {item.replace(/^[-*]\s*/, '')}
+                      </li>
+                    ))}
+                  </ul>
+                );
+              }
+              return (
+                <p key={index} className="leading-relaxed text-[#172B3A]">
+                  {paragraph}
+                </p>
+              );
+            })}
           </div>
 
-          {/* Social Share & Copy Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[#303743]">
+          {/* Social Share Strip */}
+          <div className="pt-6 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3">
+            <span className="text-xs font-bold text-[#64748B]">
+              {lang === 'bn' ? 'আর্টিকেলটি শেয়ার করুন:' : 'Share this article:'}
+            </span>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-[#B8C0CC]">
-                {lang === 'bn' ? 'শেয়ার করুন:' : 'Share this Guide:'}
-              </span>
               <button
                 type="button"
                 onClick={shareOnWhatsApp}
-                className="min-h-[40px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#28C76F] hover:bg-[#22aa5e] text-white text-xs font-bold transition-colors cursor-pointer"
+                className="min-h-[40px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold transition-colors cursor-pointer"
               >
                 <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>WhatsApp</span>
@@ -202,25 +224,25 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="min-h-[40px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#202630] hover:bg-[#2a3240] text-white border border-[#303743] text-xs font-semibold transition-colors cursor-pointer"
+                className="min-h-[40px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F5FAFC] hover:bg-[#E8F5F3] text-[#172B3A] border border-[#E2E8F0] text-xs font-semibold transition-colors cursor-pointer"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-[#28C76F]" aria-hidden="true" /> : <Share2 className="w-3.5 h-3.5" aria-hidden="true" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-[#16A34A]" aria-hidden="true" /> : <Share2 className="w-3.5 h-3.5 text-[#64748B]" aria-hidden="true" />}
                 <span>{copied ? (lang === 'bn' ? 'কপি হয়েছে!' : 'Copied!') : (lang === 'bn' ? 'লিংক কপি' : 'Copy Link')}</span>
               </button>
             </div>
           </div>
 
           {/* Service Booking Card inside Article */}
-          <div className="bg-[#11151B] border border-[#303743] rounded-2xl p-5 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+          <div className="bg-[#F5FAFC] border border-[#E2E8F0] rounded-2xl p-5 text-[#172B3A] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
             <div className="space-y-1 text-center sm:text-left">
-              <span className="text-[11px] font-extrabold uppercase text-[#2585FF] tracking-wider flex items-center justify-center sm:justify-start gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-[#2585FF]" aria-hidden="true" />
+              <span className="text-[11px] font-extrabold uppercase text-[#0D9488] tracking-wider flex items-center justify-center sm:justify-start gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-[#0D9488]" aria-hidden="true" />
                 <span>{lang === 'bn' ? 'প্রফেশনাল সার্ভিস প্রয়োজন?' : 'Need Professional Assistance?'}</span>
               </span>
-              <h4 className="text-base sm:text-lg font-bold text-white">
+              <h4 className="text-base sm:text-lg font-bold text-[#123047]">
                 {lang === 'bn' ? 'আজই বুক করুন নিরাপদ ওয়াটার ট্যাংক ও ডিপ ক্লিনিং' : 'Book Safe Water Tank & Deep Cleaning Today'}
               </h4>
-              <p className="text-xs text-[#B8C0CC]">
+              <p className="text-xs text-[#64748B]">
                 {lang === 'bn' ? 'হোয়াটসঅ্যাপে তাৎক্ষণিক কোটেশন গ্রহণ করুন অথবা আমাদের কল করুন।' : 'Get an instant quote on WhatsApp or call our hotline.'}
               </p>
             </div>
@@ -229,16 +251,16 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
               <button
                 type="button"
                 onClick={handleTriggerBooking}
-                className="min-h-[44px] flex-1 sm:flex-initial py-2.5 px-4 rounded-xl bg-[#2585FF] hover:bg-[#1a73e8] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="min-h-[44px] flex-1 sm:flex-initial py-2.5 px-4 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white font-bold text-xs shadow-md shadow-[#0D9488]/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>{lang === 'bn' ? 'কোটেশন নিন' : 'Get Quote'}</span>
                 <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
               </button>
               <a
                 href={`tel:${business.phone}`}
-                className="min-h-[44px] flex-1 sm:flex-initial py-2.5 px-4 rounded-xl bg-[#202630] hover:bg-[#2a3240] text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-[#303743]"
+                className="min-h-[44px] flex-1 sm:flex-initial py-2.5 px-4 rounded-xl bg-[#123047] hover:bg-[#0d2233] text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-[#123047]"
               >
-                <Phone className="w-3.5 h-3.5 text-[#2585FF]" aria-hidden="true" />
+                <Phone className="w-3.5 h-3.5 text-[#38BDF8]" aria-hidden="true" />
                 <span>{business.displayPhone}</span>
               </a>
             </div>

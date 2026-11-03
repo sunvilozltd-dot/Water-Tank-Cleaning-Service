@@ -43,6 +43,9 @@ export type LeadStatus =
 export type LeadSource = 'Website' | 'WhatsApp' | 'Facebook' | 'Messenger' | 'Google' | 'Direct' | 'Other' | (string & {});
 
 export interface QuoteFormData {
+  leadId?: string;
+  ownershipToken?: string;
+  idempotencyKey?: string;
   name: string;
   phone: string;
   whatsapp?: string;
@@ -147,6 +150,26 @@ export interface QuoteLead extends QuoteFormData {
   lastActiveStepName?: string;
   leadStage?: 'first_step_captured' | 'tank_selected' | 'capacity_filled' | 'location_filled' | 'fully_submitted';
   isSyncedToCloud?: boolean;
+  leadTokenHash?: string;
+  idempotencyKey?: string;
+}
+
+export interface LeadNotificationRecord {
+  id: string;
+  lead_id: string;
+  notification_type: 'complete_lead' | 'abandoned_lead';
+  recipient: string;
+  status: 'pending' | 'processing' | 'sent' | 'failed';
+  resend_message_id?: string;
+  error_message?: string;
+  retry_count: number;
+  max_retries: number;
+  locked_until?: string;
+  next_retry_at?: string;
+  last_retry_at?: string;
+  sent_at?: string;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface PortfolioItem {

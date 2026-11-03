@@ -12,7 +12,7 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onNavigate
   const { lang } = useLanguage();
 
   return (
-    <main className="min-h-screen bg-[#080A0D] text-white py-10 px-4 sm:px-6 max-w-4xl mx-auto space-y-8">
+    <main className="min-h-screen bg-transparent text-[#172B3A] py-10 px-4 sm:px-6 max-w-4xl mx-auto space-y-8">
       <SeoHead
         title={lang === 'bn' ? 'গোপনীয়তা নীতি | সানভিলোজ ক্লিন কেয়ার' : 'Privacy Policy - Sunviloz Clean Care Dhaka'}
         description="Privacy policy and data handling information for Sunviloz Clean Care in Dhaka."
@@ -20,22 +20,22 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onNavigate
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'গোপনীয়তা নীতি' : 'Privacy Policy', href: '/privacy-policy' }]} />
 
-      <div className="bg-[#11151B] border border-[#303743] rounded-3xl p-6 sm:p-10 space-y-6">
+      <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-10 space-y-6 shadow-md">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#28C76F]/15 text-[#28C76F] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#16A34A] border border-emerald-200 flex items-center justify-center">
             <Lock className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#123047]">
               {lang === 'bn' ? 'গোপনীয়তা নীতি (Privacy Policy)' : 'Privacy Policy'}
             </h1>
-            <p className="text-xs text-[#B8C0CC]">
+            <p className="text-xs text-[#64748B]">
               {lang === 'bn' ? 'সর্বশেষ আপডেট: অক্টোবর ২০২৬' : 'Last Updated: October 2026'}
             </p>
           </div>
         </div>
 
-        <div className="text-[#B8C0CC] text-xs sm:text-sm space-y-4 leading-relaxed border-t border-[#303743] pt-6">
+        <div className="text-[#64748B] text-xs sm:text-sm space-y-4 leading-relaxed border-t border-[#E2E8F0] pt-6">
           <p>
             {lang === 'bn'
               ? 'সানভিলোজ ক্লিন কেয়ার আপনার তথ্যের গোপনীয়তাকে সর্বোচ্চ গুরুত্ব দেয়। কোটেশন বা বুকিংয়ের সময় আপনার নাম, মোবাইল নম্বর এবং ভবনের ঠিকানা শুধুমাত্র সার্ভিস ডেলিভারি ও শিডিউল সমন্বয়ের জন্য ব্যবহৃত হয়।'

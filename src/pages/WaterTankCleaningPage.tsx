@@ -5,6 +5,7 @@ import { SmartQuoteWizard } from '../components/SmartQuoteWizard';
 import { OurWorkVideosSection } from '../components/OurWorkVideosSection';
 import { CustomerProblemSection } from '../components/CustomerProblemSection';
 import { SendTankPhotoCta } from '../components/SendTankPhotoCta';
+import { OptimizedImage } from '../components/OptimizedImage';
 import { 
   ShieldCheck, 
   CheckCircle2, 
@@ -160,7 +161,7 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
   ];
 
   return (
-    <main className="min-h-screen bg-[#080A0D] text-white py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-16">
+    <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-16">
       <SeoHead
         title="Water Tank Cleaning Service in Dhaka | Sunviloz Clean Care"
         description="Professional water tank cleaning service in Dhaka for rooftop and underground water tanks, including sludge, sediment and surface buildup removal. Call or WhatsApp 01609999612."
@@ -175,25 +176,25 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
       />
 
       {/* 1. Water Tank Cleaning Hero */}
-      <section className="bg-[#11151B] border border-[#303743] rounded-3xl p-6 sm:p-10 lg:p-12 shadow-2xl relative overflow-hidden">
+      <section className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-10 lg:p-12 shadow-md relative overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
           <div className="lg:col-span-7 space-y-6">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2585FF]/15 border border-[#2585FF]/30 text-xs font-bold text-[#2585FF] uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E8F5F3] border border-[#0D9488]/30 text-xs font-bold text-[#0D9488] uppercase tracking-wider">
                 <Droplets className="w-3.5 h-3.5" />
                 <span>{lang === 'bn' ? 'প্রাইমারি কোর সার্ভিস' : 'Core Priority Service'}</span>
               </div>
-              <span className="px-3 py-1 rounded-full bg-[#28C76F]/15 border border-[#28C76F]/30 text-xs font-extrabold text-[#28C76F] font-mono">
+              <span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-extrabold text-[#16A34A] font-mono">
                 {lang === 'bn' ? 'শুরু মাত্র ৳ ১,২০০' : 'Starting from BDT 1,200'}
               </span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#123047] tracking-tight leading-tight">
               {lang === 'bn' ? 'ঢাকায় পেশাদার পানির ট্যাংক পরিষ্কার সার্ভিস' : 'Professional Water Tank Cleaning Service in Dhaka'}
             </h1>
 
-            <p className="text-sm sm:text-base text-[#B8C0CC] leading-relaxed max-w-2xl">
+            <p className="text-sm sm:text-base text-[#64748B] leading-relaxed max-w-2xl">
               {lang === 'bn'
                 ? 'বাসাবাড়ি, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের ছাদের ওভারহেড এবং ভূগর্ভস্থ আন্ডারগ্রাউন্ড পানির ট্যাংক পরিষ্কারে সানভিলোজ ক্লিন কেয়ারের আধুনিক মেকানিক্যাল পদ্ধতি ও খাদ্য-বান্ধব স্যানিটাইজিং সল্যুশন।'
                 : 'Deep cleaning, heavy sludge extraction, high-pressure jet washing, and food-safe sanitization for underground reservoirs and rooftop tanks across Dhaka metro areas.'}
@@ -206,7 +207,7 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
                   trackEvent('water_tank_page_quote_click', { source: 'hero_primary' });
                   onOpenQuoteModal('Water Tank Cleaning Service');
                 }}
-                className="px-6 py-3.5 bg-[#2585FF] hover:bg-[#1a73e8] active:bg-[#1557b0] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#2585FF]/20 transition-all flex items-center gap-2 cursor-pointer"
+                className="px-6 py-3.5 bg-[#0D9488] hover:bg-[#0F766E] active:bg-[#0f6861] text-white font-bold text-sm rounded-xl shadow-lg shadow-[#0D9488]/20 transition-all flex items-center gap-2 cursor-pointer"
               >
                 <CalendarCheck className="w-4 h-4" />
                 <span>{lang === 'bn' ? 'কোটেশন ও বুকিং করুন' : 'Book & Get Quote'}</span>
@@ -217,35 +218,36 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackWhatsAppClick({ source: 'water_tank_hero' })}
-                className="px-6 py-3.5 bg-[#28C76F]/15 hover:bg-[#28C76F]/25 text-[#28C76F] border border-[#28C76F]/40 font-bold text-sm rounded-xl transition-all flex items-center gap-2"
+                className="px-6 py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center gap-2"
               >
-                <MessageCircle className="w-4 h-4 text-[#28C76F]" />
+                <MessageCircle className="w-4 h-4 text-white" />
                 <span>WhatsApp: {business.whatsappNumber || '01609999612'}</span>
               </a>
 
               <a
                 href={`tel:${business.phone}`}
-                className="px-5 py-3.5 bg-[#202630] hover:bg-[#2a3240] text-white font-semibold text-sm rounded-xl border border-[#303743] transition-colors flex items-center gap-2"
+                className="px-5 py-3.5 bg-[#123047] hover:bg-[#1b4363] text-white font-semibold text-sm rounded-xl transition-colors flex items-center gap-2 shadow-sm"
               >
-                <Phone className="w-4 h-4 text-[#2585FF]" />
+                <Phone className="w-4 h-4 text-[#38BDF8]" />
                 <span>{business.displayPhone || business.phone}</span>
               </a>
             </div>
           </div>
 
           <div className="lg:col-span-5">
-            <div className="relative aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden border border-[#303743] shadow-xl bg-[#080A0D] group">
-              <img
-                src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75"
+            <div className="relative aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-md bg-[#F5FAFC] group">
+              <OptimizedImage
+                src="https://images.unsplash.com/photo-1581578731548-c64695cc6952"
                 alt="Professional Water Tank Cleaning Service in Dhaka"
-                width="800"
-                height="600"
+                width={800}
+                height={600}
+                aspectRatio="4/3"
+                priority={true}
                 className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
-                loading="eager"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#080A0D]/90 via-transparent to-transparent flex items-end p-5">
-                <span className="text-xs font-semibold text-[#B8C0CC] flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#28C76F]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#123047]/80 via-transparent to-transparent flex items-end p-5 pointer-events-none">
+                <span className="text-xs font-semibold text-white flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#25D366]" />
                   <span>হাই-প্রেসার ওয়াটার জেট ও সেফটি প্রোটোকল</span>
                 </span>
               </div>
@@ -258,10 +260,10 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
       {/* 2. Service Benefits */}
       <section className="space-y-6">
         <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#123047]">
             {lang === 'bn' ? 'পেশাদার ট্যাংক পরিষ্কারের মূল সুবিধাসমূহ' : 'Key Service Benefits'}
           </h2>
-          <p className="text-sm text-[#B8C0CC] mt-2">
+          <p className="text-sm text-[#64748B] mt-2">
             {lang === 'bn' ? 'স্বাভাবিক হাত দিয়ে ধোয়ার চেয়ে মেকানিক্যাল ক্লিনিংয়ে পানির গুণমান সুরক্ষিত থাকে' : 'Reliable, hygienic water storage cleaning for building health'}
           </p>
         </div>
@@ -285,45 +287,45 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
               desc: 'কাজের পূর্বে ট্যাংকের আকার অনুযায়ী পরিষ্কার আলোচনা ও নির্ধারিত চার্জ।'
             }
           ].map((item, idx) => (
-            <div key={idx} className="p-6 rounded-2xl bg-[#171C24] border border-[#303743] space-y-3">
-              <CheckCircle2 className="w-5 h-5 text-[#28C76F]" />
-              <h3 className="font-bold text-white text-base">{item.title}</h3>
-              <p className="text-xs sm:text-sm text-[#B8C0CC] leading-relaxed">{item.desc}</p>
+            <div key={idx} className="p-6 rounded-2xl bg-white border border-[#E2E8F0] space-y-3 shadow-sm hover:shadow-md transition-all">
+              <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
+              <h3 className="font-bold text-[#123047] text-base">{item.title}</h3>
+              <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">{item.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* 3. Tank Types We Clean */}
-      <section className="bg-[#11151B] border border-[#303743] rounded-3xl p-6 sm:p-10 space-y-8">
+      <section className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-10 space-y-8 shadow-sm">
         <div>
-          <span className="text-xs font-bold text-[#2585FF] uppercase tracking-wider block mb-1">
+          <span className="text-xs font-bold text-[#0D9488] uppercase tracking-wider block mb-1">
             {lang === 'bn' ? 'ট্যাংকের প্রকারভেদ' : 'Versatile Capability'}
           </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#123047]">
             {lang === 'bn' ? 'যেসব পানির ট্যাংক আমরা পরিষ্কার করি' : 'Tank Types We Clean'}
           </h2>
-          <p className="text-sm text-[#B8C0CC] mt-2">
+          <p className="text-sm text-[#64748B] mt-2">
             আবাসিক ও বাণিজ্যিক ভবনের সব ধরনের স্টোরেজ কাঠামোর জন্য আমাদের রয়েছে উপযুক্ত যন্ত্রপাতি।
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="p-5 rounded-2xl bg-[#171C24] border border-[#303743]">
-            <h3 className="font-bold text-white text-base mb-1">ওভারহেড পিভিসি ট্যাংক</h3>
-            <p className="text-xs text-[#B8C0CC]">ছাদের ৫০০ থেকে ৫,০০০ লিটার প্লাস্টিক বা পলিমার ট্যাংক।</p>
+          <div className="p-5 rounded-2xl bg-[#F5FAFC] border border-[#E2E8F0]">
+            <h3 className="font-bold text-[#123047] text-base mb-1">ওভারহেড পিভিসি ট্যাংক</h3>
+            <p className="text-xs text-[#64748B]">ছাদের ৫০০ থেকে ৫,০০০ লিটার প্লাস্টিক বা পলিমার ট্যাংক।</p>
           </div>
-          <div className="p-5 rounded-2xl bg-[#171C24] border border-[#303743]">
-            <h3 className="font-bold text-white text-base mb-1">ওভারহেড আরসিসি ট্যাংক</h3>
-            <p className="text-xs text-[#B8C0CC]">ছাদের কংক্রিট বা পাকা ট্যাংক যেখানে ভারী শ্যাওলা জমে।</p>
+          <div className="p-5 rounded-2xl bg-[#F5FAFC] border border-[#E2E8F0]">
+            <h3 className="font-bold text-[#123047] text-base mb-1">ওভারহেড আরসিসি ট্যাংক</h3>
+            <p className="text-xs text-[#64748B]">ছাদের কংক্রিট বা পাকা ট্যাংক যেখানে ভারী শ্যাওলা জমে।</p>
           </div>
-          <div className="p-5 rounded-2xl bg-[#171C24] border border-[#303743]">
-            <h3 className="font-bold text-white text-base mb-1">আন্ডারগ্রাউন্ড রিজার্ভার</h3>
-            <p className="text-xs text-[#B8C0CC]">মাটির নিচে স্থাপিত ৫,০০০ থেকে ১,০০,০০০+ লিটার রিজার্ভার।</p>
+          <div className="p-5 rounded-2xl bg-[#F5FAFC] border border-[#E2E8F0]">
+            <h3 className="font-bold text-[#123047] text-base mb-1">আন্ডারগ্রাউন্ড রিজার্ভার</h3>
+            <p className="text-xs text-[#64748B]">মাটির নিচে স্থাপিত ৫,০০০ থেকে ১,০০,০০০+ লিটার রিজার্ভার।</p>
           </div>
-          <div className="p-5 rounded-2xl bg-[#171C24] border border-[#303743]">
-            <h3 className="font-bold text-white text-base mb-1">স্টেইনলেস স্টিল ও কমার্শিয়াল</h3>
-            <p className="text-xs text-[#B8C0CC]">হাসপাতাল, হোটেল, গার্মেন্টস ও কারখানার ফুড-গ্রেড স্টোরেজ।</p>
+          <div className="p-5 rounded-2xl bg-[#F5FAFC] border border-[#E2E8F0]">
+            <h3 className="font-bold text-[#123047] text-base mb-1">স্টেইনলেস স্টিল ও কমার্শিয়াল</h3>
+            <p className="text-xs text-[#64748B]">হাসপাতাল, হোটেল, গার্মেন্টস ও কারখানার ফুড-গ্রেড স্টোরেজ।</p>
           </div>
         </div>
       </section>
@@ -337,20 +339,20 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
       {/* 4. Scientific 9-Step Cleaning Process (Section 9) */}
       <section id="process-steps" className="space-y-8">
         <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest text-[#2585FF] uppercase mb-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#2585FF]" aria-hidden="true" />
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest text-[#0D9488] uppercase mb-2 bg-[#E8F5F3] px-3 py-1 rounded-full border border-[#0D9488]/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0D9488]" aria-hidden="true" />
             <span>বিজ্ঞানসম্মত কার্যপ্রণালী</span>
           </div>
           
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#123047] tracking-tight">
             বিজ্ঞানসম্মত ৯টি ধাপ
           </h2>
           
-          <p className="text-base text-[#2585FF] font-semibold mt-1">
+          <p className="text-base text-[#0D9488] font-bold mt-1">
             ওয়াটার ট্যাংকের জন্য আধুনিক ও নিরাপদ ক্লিনিং প্রসেস
           </p>
 
-          <p className="text-xs sm:text-sm text-[#B8C0CC] mt-2 leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#64748B] mt-2 leading-relaxed">
             আমরা সুশৃঙ্খল ধাপে ধাপে পরিচ্ছন্নতা পরিচালনা করি। কোনো ক্ষতিকর অ্যাসিড বা অস্বাস্থ্যকর পদ্ধতি ব্যবহার না করে যান্ত্রিক ও অনুমোদিত স্যানিটাইজিং উপায়ে সেবা সম্পন্ন হয়।
           </p>
         </div>
@@ -359,19 +361,19 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
           {nineSteps.map((step) => (
             <div 
               key={step.step}
-              className="bg-[#171C24] border border-[#303743] hover:border-[#2585FF]/50 rounded-2xl p-6 transition-all duration-300 flex flex-col justify-between"
+              className="bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 rounded-2xl p-6 transition-all duration-300 flex flex-col justify-between shadow-sm hover:shadow-md"
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-mono font-bold text-[#2585FF] px-2.5 py-1 rounded bg-[#202630] border border-[#303743]">
+                  <span className="text-xs font-mono font-bold text-[#0D9488] px-2.5 py-1 rounded-lg bg-[#E8F5F3] border border-[#0D9488]/30">
                     ধাপ {step.step}
                   </span>
-                  <Check className="w-4 h-4 text-[#28C76F]" />
+                  <Check className="w-4 h-4 text-[#16A34A]" />
                 </div>
-                <h3 className="font-bold text-white text-base mb-2">
+                <h3 className="font-bold text-[#123047] text-base mb-2">
                   {step.titleBn}
                 </h3>
-                <p className="text-xs sm:text-sm text-[#B8C0CC] leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">
                   {step.descBn}
                 </p>
               </div>
@@ -386,10 +388,10 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
       {/* 6. Pricing or Quote Information */}
       <div id="quote" className="space-y-4">
         <div className="text-center max-w-xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#123047]">
             {lang === 'bn' ? 'তাৎক্ষণিক কোটেশন ও আনুমানিক খরচ' : 'Instant Quotation & Estimation'}
           </h2>
-          <p className="text-xs sm:text-sm text-[#B8C0CC] mt-1">
+          <p className="text-xs sm:text-sm text-[#64748B] mt-1">
             আপনার ট্যাংকের সাইজ ও ধরন নির্বাচন করে সহজ কয়েকটি ধাপে আনুমানিক খরচ দেখুন।
           </p>
         </div>
@@ -397,31 +399,31 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
       </div>
 
       {/* 7. Service Area Information */}
-      <section className="bg-[#11151B] border border-[#303743] rounded-3xl p-6 sm:p-10 space-y-5">
-        <div className="flex items-center gap-2 text-xs font-bold text-[#2585FF] uppercase">
+      <section className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-10 space-y-5 shadow-sm">
+        <div className="flex items-center gap-2 text-xs font-bold text-[#0D9488] uppercase">
           <MapPin className="w-4 h-4" />
           <span>সার্ভিস এলাকা</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-          ঢাকা শহরের সকল প্রধান এলাকায় আমরা সার্ভিস দিচ্ছি
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-[#123047]">
+          ঢাকা মেট্রোপলিটন, সাভার, গাজীপুর ও নারায়ণগঞ্জের সকল এলাকায় সার্ভিস দিচ্ছি
         </h2>
-        <p className="text-xs sm:text-sm text-[#B8C0CC] leading-relaxed">
-          মিরপুর, উত্তরা, ধানমন্ডি, গুলশান, বনানী, বারিধারা, মোহাম্মদপুর, বাড্ডা, খিলগাঁও, রামপুরা, বসুন্ধরা আবাসিক, পুরান ঢাকা এবং কেরানীগঞ্জসহ সমগ্র ঢাকা মেট্রোপলিটন এলাকায় আমাদের মোবাইল টেকনিশিয়ান টিম পৌঁছে যায়।
+        <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">
+          মিরপুর, উত্তরা, ধানমন্ডি, গুলশান, বনানী, বারিধারা, মোহাম্মদপুর, বাড্ডা, খিলগাঁও, রামপুরা, বসুন্ধরা আবাসিক, পুরান ঢাকা এবং কেরানীগঞ্জসহ সমগ্র ঢাকা মেট্রোপলিটন, সাভার, গাজীপুর ও নারায়ণগঞ্জ এলাকায় আমাদের মোবাইল টেকনিশিয়ান টিম পৌঁছে যায়।
         </p>
       </section>
 
-      {/* 8. Frequently Asked Questions — Water Tank Cleaning (Section 10) */}
+      {/* 8. Frequently Asked Questions — Water Tank Cleaning */}
       <section id="faq" className="space-y-8">
         <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest text-[#2585FF] uppercase mb-2">
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest text-[#0D9488] uppercase mb-2 bg-[#E8F5F3] px-3 py-1 rounded-full border border-[#0D9488]/30">
             <span>প্রশ্নোত্তর</span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#123047] tracking-tight">
             সচরাচর জিজ্ঞাসিত প্রশ্নাবলী
           </h2>
 
-          <p className="text-sm sm:text-base text-[#B8C0CC] mt-2">
+          <p className="text-sm sm:text-base text-[#64748B] mt-2">
             ওয়াটার ট্যাংক ক্লিনিং পদ্ধতি, খরচ ও সময়সূচি সংক্রান্ত প্রয়োজনীয় তথ্য।
           </p>
         </div>
@@ -432,25 +434,25 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
             return (
               <div 
                 key={index}
-                className="bg-[#171C24] border border-[#303743] rounded-xl overflow-hidden transition-all"
+                className="bg-white border border-[#E2E8F0] rounded-xl overflow-hidden transition-all shadow-sm"
               >
                 <button
                   type="button"
                   onClick={() => toggleFaq(index)}
-                  className="w-full p-4 sm:p-5 text-left font-bold text-sm sm:text-base text-white hover:text-[#2585FF] flex items-center justify-between gap-4 transition-colors cursor-pointer"
+                  className="w-full p-4 sm:p-5 text-left font-bold text-sm sm:text-base text-[#123047] hover:text-[#0D9488] flex items-center justify-between gap-4 transition-colors cursor-pointer"
                   aria-expanded={isOpen}
                 >
                   <span className="flex items-center gap-3">
-                    <span className="text-[#2585FF] text-xs font-mono font-bold">Q{index + 1}.</span>
+                    <span className="text-[#0D9488] text-xs font-mono font-bold">Q{index + 1}.</span>
                     <span>{faq.qBn}</span>
                   </span>
                   <ChevronDown 
-                    className={`w-4 h-4 text-[#B8C0CC] transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-[#2585FF]' : ''}`} 
+                    className={`w-4 h-4 text-[#64748B] transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-[#0D9488]' : ''}`} 
                   />
                 </button>
 
                 {isOpen && (
-                  <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#B8C0CC] leading-relaxed border-t border-[#303743]/50">
+                  <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#64748B] leading-relaxed border-t border-[#E2E8F0]">
                     <p>{faq.aBn}</p>
                   </div>
                 )}
@@ -461,11 +463,11 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
       </section>
 
       {/* 9. WhatsApp Booking CTA Banner */}
-      <section className="bg-gradient-to-r from-[#171C24] via-[#1c232e] to-[#171C24] border border-[#2585FF]/40 rounded-3xl p-6 sm:p-10 lg:p-12 text-center space-y-6 shadow-2xl">
+      <section className="bg-[#123047] rounded-3xl p-6 sm:p-10 lg:p-12 text-center space-y-6 shadow-xl text-white">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
           আপনার পানির ট্যাংক আজই পরিষ্কার করতে চান?
         </h2>
-        <p className="text-sm text-[#B8C0CC] max-w-2xl mx-auto leading-relaxed">
+        <p className="text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed">
           কোনো অগ্রিম পেমেন্ট ছাড়াই সরাসরি আপনার ট্যাংকের তথ্য জানিয়ে ফ্রি কোটেশন ও সুবিধাজনক শিডিউল নিশ্চিত করুন।
         </p>
 
@@ -475,16 +477,16 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackWhatsAppClick({ source: 'water_tank_bottom_cta' })}
-            className="px-8 py-3.5 bg-[#28C76F] hover:bg-[#22ab5f] text-slate-950 font-extrabold text-sm sm:text-base rounded-xl transition-all shadow-lg shadow-[#28C76F]/20 flex items-center gap-2"
+            className="px-8 py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold text-sm sm:text-base rounded-xl transition-all shadow-lg shadow-[#25D366]/20 flex items-center gap-2"
           >
-            <MessageCircle className="w-5 h-5 text-slate-950" />
+            <MessageCircle className="w-5 h-5 text-white" />
             <span>WhatsApp-এ সরাসরি বুকিং করুন</span>
           </a>
 
           <button
             type="button"
             onClick={() => onOpenQuoteModal('Water Tank Cleaning Service')}
-            className="px-7 py-3.5 bg-[#2585FF] hover:bg-[#1a73e8] text-white font-bold text-sm sm:text-base rounded-xl transition-all shadow-lg shadow-[#2585FF]/20"
+            className="px-7 py-3.5 bg-[#0D9488] hover:bg-[#0F766E] text-white font-bold text-sm sm:text-base rounded-xl transition-all shadow-lg shadow-[#0D9488]/20 cursor-pointer"
           >
             <span>অনলাইন কোটেশন ফর্ম</span>
           </button>
@@ -493,7 +495,7 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
 
       {/* 10. Related Services */}
       <section className="space-y-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-white">
+        <h2 className="text-xl sm:text-2xl font-bold text-[#123047]">
           সম্পর্কিত অন্যান্য সেবা
         </h2>
 
@@ -501,14 +503,14 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
           <button
             type="button"
             onClick={() => handleNavigate('/services/pipeline-cleaning')}
-            className="p-5 rounded-2xl bg-[#171C24] border border-[#303743] hover:border-[#2585FF]/50 text-left transition-all group flex items-start gap-4 cursor-pointer"
+            className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
-            <Wrench className="w-8 h-8 text-[#2585FF] shrink-0" />
+            <Wrench className="w-8 h-8 text-[#0D9488] shrink-0" />
             <div>
-              <h3 className="font-bold text-white group-hover:text-[#2585FF] transition-colors text-base">
+              <h3 className="font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors text-base">
                 Pipeline Cleaning Service
               </h3>
-              <p className="text-xs text-[#B8C0CC] mt-1">
+              <p className="text-xs text-[#64748B] mt-1">
                 পাইপলাইনে জমে থাকা আয়রন ও মরিচা দেয়াল অক্ষত রেখে ফ্লাশিং।
               </p>
             </div>
@@ -517,14 +519,14 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
           <button
             type="button"
             onClick={() => handleNavigate('/services/home-deep-cleaning')}
-            className="p-5 rounded-2xl bg-[#171C24] border border-[#303743] hover:border-[#2585FF]/50 text-left transition-all group flex items-start gap-4 cursor-pointer"
+            className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
-            <Sparkles className="w-8 h-8 text-[#28C76F] shrink-0" />
+            <Sparkles className="w-8 h-8 text-[#16A34A] shrink-0" />
             <div>
-              <h3 className="font-bold text-white group-hover:text-[#2585FF] transition-colors text-base">
+              <h3 className="font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors text-base">
                 Professional Deep Cleaning
               </h3>
-              <p className="text-xs text-[#B8C0CC] mt-1">
+              <p className="text-xs text-[#64748B] mt-1">
                 নতুন বাসা, ফ্ল্যাট বা রেনোভেশনের পর সম্পূর্ণ বাড়ি ডিপ ক্লিন।
               </p>
             </div>
@@ -533,14 +535,14 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
           <button
             type="button"
             onClick={() => handleNavigate('/services/sofa-cleaning')}
-            className="p-5 rounded-2xl bg-[#171C24] border border-[#303743] hover:border-[#2585FF]/50 text-left transition-all group flex items-start gap-4 cursor-pointer"
+            className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
-            <Droplets className="w-8 h-8 text-cyan-400 shrink-0" />
+            <Droplets className="w-8 h-8 text-[#38BDF8] shrink-0" />
             <div>
-              <h3 className="font-bold text-white group-hover:text-[#2585FF] transition-colors text-base">
+              <h3 className="font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors text-base">
                 Sofa & Upholstery Cleaning
               </h3>
-              <p className="text-xs text-[#B8C0CC] mt-1">
+              <p className="text-xs text-[#64748B] mt-1">
                 সোফার ডাস্ট ও দাগ দূরীকরণে আধুনিক ফোম ওয়াশ ও ভ্যাকুয়াম।
               </p>
             </div>

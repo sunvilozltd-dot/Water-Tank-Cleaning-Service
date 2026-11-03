@@ -3,191 +3,179 @@
   <!-- Core Public Pages -->
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/get-quote</loc>
-    <lastmod>2026-10-05</lastmod>
-    <changefreq>monthly</changefreq>
+    <lastmod>2026-11-03</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/services</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/about</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/portfolio</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/contact</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/blog</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/faq</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
-  <!-- Service Landing Pages -->
+  <!-- Priority Core Service Landing Pages -->
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/services/water-tank-cleaning</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://water-tank-cleaning-service.vercel.app/services/pipeline-cleaning</loc>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/services/overhead-water-tank-cleaning</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/services/underground-water-tank-cleaning</loc>
-    <lastmod>2026-10-05</lastmod>
-    <changefreq>monthly</changefreq>
+    <lastmod>2026-11-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://water-tank-cleaning-service.vercel.app/services/both-water-tank-cleaning</loc>
+    <lastmod>2026-11-03</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://water-tank-cleaning-service.vercel.app/services/pipeline-cleaning</loc>
-    <lastmod>2026-10-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://water-tank-cleaning-service.vercel.app/services/carpet-cleaning</loc>
-    <lastmod>2026-10-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://water-tank-cleaning-service.vercel.app/services/sofa-cleaning</loc>
-    <lastmod>2026-10-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://water-tank-cleaning-service.vercel.app/services/home-deep-cleaning</loc>
-    <lastmod>2026-10-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
   </url>
 
   <!-- Dhaka & Regional Service-Area Landing Pages -->
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/dhaka</loc>
-    <lastmod>2026-11-01</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/gazipur</loc>
-    <lastmod>2026-11-01</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/savar</loc>
-    <lastmod>2026-11-01</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/narayanganj</loc>
-    <lastmod>2026-11-01</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/gulshan</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/banani</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/uttara</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/bashundhara</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/dhanmondi</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/mirpur</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/mohammadpur</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/baridhara</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/badda</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/khilkhet</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/service-areas/rampura</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -195,13 +183,13 @@
   <!-- Legal & Policies -->
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/terms</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://water-tank-cleaning-service.vercel.app/privacy-policy</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-11-03</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>

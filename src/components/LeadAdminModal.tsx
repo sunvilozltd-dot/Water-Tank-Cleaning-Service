@@ -203,7 +203,7 @@ export const LeadAdminModal: React.FC<LeadAdminModalProps> = ({
               onClick={() => { setActiveTab('leads'); setIsEditingService(false); }}
               className={`min-h-[40px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === 'leads'
-                  ? 'bg-white text-[#0B2B5C] shadow-xs'
+                  ? 'bg-white text-[#123047] shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -219,7 +219,7 @@ export const LeadAdminModal: React.FC<LeadAdminModalProps> = ({
               onClick={() => setActiveTab('services')}
               className={`min-h-[40px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
                 activeTab === 'services'
-                  ? 'bg-white text-[#0B2B5C] shadow-xs'
+                  ? 'bg-white text-[#123047] shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -284,7 +284,7 @@ export const LeadAdminModal: React.FC<LeadAdminModalProps> = ({
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-sm text-[#0B2B5C]">{lead.name}</span>
+                        <span className="font-extrabold text-sm text-[#123047]">{lead.name}</span>
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
                           lead.status === 'New' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
                           lead.status === 'Contacted' ? 'bg-blue-100 text-blue-900' :
@@ -386,7 +386,7 @@ export const LeadAdminModal: React.FC<LeadAdminModalProps> = ({
                         loading="lazy"
                       />
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-extrabold text-sm text-[#0B2B5C] truncate">
+                        <h4 className="font-extrabold text-sm text-[#123047] truncate">
                           {srv.title}
                         </h4>
                         <p className="text-xs text-slate-600 font-medium">

@@ -127,7 +127,7 @@ export const MediaField: React.FC<MediaFieldProps> = ({
             type="button"
             onClick={() => setSourceMode('upload')}
             className={`px-2 py-1 rounded-lg font-bold flex items-center gap-1 transition-all cursor-pointer ${
-              sourceMode === 'upload' ? 'bg-[#0B2545] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              sourceMode === 'upload' ? 'bg-[#123047] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Upload className="w-3 h-3" />
@@ -138,7 +138,7 @@ export const MediaField: React.FC<MediaFieldProps> = ({
               type="button"
               onClick={() => setSourceMode('youtube')}
               className={`px-2 py-1 rounded-lg font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                sourceMode === 'youtube' ? 'bg-[#0B2545] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                sourceMode === 'youtube' ? 'bg-[#123047] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <Youtube className="w-3 h-3 text-rose-500" />
@@ -149,7 +149,7 @@ export const MediaField: React.FC<MediaFieldProps> = ({
             type="button"
             onClick={() => setSourceMode('url')}
             className={`px-2 py-1 rounded-lg font-bold flex items-center gap-1 transition-all cursor-pointer ${
-              sourceMode === 'url' ? 'bg-[#0B2545] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              sourceMode === 'url' ? 'bg-[#123047] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <LinkIcon className="w-3 h-3" />
@@ -246,7 +246,7 @@ export const MediaField: React.FC<MediaFieldProps> = ({
             <button
               type="button"
               onClick={handleApplyUrl}
-              className="min-h-[40px] px-4 py-2 bg-[#0B2545] hover:bg-[#071E3D] text-white rounded-xl font-bold flex items-center gap-1 cursor-pointer"
+              className="min-h-[40px] px-4 py-2 bg-[#0D9488] hover:bg-[#0F766E] text-white rounded-xl font-bold flex items-center gap-1 cursor-pointer"
             >
               <Check className="w-4 h-4" />
               <span>যুক্ত করুন</span>

@@ -65,26 +65,26 @@ export const TrustSection: React.FC<TrustSectionProps> = ({ onOpenQuoteModal }) 
   ];
 
   return (
-    <section className="py-14 sm:py-20 bg-gradient-to-b from-[#051122] via-[#061833] to-[#040D1B] border-b border-cyan-900/35 relative overflow-hidden" id="trust-facts" aria-labelledby="trust-heading">
-      {/* Ambient water glow */}
-      <div className="absolute top-1/2 -right-40 w-96 h-96 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" aria-hidden="true" />
-      <div className="absolute bottom-10 -left-40 w-96 h-96 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" aria-hidden="true" />
-
+    <section 
+      className="py-14 sm:py-20 bg-[#F5FAFC] border-b border-[#E2E8F0] relative overflow-hidden" 
+      id="trust-facts" 
+      aria-labelledby="trust-heading"
+    >
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-12">
-          <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" aria-hidden="true" />
+          <span className="text-xs font-bold uppercase tracking-wider text-[#0D9488] inline-flex items-center gap-1.5 bg-[#E8F5F3] px-3.5 py-1 rounded-full border border-[#0D9488]/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0D9488] animate-pulse" aria-hidden="true" />
             <span>{lang === 'bn' ? 'সেবার স্বাস্থ্যবিধি ও মান' : 'Hygiene & Safety Standards'}</span>
           </span>
-          <h2 id="trust-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight mt-1.5">
+          <h2 id="trust-heading" className="text-2xl sm:text-3xl md:text-4xl font-black text-[#123047] tracking-tight mt-2.5">
             {lang === 'bn' 
               ? 'বিশুদ্ধ ও নিরাপদ পানির জন্য আমাদের প্রমাণিত স্ট্যান্ডার্ড' 
               : 'Proven Standards for Pure & Hygienic Water Tanks'}
           </h2>
-          <div className="w-20 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent mx-auto my-3.5 rounded-full" />
-          <p className="mt-2.5 text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl mx-auto">
+          <div className="w-20 h-1 bg-gradient-to-r from-transparent via-[#0D9488] to-transparent mx-auto my-3.5 rounded-full" />
+          <p className="mt-2.5 text-sm sm:text-base text-[#64748B] leading-relaxed max-w-2xl mx-auto">
             {lang === 'bn'
               ? 'আমরা কোনো ক্ষতিকর কাঁচা অ্যাসিড বা ধারালো তারের ব্রাশ ব্যবহার করি না। মেকানাইজড পদ্ধতিতে ট্যাংক সুরক্ষিত রেখে জীবাণুমুক্ত সেবা নিশ্চিত করি।'
               : 'No abrasive wire brushes or harsh acid damage. We adhere strictly to verified hygiene, safety, and equipment standards across Dhaka.'}
@@ -101,22 +101,22 @@ export const TrustSection: React.FC<TrustSectionProps> = ({ onOpenQuoteModal }) 
             return (
               <div 
                 key={idx}
-                className="water-glass-card hover:border-cyan-400/50 p-6 rounded-2xl border border-cyan-500/20 shadow-lg transition-all flex flex-col justify-between"
+                className="bg-white hover:border-[#0D9488]/50 p-6 rounded-2xl border border-[#E2E8F0] shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="w-11 h-11 rounded-xl bg-[#040D1A] border border-cyan-800/40 text-cyan-400 flex items-center justify-center mb-4 shadow-sm" aria-hidden="true">
-                    <Icon className="w-5 h-5 text-cyan-400" />
+                  <div className="w-11 h-11 rounded-xl bg-[#E8F5F3] text-[#0D9488] flex items-center justify-center mb-4 shadow-2xs" aria-hidden="true">
+                    <Icon className="w-5 h-5 text-[#0D9488]" />
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-white leading-snug mb-2">
+                  <h3 className="text-base sm:text-lg font-bold text-[#123047] leading-snug mb-2">
                     {title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">
                     {desc}
                   </p>
                 </div>
 
-                <div className="pt-4 mt-4 border-t border-cyan-900/40 flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden="true" />
+                <div className="pt-4 mt-4 border-t border-[#E2E8F0] flex items-center gap-1.5 text-xs font-semibold text-[#16A34A]">
+                  <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" aria-hidden="true" />
                   <span>{lang === 'bn' ? 'সানভিলোজ কোয়ালিটি পলিসি' : 'Verified Policy'}</span>
                 </div>
               </div>
@@ -125,12 +125,12 @@ export const TrustSection: React.FC<TrustSectionProps> = ({ onOpenQuoteModal }) 
         </div>
 
         {/* Quick Assurance Strip */}
-        <div className="mt-10 p-5 sm:p-6 rounded-2xl bg-[#171C24] border border-[#303743] text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+        <div className="mt-10 p-5 sm:p-6 rounded-2xl bg-white border border-[#E2E8F0] text-[#172B3A] flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
           <div className="text-center sm:text-left">
-            <h4 className="text-sm sm:text-base font-bold text-white">
+            <h4 className="text-sm sm:text-base font-bold text-[#123047]">
               {lang === 'bn' ? 'আপনার ছাদ বা আন্ডারগ্রাউন্ড ট্যাংকের জন্য কোটেশন প্রয়োজন?' : 'Need an exact quote for your rooftop or reserve tank?'}
             </h4>
-            <p className="text-xs text-[#B8C0CC] mt-0.5">
+            <p className="text-xs text-[#64748B] mt-0.5">
               {lang === 'bn' 
                 ? `সরাসরি ফোন করুন ${business.displayPhone} নম্বরে অথবা হোয়াটসঅ্যাপে মেসেজ পাঠিয়ে কোটেশন নিন` 
                 : `Call us directly at ${business.displayPhone} or message on WhatsApp for instant confirmation`}
@@ -142,7 +142,7 @@ export const TrustSection: React.FC<TrustSectionProps> = ({ onOpenQuoteModal }) 
               <button
                 type="button"
                 onClick={onOpenQuoteModal}
-                className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#2585FF] hover:bg-[#1a73e8] text-white font-bold text-xs sm:text-sm transition-all cursor-pointer shadow-md focus-visible:outline-2 focus-visible:outline-[#2585FF]"
+                className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white font-bold text-xs sm:text-sm transition-all cursor-pointer shadow-xs focus-visible:outline-2 focus-visible:outline-[#0D9488]"
               >
                 {lang === 'bn' ? 'ফ্রি কোটেশন নিন' : 'Get Free Quote'}
               </button>
@@ -151,7 +151,7 @@ export const TrustSection: React.FC<TrustSectionProps> = ({ onOpenQuoteModal }) 
               href={`https://wa.me/${business.whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('আসসালামু আলাইকুম। আমি Water Tank Cleaning Service নিতে আগ্রহী। আমার এলাকা: ঢাকা। অনুগ্রহ করে সার্ভিসের মূল্য ও বুকিং প্রক্রিয়া জানাবেন।')}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="min-h-[44px] flex items-center px-4 py-2.5 rounded-xl bg-[#28C76F] hover:bg-[#22aa5e] text-white font-bold text-xs sm:text-sm transition-all shadow-md focus-visible:outline-2 focus-visible:outline-[#28C76F]"
+              className="min-h-[44px] flex items-center px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs sm:text-sm transition-all shadow-xs focus-visible:outline-2 focus-visible:outline-[#25D366]"
             >
               WhatsApp
             </a>

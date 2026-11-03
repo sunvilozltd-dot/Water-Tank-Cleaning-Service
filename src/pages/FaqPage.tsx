@@ -8,7 +8,7 @@ export const FaqPage: React.FC = () => {
   const { lang } = useLanguage();
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
+    <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
       <SeoHead
         title="Frequently Asked Questions - Water Tank Cleaning Dhaka"
         description="Find answers to common questions about water tank cleaning process, pricing, time needed, chemicals used, and safety in Dhaka."
@@ -19,3 +19,5 @@ export const FaqPage: React.FC = () => {
     </main>
   );
 };
+
+export default FaqPage;

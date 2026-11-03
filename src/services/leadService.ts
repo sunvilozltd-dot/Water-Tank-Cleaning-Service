@@ -1,4 +1,4 @@
-import { QuoteFormData, QuoteLead, LeadStatus } from '../types';
+import { QuoteFormData, QuoteLead, LeadStatus, LeadNotificationRecord } from '../types';
 import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
 import { safeGetItem, safeSetItem } from '../utils/safeLocalStorage';
 import { getStoredAttribution } from '../utils/utmTracking';
@@ -12,35 +12,64 @@ export function generateLeadNumber(): string {
   return `SVC-${dateStr}-${randomPart}`;
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isValidUUID(str?: string | null): boolean {
+  return Boolean(str && UUID_REGEX.test(str));
+}
+
+const PENDING_SYNC_STORAGE_KEY = 'sunviloz_pending_lead_sync_v1';
+
+export function generateOwnershipToken(): string {
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const arr = new Uint8Array(24);
+    crypto.getRandomValues(arr);
+    return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  return 'tok_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+}
+
+export function generateIdempotencyKey(): string {
+  return 'idem_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 10);
+}
+
 /**
- * Save new lead to Supabase (with offline/localStorage resilience and deduplication)
+ * Save new lead or complete an existing incomplete lead in Supabase
+ * If existingLeadId is provided, updates the existing row instead of creating a duplicate!
  */
-export async function createLead(data: QuoteFormData, source = 'Website'): Promise<QuoteLead> {
+export async function createLead(
+  data: QuoteFormData, 
+  source = 'Website', 
+  existingLeadId?: string | null,
+  ownershipToken?: string | null
+): Promise<QuoteLead> {
   const cleanPhone = normalizeBangladeshiPhone(data.phone || '');
   const cleanName = sanitizeInputString(data.name, 100);
   const cleanArea = sanitizeInputString(data.area, 100);
+  const cleanWhatsapp = normalizeBangladeshiPhone(data.whatsapp || data.phone || '');
 
   // Deduplication check: prevent accidental double-click / rapid retry duplicate records
-  try {
-    const localLeads = getLocalLeads();
-    const nowMs = Date.now();
-    const recentDuplicate = localLeads.find(l => {
-      if (!l.createdAt || !l.phone) return false;
-      const createdMs = new Date(l.createdAt).getTime();
-      const isRecent = (nowMs - createdMs) < 20000; // 20 second idempotency window
-      const lCleanPhone = normalizeBangladeshiPhone(l.phone);
-      return isRecent && cleanPhone.length >= 10 && cleanPhone === lCleanPhone;
-    });
+  if (!existingLeadId) {
+    try {
+      const localLeads = getLocalLeads();
+      const nowMs = Date.now();
+      const recentDuplicate = localLeads.find(l => {
+        if (!l.createdAt || !l.phone) return false;
+        const createdMs = new Date(l.createdAt).getTime();
+        const isRecent = (nowMs - createdMs) < 20000; // 20 second idempotency window
+        const lCleanPhone = normalizeBangladeshiPhone(l.phone);
+        return isRecent && cleanPhone.length >= 10 && cleanPhone === lCleanPhone;
+      });
 
-    if (recentDuplicate) {
-      return recentDuplicate;
+      if (recentDuplicate) {
+        return recentDuplicate;
+      }
+    } catch {
+      // Continue if dedup check fails
     }
-  } catch (dedupErr) {
-    // Continue if dedup check fails
   }
 
-  const leadNumber = generateLeadNumber();
-  const id = 'lead_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+  const attribution = getStoredAttribution();
   const now = new Date().toISOString();
 
   // Combine extra details into message string for maximum visibility in DB & admin
@@ -71,108 +100,140 @@ export async function createLead(data: QuoteFormData, source = 'Website'): Promi
     ? sanitizeInputString(data.message, 1000)
     : (extraDetails.length > 0 ? extraDetails.join(' | ') : sanitizeInputString(data.message || '', 500));
 
-  const attribution = getStoredAttribution();
+  const address = sanitizeInputString(data.address || [
+    data.houseNumber ? `বাসা: ${data.houseNumber}` : '',
+    data.roadNumber ? `রোড: ${data.roadNumber}` : '',
+    cleanArea,
+    data.thana ? `থানা: ${data.thana}` : '',
+    data.postcode ? `পোস্ট কোড: ${data.postcode}` : '',
+    data.landmark ? `ল্যান্ডমার্ক: ${data.landmark}` : ''
+  ].filter(Boolean).join(', '), 300) || undefined;
 
-  const newLead: QuoteLead = {
+  let leadId = existingLeadId && isValidUUID(existingLeadId) ? existingLeadId : ('offline_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
+  let leadNumber = generateLeadNumber();
+  let isSynced = false;
+
+  // Cancel any pending abandonment notification since lead has now been completed
+  if (existingLeadId) {
+    cancelAbandonedLeadCheck(existingLeadId);
+  }
+
+  // 1. Synchronize to Supabase via complete_customer_lead RPC
+  if (isSupabaseConfigured()) {
+    try {
+      let effectiveToken = ownershipToken || (data as any).ownershipToken || (getLeadDraft()?.ownershipToken) || null;
+      const { data: rpcRes, error: rpcError } = await supabase.rpc('complete_customer_lead', {
+        p_lead_id: existingLeadId && isValidUUID(existingLeadId) ? existingLeadId : null,
+        p_customer_name: cleanName,
+        p_phone: cleanPhone,
+        p_whatsapp: cleanWhatsapp,
+        p_email: data.email ? sanitizeInputString(data.email, 100) : null,
+        p_area: cleanArea || 'Dhaka',
+        p_address: address || null,
+        p_service_type: data.serviceType || 'Water Tank Cleaning',
+        p_tank_type: data.tankType || null,
+        p_tank_capacity: data.tankCapacity || null,
+        p_floors: data.floors ? sanitizeInputString(data.floors, 30) : null,
+        p_flats: data.flats ? sanitizeInputString(data.flats, 30) : (data.numberOfFlats ? String(data.numberOfFlats) : null),
+        p_additional_pipeline: Boolean(data.additionalPipelineCleaning || data.additionalServices?.includes('পাইপলাইন ক্লিনিং')),
+        p_additional_amc: Boolean(data.additionalAmc || data.additionalServices?.includes('বার্ষিক চুক্তি (AMC)')),
+        p_preferred_date: data.preferredDate || null,
+        p_preferred_time: data.preferredTime || null,
+        p_message: consolidatedMessage || null,
+        p_source: (data as any).source || (attribution.utm_source ? `${attribution.utm_source}${attribution.utm_medium ? ` (${attribution.utm_medium})` : ''}` : source),
+        p_utm_source: (data as any).utm_source || attribution.utm_source || null,
+        p_utm_medium: (data as any).utm_medium || attribution.utm_medium || null,
+        p_utm_campaign: (data as any).utm_campaign || attribution.utm_campaign || null,
+        p_ownership_token: effectiveToken
+      });
+
+      if (!rpcError && rpcRes && rpcRes.id) {
+        leadId = rpcRes.id;
+        leadNumber = rpcRes.lead_number || leadNumber;
+        if (rpcRes.ownership_token) {
+          effectiveToken = rpcRes.ownership_token;
+        }
+        isSynced = true;
+      } else {
+        // Fallback to direct table insertion if RPC is not yet created
+        const { data: insertData, error: insertError } = await supabase
+          .from('leads')
+          .insert([{
+            customer_name: cleanName,
+            phone: cleanPhone,
+            whatsapp: cleanWhatsapp,
+            email: data.email ? sanitizeInputString(data.email, 100) : null,
+            area: cleanArea,
+            address: address || null,
+            service_type: data.serviceType || 'Water Tank Cleaning',
+            tank_type: data.tankType || null,
+            tank_capacity: data.tankCapacity || null,
+            message: consolidatedMessage || null,
+            source: (data as any).source || source,
+            status: 'New',
+            lead_status: 'New'
+          }])
+          .select('id, lead_number')
+          .single();
+
+        if (!insertError && insertData) {
+          leadId = insertData.id;
+          leadNumber = insertData.lead_number || leadNumber;
+          isSynced = true;
+        }
+      }
+    } catch (err: any) {
+      console.warn('[LeadService] Network error saving lead to Supabase:', err?.message || err);
+      isSynced = false;
+    }
+  }
+
+  const finalLead: QuoteLead = {
     ...data,
-    id,
+    id: leadId,
+    ownershipToken: ownershipToken || (data as any).ownershipToken || getLeadDraft()?.ownershipToken,
     name: cleanName,
     phone: cleanPhone,
+    whatsapp: cleanWhatsapp,
     area: cleanArea,
+    address,
     leadNumber,
     createdAt: now,
     updatedAt: now,
     status: 'New',
-    isSyncedToCloud: false,
+    isSyncedToCloud: isSynced,
     source: (data as any).source || (attribution.utm_source ? `${attribution.utm_source}${attribution.utm_medium ? ` (${attribution.utm_medium})` : ''}` : source),
     utm_source: (data as any).utm_source || attribution.utm_source,
     utm_medium: (data as any).utm_medium || attribution.utm_medium,
     utm_campaign: (data as any).utm_campaign || attribution.utm_campaign,
     utm_term: data.utm_term || attribution.utm_term,
     utm_content: data.utm_content || attribution.utm_content,
-    message: consolidatedMessage,
-    whatsapp: normalizeBangladeshiPhone(data.whatsapp || data.phone)
+    message: consolidatedMessage
   };
 
-  // 1. Always update local storage first (Ensures zero lead loss, offline resilience)
+  // 2. Update local storage (if existing lead, replace it; otherwise prepend)
   try {
     const existing = getLocalLeads();
-    safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify([newLead, ...existing]));
-  } catch (err) {
-    // Local storage full or unavailable
-  }
-
-  // 2. Insert into Supabase if configured
-  if (isSupabaseConfigured()) {
-    try {
-      const payload: Record<string, any> = {
-        lead_number: leadNumber,
-        customer_name: cleanName,
-        phone: cleanPhone,
-        whatsapp: newLead.whatsapp,
-        email: data.email ? sanitizeInputString(data.email, 100) : null,
-        area: cleanArea,
-        house_number: data.houseNumber ? sanitizeInputString(data.houseNumber, 50) : null,
-        road_number: data.roadNumber ? sanitizeInputString(data.roadNumber, 50) : null,
-        thana: data.thana ? sanitizeInputString(data.thana, 50) : null,
-        postcode: data.postcode ? sanitizeInputString(data.postcode, 20) : null,
-        landmark: data.landmark ? sanitizeInputString(data.landmark, 100) : null,
-        address: sanitizeInputString(data.address || [
-          data.houseNumber ? `বাসা: ${data.houseNumber}` : '',
-          data.roadNumber ? `রোড: ${data.roadNumber}` : '',
-          cleanArea,
-          data.thana ? `থানা: ${data.thana}` : '',
-          data.postcode ? `পোস্ট কোড: ${data.postcode}` : '',
-          data.landmark ? `ল্যান্ডমার্ক: ${data.landmark}` : ''
-        ].filter(Boolean).join(', '), 300) || null,
-        service_type: data.serviceType || 'Water Tank Cleaning',
-        tank_type: data.tankType || null,
-        tank_capacity: data.tankCapacity || null,
-        capacity_unknown: Boolean(data.capacityUnknown || data.tankCapacity === 'ধারণক্ষমতা জানা নেই'),
-        building_floors: data.floors ? sanitizeInputString(data.floors, 30) : null,
-        flat_count: data.flats ? sanitizeInputString(data.flats, 30) : (data.numberOfFlats ? String(data.numberOfFlats) : null),
-        additional_pipeline_cleaning: Boolean(data.additionalPipelineCleaning || data.additionalServices?.includes('পাইপলাইন ক্লিনিং')),
-        additional_amc: Boolean(data.additionalAmc || data.additionalServices?.includes('বার্ষিক চুক্তি (AMC)')),
-        number_of_tanks: data.numberOfTanks || 1,
-        number_of_flats: data.numberOfFlats || data.flats || null,
-        building_type: data.buildingType || data.propertyType || null,
-        preferred_date: data.preferredDate || null,
-        preferred_time: data.preferredTime || null,
-        message: consolidatedMessage || null,
-        estimated_price: data.estimatedPrice || null,
-        source: newLead.source,
-        utm_source: newLead.utm_source || null,
-        utm_medium: newLead.utm_medium || null,
-        utm_campaign: newLead.utm_campaign || null,
-        status: 'New',
-        lead_status: 'New'
-      };
-
-      const { error: insertError } = await supabase
-        .from('leads')
-        .insert([payload]);
-
-      if (!insertError) {
-        newLead.isSyncedToCloud = true;
-        // Sync the cloud status back to local storage
-        try {
-          const currentLocal = getLocalLeads();
-          const updatedLocal = currentLocal.map(l => l.leadNumber === leadNumber ? { ...l, isSyncedToCloud: true } : l);
-          safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
-        } catch {
-          // Ignore
-        }
-      } else {
-        console.warn('[LeadService] Lead insert into Supabase returned error:', insertError.message);
-        newLead.isSyncedToCloud = false;
-      }
-    } catch (err: any) {
-      console.warn('[LeadService] Network error saving lead to Supabase:', err?.message || err);
-      newLead.isSyncedToCloud = false;
+    const existingIdx = existing.findIndex(l => (existingLeadId && l.id === existingLeadId) || l.id === leadId || l.leadNumber === leadNumber);
+    if (existingIdx >= 0) {
+      existing[existingIdx] = finalLead;
+      safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify(existing));
+    } else {
+      safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify([finalLead, ...existing]));
     }
+  } catch {
+    // Ignore storage issues
   }
 
-  return newLead;
+  // 3. Dispatch Email Notification to Business Owner (Deduplicated)
+  dispatchLeadNotification(finalLead, 'complete_lead').catch(() => {});
+
+  // 4. If offline, enqueue for background sync
+  if (!isSynced) {
+    enqueuePendingSync({ action: 'complete', leadId, payload: finalLead });
+  }
+
+  return finalLead;
 }
 
 /**
@@ -546,76 +607,179 @@ export async function updateLeadDetails(lead: QuoteLead): Promise<boolean> {
 }
 
 /**
- * Save or update partial lead for Incomplete Order Tracking
- * Captures lead at Step 1 (Name & Mobile Number) and updates it in subsequent steps.
+ * Save or update partial lead for Incomplete Order Tracking.
+ * - In Step 1: Calls Supabase create_partial_lead RPC to generate and return a true UUID.
+ * - In subsequent steps: Calls update_partial_lead RPC using that UUID.
+ * - Never uses locally generated pseudo-strings as the Supabase UUID!
+ * - Fallback to localStorage and background retry queue.
  */
 export async function saveOrUpdatePartialLead(
   leadId: string | null,
-  data: Partial<QuoteLead> & { name: string; phone: string }
+  data: Partial<QuoteLead> & { name: string; phone: string },
+  ownershipToken?: string | null,
+  idempotencyKey?: string | null
 ): Promise<QuoteLead> {
   const localLeads = getLocalLeads();
   const now = new Date().toISOString();
+  const cleanPhone = normalizeBangladeshiPhone(data.phone);
+  const cleanName = sanitizeInputString(data.name, 100);
+  const cleanWhatsapp = normalizeBangladeshiPhone(data.whatsapp || cleanPhone);
+  const cleanArea = sanitizeInputString(data.area, 100) || 'Dhaka';
+  const attribution = getStoredAttribution();
 
-  if (leadId) {
-    const existingIndex = localLeads.findIndex(l => l.id === leadId);
+  // Deduplication check: check if draft in storage already has a valid UUID
+  const draft = getLeadDraft();
+  const effectiveLeadId = (leadId && isValidUUID(leadId)) 
+    ? leadId 
+    : (draft?.leadId && isValidUUID(draft.leadId) ? draft.leadId : null);
+  const effectiveToken = ownershipToken || (data as any).ownershipToken || draft?.ownershipToken || generateOwnershipToken();
+  const effectiveIdempotencyKey = idempotencyKey || (data as any).idempotencyKey || draft?.idempotencyKey || generateIdempotencyKey();
+
+  // 1. UPDATE EXISTING PARTIAL LEAD (Guaranteed: never creates duplicate row!)
+  if (effectiveLeadId && isValidUUID(effectiveLeadId)) {
+    const existingIndex = localLeads.findIndex(l => l.id === effectiveLeadId);
+    let updated: QuoteLead;
+
     if (existingIndex >= 0) {
-      const existing = localLeads[existingIndex];
-      const updated: QuoteLead = {
-        ...existing,
+      updated = {
+        ...localLeads[existingIndex],
         ...data,
+        name: cleanName || localLeads[existingIndex].name,
+        phone: cleanPhone || localLeads[existingIndex].phone,
+        whatsapp: cleanWhatsapp || localLeads[existingIndex].whatsapp,
+        area: cleanArea || localLeads[existingIndex].area,
+        ownershipToken: effectiveToken,
         updatedAt: now
       };
       localLeads[existingIndex] = updated;
-      safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify(localLeads));
+    } else {
+      updated = {
+        ...data,
+        id: effectiveLeadId,
+        ownershipToken: effectiveToken,
+        leadNumber: generateLeadNumber(),
+        name: cleanName,
+        phone: cleanPhone,
+        whatsapp: cleanWhatsapp,
+        area: cleanArea,
+        tankType: (data.tankType as any) || '',
+        tankCapacity: (data.tankCapacity as any) || '',
+        numberOfTanks: data.numberOfTanks || 1,
+        status: 'Incomplete',
+        isAbandoned: true,
+        completionStep: data.completionStep || 2,
+        lastActiveStepName: data.lastActiveStepName || 'Step 2 - Details Added',
+        createdAt: now,
+        updatedAt: now,
+        isSyncedToCloud: false,
+        source: 'Website Booking Form'
+      };
+      localLeads.unshift(updated);
+    }
 
-      // Attempt Supabase sync
-      if (isSupabaseConfigured()) {
-        try {
-          await supabase.from('leads').update({
-            customer_name: updated.name,
-            phone: updated.phone,
-            whatsapp: updated.whatsapp || updated.phone,
-            area: updated.area || 'Dhaka',
-            service_type: updated.serviceType || 'Water Tank Cleaning',
-            tank_type: updated.tankType || null,
-            tank_capacity: updated.tankCapacity || null,
-            status: updated.status,
-            message: updated.message || updated.notes || null,
-            updated_at: now
-          }).eq('id', leadId);
-        } catch {
-          // Ignore
+    safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify(localLeads));
+
+    // Supabase update via update_partial_lead RPC with ownership token
+    if (isSupabaseConfigured()) {
+      try {
+        const { error: rpcErr } = await supabase.rpc('update_partial_lead', {
+          p_lead_id: effectiveLeadId,
+          p_ownership_token: effectiveToken,
+          p_tank_type: updated.tankType || null,
+          p_tank_capacity: updated.tankCapacity || null,
+          p_area: updated.area || 'Dhaka',
+          p_service_type: updated.serviceType || 'Water Tank Cleaning',
+          p_message: updated.message || updated.notes || null,
+          p_step: updated.completionStep || 2
+        });
+
+        if (!rpcErr) {
+          updated.isSyncedToCloud = true;
+          safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify(localLeads));
+        } else {
+          enqueuePendingSync({
+            action: 'update_partial',
+            leadId: effectiveLeadId,
+            payload: {
+              p_ownership_token: effectiveToken,
+              p_tank_type: updated.tankType || null,
+              p_tank_capacity: updated.tankCapacity || null,
+              p_area: updated.area || 'Dhaka',
+              p_service_type: updated.serviceType || 'Water Tank Cleaning',
+              p_step: updated.completionStep || 2
+            }
+          });
         }
+      } catch {
+        enqueuePendingSync({
+          action: 'update_partial',
+          leadId: effectiveLeadId,
+          payload: { p_ownership_token: effectiveToken, p_tank_type: updated.tankType, p_tank_capacity: updated.tankCapacity, p_area: updated.area }
+        });
       }
-      return updated;
+    }
+
+    return updated;
+  }
+
+  // 2. CREATE BRAND NEW PARTIAL LEAD (First-Step Lead Capture)
+  let generatedUuid: string | null = null;
+  let generatedLeadNum = generateLeadNumber();
+  let receivedToken: string = effectiveToken;
+  let isCloudSynced = false;
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data: rpcRes, error: rpcErr } = await supabase.rpc('create_partial_lead', {
+        p_customer_name: cleanName,
+        p_phone: cleanPhone,
+        p_whatsapp: cleanWhatsapp,
+        p_area: cleanArea,
+        p_service_type: data.serviceType || 'Water Tank Cleaning',
+        p_source: (data.source as any) || (attribution.utm_source ? `${attribution.utm_source}${attribution.utm_medium ? ` (${attribution.utm_medium})` : ''}` : 'Website Booking Wizard (Step 1)'),
+        p_utm_source: data.utm_source || attribution.utm_source || null,
+        p_utm_medium: data.utm_medium || attribution.utm_medium || null,
+        p_utm_campaign: data.utm_campaign || attribution.utm_campaign || null,
+        p_ownership_token: effectiveToken,
+        p_idempotency_key: effectiveIdempotencyKey
+      });
+
+      if (!rpcErr && rpcRes && rpcRes.id) {
+        generatedUuid = rpcRes.id;
+        generatedLeadNum = rpcRes.lead_number || generatedLeadNum;
+        if (rpcRes.ownership_token) {
+          receivedToken = rpcRes.ownership_token;
+        }
+        isCloudSynced = true;
+      }
+    } catch (err) {
+      console.warn('[LeadService] Network failure during partial lead RPC:', err);
     }
   }
 
-  // Create brand new partial lead
-  const attribution = getStoredAttribution();
-  const leadNumber = generateLeadNumber();
-  const id = 'lead_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-  const cleanPhone = normalizeBangladeshiPhone(data.phone);
-  const cleanName = sanitizeInputString(data.name, 100);
+  // Fallback ID only if completely offline
+  const finalId = generatedUuid || ('offline_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
 
   const newLead: QuoteLead = {
     ...data,
-    id,
-    leadNumber,
+    id: finalId,
+    idempotencyKey: effectiveIdempotencyKey,
+    ownershipToken: receivedToken,
+    leadNumber: generatedLeadNum,
     name: cleanName,
     phone: cleanPhone,
-    whatsapp: normalizeBangladeshiPhone(data.whatsapp || cleanPhone),
-    area: sanitizeInputString(data.area, 100) || 'Dhaka',
+    whatsapp: cleanWhatsapp,
+    area: cleanArea,
     serviceType: data.serviceType || 'Water Tank Cleaning',
     tankType: (data.tankType as any) || '',
     tankCapacity: (data.tankCapacity as any) || '',
     numberOfTanks: data.numberOfTanks || 1,
-    status: data.status || 'Incomplete',
-    isAbandoned: data.isAbandoned !== undefined ? data.isAbandoned : true,
+    status: 'Incomplete',
+    isAbandoned: true,
     completionStep: data.completionStep || 1,
     lastActiveStepName: data.lastActiveStepName || 'Step 1 - Contact Captured',
-    isSyncedToCloud: false,
-    source: (data.source as any) || (attribution.utm_source ? `${attribution.utm_source}${attribution.utm_medium ? ` (${attribution.utm_medium})` : ''}` : 'Website Booking Form (Step 1)'),
+    isSyncedToCloud: isCloudSynced,
+    source: (data.source as any) || (attribution.utm_source ? `${attribution.utm_source}${attribution.utm_medium ? ` (${attribution.utm_medium})` : ''}` : 'Website Booking Wizard (Step 1)'),
     utm_source: data.utm_source || attribution.utm_source,
     utm_medium: data.utm_medium || attribution.utm_medium,
     utm_campaign: data.utm_campaign || attribution.utm_campaign,
@@ -625,34 +789,564 @@ export async function saveOrUpdatePartialLead(
 
   safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify([newLead, ...localLeads]));
 
-  if (isSupabaseConfigured()) {
-    try {
-      const { error: insertErr } = await supabase.from('leads').insert([{
-        lead_number: leadNumber,
-        customer_name: cleanName,
-        phone: cleanPhone,
-        whatsapp: newLead.whatsapp,
-        area: newLead.area,
-        service_type: newLead.serviceType,
-        status: 'Incomplete',
-        source: newLead.source,
-        utm_source: newLead.utm_source || null,
-        utm_medium: newLead.utm_medium || null,
-        utm_campaign: newLead.utm_campaign || null,
-        message: `Step 1 Incomplete Lead: ${newLead.lastActiveStepName}`,
-        created_at: now
-      }]);
+  // Schedule abandonment notification check in case user drops off after capturing contact
+  if (cleanPhone.length >= 10) {
+    scheduleAbandonedLeadCheck(newLead);
+  }
 
-      if (!insertErr) {
-        newLead.isSyncedToCloud = true;
-        const currentLocal = getLocalLeads();
-        const updatedLocal = currentLocal.map(l => l.leadNumber === leadNumber ? { ...l, isSyncedToCloud: true } : l);
-        safeSetItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocal));
+  // If offline, enqueue for background sync with stable idempotency key
+  if (!isCloudSynced) {
+    enqueuePendingSync({
+      action: 'create_partial',
+      payload: {
+        p_customer_name: cleanName,
+        p_phone: cleanPhone,
+        p_whatsapp: cleanWhatsapp,
+        p_area: cleanArea,
+        p_service_type: newLead.serviceType,
+        p_source: newLead.source,
+        p_ownership_token: receivedToken,
+        p_idempotency_key: effectiveIdempotencyKey
       }
-    } catch {
-      // Offline fallback: lead safely retained in localStorage without pretending to be cloud synced
-    }
+    });
   }
 
   return newLead;
 }
+
+// ------------------------------------------------------------------------------
+// DRAFT LEAD MANAGEMENT (Resilient auto-save with zero duplicate spam)
+// ------------------------------------------------------------------------------
+const DRAFT_STORAGE_KEY = 'sunviloz_quote_draft_v1';
+let draftDebounceTimer: any = null;
+let isCreatingPartialLeadPromise: Promise<QuoteLead | null> | null = null;
+
+export function getLeadDraft(): Partial<QuoteFormData> | null {
+  try {
+    const raw = safeGetItem(DRAFT_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearLeadDraft(): void {
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+    }
+  } catch {
+    // Ignore
+  }
+}
+
+/**
+ * Save draft lead locally immediately and debounces cloud draft if meaningful phone exists.
+ * Does not spam Supabase on every keystroke.
+ * Ensures EXACTLY ONE Supabase incomplete lead is created, capturing and persisting its UUID.
+ */
+export function saveLeadDraft(data: Partial<QuoteFormData>): void {
+  // 1. Immediately persist locally
+  const existingDraft = getLeadDraft() || {};
+  const mergedDraft: Partial<QuoteFormData> = {
+    ...existingDraft,
+    ...data,
+    leadId: data.leadId || existingDraft.leadId,
+    ownershipToken: data.ownershipToken || existingDraft.ownershipToken,
+    idempotencyKey: data.idempotencyKey || existingDraft.idempotencyKey || generateIdempotencyKey()
+  };
+
+  try {
+    safeSetItem(DRAFT_STORAGE_KEY, JSON.stringify(mergedDraft));
+  } catch {
+    // Ignore
+  }
+
+  // 2. Only consider syncing partial lead to cloud if meaningful contact details (11-digit phone) exist
+  const cleanPhone = normalizeBangladeshiPhone(mergedDraft.phone || '');
+  if (cleanPhone.length < 11 || !isSupabaseConfigured()) {
+    return;
+  }
+
+  if (draftDebounceTimer) {
+    clearTimeout(draftDebounceTimer);
+  }
+
+  // 10-second debounce to ensure user paused typing before cloud save
+  draftDebounceTimer = setTimeout(async () => {
+    try {
+      const currentDraft = getLeadDraft() || mergedDraft;
+      const targetLeadId = currentDraft.leadId;
+      const targetToken = currentDraft.ownershipToken || generateOwnershipToken();
+      const targetIdempotencyKey = currentDraft.idempotencyKey || generateIdempotencyKey();
+
+      // If we already have a valid Supabase UUID, UPDATE THAT RECORD — NEVER create a new one!
+      if (targetLeadId && isValidUUID(targetLeadId)) {
+        await saveOrUpdatePartialLead(targetLeadId, {
+          name: currentDraft.name || 'Website Visitor',
+          phone: cleanPhone,
+          whatsapp: currentDraft.whatsapp || cleanPhone,
+          area: currentDraft.area || 'Dhaka',
+          serviceType: currentDraft.serviceType || 'Water Tank Cleaning',
+          tankType: currentDraft.tankType,
+          tankCapacity: currentDraft.tankCapacity,
+          numberOfTanks: currentDraft.numberOfTanks || 1,
+          status: 'Incomplete',
+          isAbandoned: true,
+          completionStep: 1,
+          lastActiveStepName: 'Auto-saved Draft'
+        }, targetToken, targetIdempotencyKey);
+        return;
+      }
+
+      // If no leadId exists yet, create it EXACTLY ONCE using an in-flight singleton promise lock
+      if (!isCreatingPartialLeadPromise) {
+        isCreatingPartialLeadPromise = (async () => {
+          try {
+            const partial = await saveOrUpdatePartialLead(null, {
+              name: currentDraft.name || 'Website Visitor',
+              phone: cleanPhone,
+              whatsapp: currentDraft.whatsapp || cleanPhone,
+              area: currentDraft.area || 'Dhaka',
+              serviceType: currentDraft.serviceType || 'Water Tank Cleaning',
+              tankType: currentDraft.tankType,
+              tankCapacity: currentDraft.tankCapacity,
+              numberOfTanks: currentDraft.numberOfTanks || 1,
+              status: 'Incomplete',
+              isAbandoned: true,
+              completionStep: 1,
+              lastActiveStepName: 'Auto-saved Draft'
+            }, targetToken, targetIdempotencyKey);
+
+            if (partial && partial.id && isValidUUID(partial.id)) {
+              const updatedDraft = {
+                ...(getLeadDraft() || currentDraft),
+                leadId: partial.id,
+                ownershipToken: (partial as any).ownershipToken || targetToken,
+                idempotencyKey: (partial as any).idempotencyKey || targetIdempotencyKey
+              };
+              safeSetItem(DRAFT_STORAGE_KEY, JSON.stringify(updatedDraft));
+
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('sunviloz_lead_id_synced', {
+                  detail: { leadId: partial.id, ownershipToken: updatedDraft.ownershipToken }
+                }));
+              }
+            }
+            return partial;
+          } finally {
+            isCreatingPartialLeadPromise = null;
+          }
+        })();
+      }
+      await isCreatingPartialLeadPromise;
+    } catch (err) {
+      console.warn('[LeadService] Non-blocking autosave warning:', err);
+    }
+  }, 10000);
+}
+
+// ------------------------------------------------------------------------------
+// PAGINATED LEADS QUERY (Scalable Admin Dashboard Querying)
+// ------------------------------------------------------------------------------
+export interface PaginatedLeadsResult {
+  leads: QuoteLead[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+export async function fetchPaginatedLeads(params: {
+  page: number;
+  pageSize: number;
+  statusFilter?: string;
+  searchQuery?: string;
+}): Promise<PaginatedLeadsResult> {
+  const { page = 1, pageSize = 20, statusFilter, searchQuery } = params;
+
+  if (isSupabaseConfigured()) {
+    try {
+      let query = supabase
+        .from('leads')
+        .select('*', { count: 'exact' });
+
+      if (statusFilter && statusFilter !== 'All') {
+        query = query.eq('status', statusFilter);
+      }
+
+      if (searchQuery && searchQuery.trim()) {
+        const cleanTerm = searchQuery.trim();
+        query = query.or(`customer_name.ilike.%${cleanTerm}%,phone.ilike.%${cleanTerm}%,area.ilike.%${cleanTerm}%,lead_number.ilike.%${cleanTerm}%`);
+      }
+
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data, count, error } = await query
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+      if (!error && data) {
+        const totalCount = count || data.length;
+        const totalPages = Math.ceil(totalCount / pageSize);
+
+        const mapped: QuoteLead[] = data.map(item => ({
+          id: item.id,
+          leadNumber: item.lead_number,
+          name: item.customer_name,
+          phone: item.phone,
+          whatsapp: item.whatsapp || item.phone,
+          email: item.email || undefined,
+          area: item.area,
+          address: item.address || undefined,
+          serviceType: item.service_type || 'Water Tank Cleaning',
+          tankType: item.tank_type || '',
+          tankCapacity: item.tank_capacity || '',
+          numberOfTanks: item.number_of_tanks || 1,
+          status: (item.status as LeadStatus) || 'New',
+          adminNote: item.admin_note || undefined,
+          isSyncedToCloud: true,
+          createdAt: item.created_at,
+          updatedAt: item.updated_at
+        }));
+
+        return {
+          leads: mapped,
+          totalCount,
+          totalPages,
+          currentPage: page
+        };
+      }
+    } catch (err) {
+      console.warn('[LeadService] Error fetching paginated leads from cloud:', err);
+    }
+  }
+
+  // Fallback to local storage with simulated pagination
+  const allLocal = getLocalLeads();
+  let filtered = allLocal;
+  if (statusFilter && statusFilter !== 'All') {
+    filtered = filtered.filter(l => l.status === statusFilter);
+  }
+  if (searchQuery && searchQuery.trim()) {
+    const term = searchQuery.toLowerCase();
+    filtered = filtered.filter(l => 
+      l.name?.toLowerCase().includes(term) || 
+      l.phone?.includes(term) || 
+      l.area?.toLowerCase().includes(term) ||
+      l.leadNumber?.toLowerCase().includes(term)
+    );
+  }
+
+  const totalCount = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const from = (page - 1) * pageSize;
+  const leads = filtered.slice(from, from + pageSize).map(l => ({ ...l, isSyncedToCloud: false }));
+
+  return {
+    leads,
+    totalCount,
+    totalPages,
+    currentPage: page
+  };
+}
+
+// ------------------------------------------------------------------------------
+// FREE-TIER RESOURCE USAGE METRICS (Real-time live database calculation)
+// ------------------------------------------------------------------------------
+export interface DatabaseUsageMetrics {
+  totalLeadsCount: number;
+  incompleteLeadsCount: number;
+  auditLogsCount: number;
+  mediaItemsCount: number;
+  estimatedDbSizeBytes: number;
+  estimatedDbSizeFormatted: string;
+  maxFreeTierBytes: number;
+  percentUsed: number;
+}
+
+export async function fetchLiveDatabaseResourceUsage(): Promise<DatabaseUsageMetrics> {
+  const defaultMetrics: DatabaseUsageMetrics = {
+    totalLeadsCount: 0,
+    incompleteLeadsCount: 0,
+    auditLogsCount: 0,
+    mediaItemsCount: 0,
+    estimatedDbSizeBytes: 1048576, // ~1MB baseline
+    estimatedDbSizeFormatted: '1.2 MB',
+    maxFreeTierBytes: 524288000, // 500 MB Supabase free limit
+    percentUsed: 0.24
+  };
+
+  if (!isSupabaseConfigured()) {
+    return defaultMetrics;
+  }
+
+  try {
+    const [leadsRes, auditRes, mediaRes] = await Promise.all([
+      supabase.from('leads').select('id, status', { count: 'exact', head: true }),
+      supabase.from('audit_logs').select('id', { count: 'exact', head: true }),
+      supabase.from('media_library').select('id', { count: 'exact', head: true })
+    ]);
+
+    const totalLeads = leadsRes.count || 0;
+    const auditLogs = auditRes.count || 0;
+    const mediaItems = mediaRes.count || 0;
+
+    // Approximate database size based on average row footprint (PostgreSQL ~2KB/row overhead)
+    const estimatedBytes = (totalLeads * 3500) + (auditLogs * 1200) + (mediaItems * 4000) + 1500000;
+    const megabytes = (estimatedBytes / (1024 * 1024)).toFixed(2);
+    const maxFree = 500 * 1024 * 1024; // 500 MB
+    const percent = Math.min(100, Number(((estimatedBytes / maxFree) * 100).toFixed(2)));
+
+    return {
+      totalLeadsCount: totalLeads,
+      incompleteLeadsCount: 0,
+      auditLogsCount: auditLogs,
+      mediaItemsCount: mediaItems,
+      estimatedDbSizeBytes: estimatedBytes,
+      estimatedDbSizeFormatted: `${megabytes} MB`,
+      maxFreeTierBytes: maxFree,
+      percentUsed: percent
+    };
+  } catch (err) {
+    console.warn('[LeadService] Failed to calculate live resource metrics:', err);
+    return defaultMetrics;
+  }
+}
+
+// ------------------------------------------------------------------------------
+// OFFLINE QUEUE & RETRY SYNCHRONIZATION
+// ------------------------------------------------------------------------------
+export interface PendingSyncItem {
+  id: string;
+  action: 'create_partial' | 'update_partial' | 'complete';
+  leadId?: string;
+  payload: any;
+  timestamp: string;
+}
+
+export function enqueuePendingSync(item: {
+  action: 'create_partial' | 'update_partial' | 'complete';
+  leadId?: string;
+  payload: any;
+}): void {
+  try {
+    const raw = safeGetItem(PENDING_SYNC_STORAGE_KEY);
+    const queue: PendingSyncItem[] = raw ? JSON.parse(raw) : [];
+    queue.push({
+      id: 'sync_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      action: item.action,
+      leadId: item.leadId,
+      payload: item.payload,
+      timestamp: new Date().toISOString()
+    });
+    // Keep max 50 pending records to prevent overflow
+    if (queue.length > 50) queue.shift();
+    safeSetItem(PENDING_SYNC_STORAGE_KEY, JSON.stringify(queue));
+  } catch {
+    // Ignore
+  }
+}
+
+export async function flushPendingLeadSync(): Promise<void> {
+  if (!isSupabaseConfigured() || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+    return;
+  }
+
+  try {
+    const raw = safeGetItem(PENDING_SYNC_STORAGE_KEY);
+    if (!raw) return;
+    const queue: PendingSyncItem[] = JSON.parse(raw);
+    if (!Array.isArray(queue) || queue.length === 0) return;
+
+    const remaining: PendingSyncItem[] = [];
+
+    for (const item of queue) {
+      try {
+        if (item.action === 'create_partial') {
+          const res = await supabase.rpc('create_partial_lead', item.payload);
+          if (res.error) {
+            remaining.push(item);
+          } else if (res.data?.id && isValidUUID(res.data.id)) {
+            // Ensure the actual Supabase UUID is persisted in client draft
+            const currentDraft = getLeadDraft();
+            if (currentDraft && (!currentDraft.leadId || !isValidUUID(currentDraft.leadId))) {
+              const updatedDraft = {
+                ...currentDraft,
+                leadId: res.data.id,
+                ownershipToken: res.data.ownership_token || currentDraft.ownershipToken
+              };
+              safeSetItem(DRAFT_STORAGE_KEY, JSON.stringify(updatedDraft));
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('sunviloz_lead_id_synced', {
+                  detail: { leadId: res.data.id, ownershipToken: updatedDraft.ownershipToken }
+                }));
+              }
+            }
+          }
+        } else if (item.action === 'update_partial' && item.leadId && isValidUUID(item.leadId)) {
+          const res = await supabase.rpc('update_partial_lead', { p_lead_id: item.leadId, ...item.payload });
+          if (res.error) remaining.push(item);
+        } else if (item.action === 'complete') {
+          const res = await supabase.rpc('complete_customer_lead', item.payload);
+          if (res.error) remaining.push(item);
+        }
+      } catch {
+        remaining.push(item);
+      }
+    }
+
+    safeSetItem(PENDING_SYNC_STORAGE_KEY, JSON.stringify(remaining));
+  } catch {
+    // Ignore
+  }
+}
+
+// ------------------------------------------------------------------------------
+// RESEND EMAIL NOTIFICATIONS (Server-side Edge Function Dispatcher)
+// ------------------------------------------------------------------------------
+const NOTIFICATION_CACHE_PREFIX = 'sunviloz_notif_sent_';
+const abandonmentTimers = new Map<string, any>();
+
+export async function dispatchLeadNotification(
+  lead: QuoteLead,
+  eventType: 'complete_lead' | 'abandoned_lead',
+  isRetry = false
+): Promise<boolean> {
+  const cacheKey = `${NOTIFICATION_CACHE_PREFIX}${lead.id || lead.leadNumber}_${eventType}`;
+  if (!isRetry && safeGetItem(cacheKey)) {
+    return true; // Already sent (deduplicated)
+  }
+
+  const cleanPhone = normalizeBangladeshiPhone(lead.phone);
+  if (cleanPhone.length < 10) return false;
+
+  try {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.functions.invoke('notify-lead', {
+        body: {
+          leadId: isValidUUID(lead.id) ? lead.id : undefined,
+          leadNumber: lead.leadNumber,
+          name: lead.name,
+          phone: cleanPhone,
+          whatsapp: lead.whatsapp || cleanPhone,
+          serviceType: lead.serviceType,
+          tankType: lead.tankType,
+          tankCapacity: lead.tankCapacity,
+          area: lead.area,
+          address: lead.address,
+          message: lead.message,
+          eventType,
+          isRetry,
+          ownershipToken: (lead as any).ownershipToken || getLeadDraft()?.ownershipToken
+        }
+      });
+
+      if (!error) {
+        safeSetItem(cacheKey, new Date().toISOString());
+        return true;
+      }
+    }
+  } catch (err) {
+    console.warn('[LeadService] Notification trigger warning:', err);
+  }
+  return false;
+}
+
+export async function fetchLeadNotification(leadId: string): Promise<LeadNotificationRecord | null> {
+  if (!isSupabaseConfigured() || !isValidUUID(leadId)) return null;
+  try {
+    const { data, error } = await supabase
+      .from('lead_notifications')
+      .select('*')
+      .eq('lead_id', leadId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!error && data) {
+      return data as LeadNotificationRecord;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function retryLeadNotification(
+  leadId: string,
+  eventType: 'complete_lead' | 'abandoned_lead' = 'complete_lead'
+): Promise<{ success: boolean; message: string }> {
+  if (!isSupabaseConfigured() || !isValidUUID(leadId)) {
+    return { success: false, message: 'Invalid lead ID.' };
+  }
+
+  try {
+    const { data, error } = await supabase.functions.invoke('notify-lead', {
+      body: {
+        leadId,
+        eventType,
+        isRetry: true
+      }
+    });
+
+    if (error) {
+      return { success: false, message: error.message || 'Notification retry request failed.' };
+    }
+
+    if (data?.error) {
+      return { success: false, message: data.error };
+    }
+
+    return { 
+      success: true, 
+      message: data?.message || (data?.status === 'sent' ? 'Notification successfully delivered via Resend!' : 'Notification processed.') 
+    };
+  } catch (err: any) {
+    return { success: false, message: err?.message || 'Network error while attempting retry.' };
+  }
+}
+
+export function scheduleAbandonedLeadCheck(lead: QuoteLead): void {
+  const cleanPhone = normalizeBangladeshiPhone(lead.phone);
+  if (cleanPhone.length < 10) return;
+
+  const key = lead.id || lead.leadNumber || '';
+  if (!key) return;
+
+  if (abandonmentTimers.has(key)) {
+    clearTimeout(abandonmentTimers.get(key));
+  }
+
+  // Check in 15 minutes
+  const timer = setTimeout(async () => {
+    try {
+      const currentLeads = getLocalLeads();
+      const current = currentLeads.find(l => l.id === lead.id || l.leadNumber === lead.leadNumber);
+      if (current && (current.status === 'Incomplete' || current.isAbandoned)) {
+        await dispatchLeadNotification(current, 'abandoned_lead');
+      }
+    } catch {
+      // Ignore
+    } finally {
+      abandonmentTimers.delete(key);
+    }
+  }, 15 * 60 * 1000);
+
+  abandonmentTimers.set(key, timer);
+}
+
+export function cancelAbandonedLeadCheck(leadIdOrNumber: string): void {
+  if (leadIdOrNumber && abandonmentTimers.has(leadIdOrNumber)) {
+    clearTimeout(abandonmentTimers.get(leadIdOrNumber));
+    abandonmentTimers.delete(leadIdOrNumber);
+  }
+}
+
+// Auto-register browser online listener
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    flushPendingLeadSync();
+  });
+}
+

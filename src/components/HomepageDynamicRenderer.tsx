@@ -35,7 +35,7 @@ export const HomepageDynamicRenderer: React.FC<HomepageDynamicRendererProps> = (
   // 1. Hero
   // 2. Running Special Offers (immediately connected beneath/within hero)
   // 3. Popular Services
-  // [Diamond line separator in #2585FF]
+  // [Diamond line separator in #0D9488 / #38BDF8]
   // 4. Our Other Services
   // 5. About SUNVILOZ Clean Care (immediately after Our Other Services)
   // 6. Why SUNVILOZ Clean Care? (immediately after About)
@@ -70,13 +70,10 @@ export const HomepageDynamicRenderer: React.FC<HomepageDynamicRendererProps> = (
       <OurWorkVideosSection />
       <ReviewsSection />
       {/* Water Wave Divider leading into Smart Quote Section */}
-      <WaterWaveDivider variant="flowing" fillColor="#08172C" />
+      <WaterWaveDivider variant="flowing" fillColor="#FFFFFF" />
 
       {/* 8. Smart Instant Quote Wizard Section */}
-      <section id="quote" className="py-14 sm:py-20 bg-gradient-to-b from-[#08172C] via-[#0B203E] to-[#06152B] border-b border-cyan-900/35 relative overflow-hidden" aria-label="Smart Quote Wizard">
-        <div className="absolute top-1/2 -right-40 w-96 h-96 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" aria-hidden="true" />
-        <div className="absolute bottom-10 -left-40 w-96 h-96 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" aria-hidden="true" />
-        
+      <section id="quote" className="py-14 sm:py-20 bg-white border-b border-[#E2E8F0] relative overflow-hidden" aria-label="Smart Quote Wizard">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <SmartQuoteWizard />
         </div>
@@ -87,7 +84,7 @@ export const HomepageDynamicRenderer: React.FC<HomepageDynamicRendererProps> = (
       <BlogSection onNavigate={onNavigate} onOpenPostModal={onOpenBlogModal} />
 
       {/* Wave transition into Final CTA */}
-      <WaterWaveDivider variant="crest" fillColor="#0B2545" />
+      <WaterWaveDivider variant="crest" fillColor="#123047" />
       <FinalCtaSection onOpenQuoteModal={onOpenQuoteModal} />
     </>
   );
@@ -156,9 +153,8 @@ export const HomepageDynamicRenderer: React.FC<HomepageDynamicRendererProps> = (
           case 'calculator':
             return (
               <React.Fragment key={section.id}>
-                <WaterWaveDivider variant="flowing" fillColor="#08172C" />
-                <section id="quote" className="py-14 sm:py-20 bg-gradient-to-b from-[#08172C] via-[#0B203E] to-[#06152B] border-b border-cyan-900/35 relative overflow-hidden" aria-label="Smart Quote Wizard">
-                  <div className="absolute top-1/2 -right-40 w-96 h-96 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" aria-hidden="true" />
+                <WaterWaveDivider variant="flowing" fillColor="#FFFFFF" />
+                <section id="quote" className="py-14 sm:py-20 bg-white border-b border-[#E2E8F0] relative overflow-hidden" aria-label="Smart Quote Wizard">
                   <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                     <SmartQuoteWizard />
                   </div>

@@ -16,10 +16,10 @@ export const CustomSectionRenderer: React.FC<CustomSectionRendererProps> = ({ se
   if (!data) return null;
 
   const bgClassesMap: Record<string, string> = {
-    blue: 'bg-gradient-to-r from-[#0B2545] via-[#0E3A75] to-[#0284C7] text-white',
-    white: 'bg-[#171C24] text-white border-y border-[#303743]',
-    slate: 'bg-[#11151B] text-white',
-    cyan: 'bg-gradient-to-r from-cyan-700 via-blue-800 to-[#0B2545] text-white'
+    blue: 'bg-gradient-to-r from-[#123047] via-[#0F766E] to-[#0D9488] text-white',
+    white: 'bg-white text-[#172B3A] border-y border-[#E2E8F0]',
+    slate: 'bg-[#F5FAFC] text-[#172B3A] border-y border-[#E2E8F0]',
+    cyan: 'bg-[#123047] text-white'
   };
   const bgClasses = bgClassesMap[data.bgStyle as string] || bgClassesMap.blue;
 
@@ -43,7 +43,7 @@ export const CustomSectionRenderer: React.FC<CustomSectionRendererProps> = ({ se
               </div>
             )}
 
-            <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight ${isLight ? 'text-[#0B2545]' : 'text-white'}`}>
+            <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight ${isLight ? 'text-[#123047]' : 'text-white'}`}>
               {heading}
             </h2>
 
@@ -63,23 +63,19 @@ export const CustomSectionRenderer: React.FC<CustomSectionRendererProps> = ({ se
               <button
                 type="button"
                 onClick={onOpenQuoteModal}
-                className="min-h-[44px] inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-cyan-400 hover:bg-cyan-300 text-slate-950 shadow-lg hover:shadow-xl transition-all transform active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0B2545]"
+                className="min-h-[44px] inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-[#0D9488] hover:bg-[#0F766E] text-white shadow-lg hover:shadow-xl transition-all transform active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0D9488]"
               >
                 <span>{ctaText}</span>
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                <ArrowRight className="w-4 h-4 text-white" aria-hidden="true" />
               </button>
 
               <a
                 href={`https://wa.me/${business.whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello Sunviloz Clean Care, I have an inquiry about ${heading}.`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`min-h-[44px] inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all border ${
-                  isLight 
-                    ? 'border-emerald-600 text-emerald-700 bg-emerald-50 hover:bg-emerald-100' 
-                    : 'border-white/30 text-white bg-white/10 hover:bg-white/20'
-                }`}
+                className="min-h-[44px] inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm bg-[#25D366] hover:bg-[#20ba5a] text-white shadow-md transition-all active:scale-95"
               >
-                <MessageCircle className="w-4 h-4 text-emerald-400" aria-hidden="true" />
+                <MessageCircle className="w-4 h-4 text-white" aria-hidden="true" />
                 <span>WhatsApp</span>
               </a>
 
@@ -87,11 +83,11 @@ export const CustomSectionRenderer: React.FC<CustomSectionRendererProps> = ({ se
                 href={`tel:${business.phone}`}
                 className={`min-h-[44px] inline-flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all ${
                   isLight 
-                    ? 'text-slate-700 hover:bg-slate-100' 
-                    : 'text-white/80 hover:text-white'
+                    ? 'text-[#123047] hover:bg-[#E8F5F3]' 
+                    : 'text-white/90 hover:text-white'
                 }`}
               >
-                <Phone className="w-4 h-4 text-cyan-400" aria-hidden="true" />
+                <Phone className="w-4 h-4 text-[#38BDF8]" aria-hidden="true" />
                 <span>{business.displayPhone}</span>
               </a>
             </div>

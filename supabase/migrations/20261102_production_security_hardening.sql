@@ -5,8 +5,9 @@
 -- 1. Eliminates dangerous unrestricted "FOR ALL TO authenticated USING (true)" policies.
 -- 2. Uses non-circular SECURITY DEFINER functions (is_admin, is_super_admin) with fixed search_path.
 -- 3. Anonymous visitors can ONLY INSERT valid leads. Zero anonymous read/update/delete.
--- 4. Only verified active administrators in public.admin_users can access leads or modify CMS/Settings/Storage.
--- 5. Safe, idempotent, preserves all existing tables and data.
+-- 4. Audit logs are strictly admin-only (Zero anonymous INSERT, SELECT, UPDATE, or DELETE).
+-- 5. Only verified active administrators in public.admin_users can access leads or modify CMS/Settings/Storage.
+-- 6. Safe, idempotent, preserves all existing tables and data.
 -- ==============================================================================
 
 -- ------------------------------------------------------------------------------
@@ -51,8 +52,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
-GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;
-GRANT EXECUTE ON FUNCTION public.is_super_admin(uuid) TO authenticated, anon;
+-- Revoke unnecessary public/anon execution privileges; grant strictly to authenticated users
+REVOKE EXECUTE ON FUNCTION public.is_admin(uuid) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.is_super_admin(uuid) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.is_super_admin(uuid) TO authenticated;
 
 
 -- ------------------------------------------------------------------------------
@@ -126,10 +131,40 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
+REVOKE EXECUTE ON FUNCTION public.handle_new_auth_user() FROM public, anon;
+
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT OR UPDATE ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_auth_user();
+
+-- Secure assign_admin_role_by_email to require Super Admin privileges
+CREATE OR REPLACE FUNCTION public.assign_admin_role_by_email(target_email TEXT, target_role TEXT DEFAULT 'super_admin', target_name TEXT DEFAULT 'Admin')
+RETURNS TEXT AS $$
+DECLARE
+    found_user_id UUID;
+BEGIN
+    IF NOT public.is_super_admin(auth.uid()) THEN
+        RAISE EXCEPTION 'Access Denied: Only Super Administrators can assign administrator roles.';
+    END IF;
+
+    SELECT id INTO found_user_id FROM auth.users WHERE lower(trim(email)) = lower(trim(target_email)) LIMIT 1;
+    
+    IF found_user_id IS NULL THEN
+        RETURN 'Error: No user found with email ' || target_email || '. Please create the user first in Supabase Authentication -> Users.';
+    END IF;
+
+    INSERT INTO public.admin_users (id, email, role, name, is_active)
+    VALUES (found_user_id, lower(trim(target_email)), target_role, target_name, true)
+    ON CONFLICT (email) DO UPDATE 
+    SET role = target_role, is_active = true, id = found_user_id, updated_at = now();
+
+    RETURN 'Success: User ' || target_email || ' assigned role ' || target_role || ' (ID: ' || found_user_id || ')';
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+
+REVOKE EXECUTE ON FUNCTION public.assign_admin_role_by_email(TEXT, TEXT, TEXT) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.assign_admin_role_by_email(TEXT, TEXT, TEXT) TO authenticated;
 
 
 -- ------------------------------------------------------------------------------
@@ -162,7 +197,7 @@ WITH CHECK (public.is_admin(auth.uid()));
 
 
 -- ------------------------------------------------------------------------------
--- 4. AUDIT LOGS SECURITY
+-- 4. AUDIT LOGS SECURITY (Strictly Admin-Only: Zero Anonymous Access)
 -- ------------------------------------------------------------------------------
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
@@ -171,16 +206,19 @@ DROP POLICY IF EXISTS "Allow read audit_logs" ON public.audit_logs;
 DROP POLICY IF EXISTS "Only active admins can view audit_logs" ON public.audit_logs;
 DROP POLICY IF EXISTS "Only admins can view audit logs" ON public.audit_logs;
 DROP POLICY IF EXISTS "Allow system and admin insert audit logs" ON public.audit_logs;
+DROP POLICY IF EXISTS "Only active admins can insert audit logs" ON public.audit_logs;
+DROP POLICY IF EXISTS "Admins can view audit logs" ON public.audit_logs;
+DROP POLICY IF EXISTS "Anyone can insert audit logs" ON public.audit_logs;
 
 -- Admins can read audit logs
-CREATE POLICY "Only admins can view audit logs"
+CREATE POLICY "Only active admins can view audit logs"
 ON public.audit_logs FOR SELECT TO authenticated
 USING (public.is_admin(auth.uid()));
 
--- System or admin can record audit logs (Insert only, audit logs are immutable)
-CREATE POLICY "Allow system and admin insert audit logs"
-ON public.audit_logs FOR INSERT TO anon, authenticated
-WITH CHECK (true);
+-- ONLY active administrators can create audit records (Zero anonymous INSERT)
+CREATE POLICY "Only active admins can insert audit logs"
+ON public.audit_logs FOR INSERT TO authenticated
+WITH CHECK (public.is_admin(auth.uid()));
 
 
 -- ------------------------------------------------------------------------------

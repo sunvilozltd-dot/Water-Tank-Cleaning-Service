@@ -11,33 +11,46 @@ import { Footer } from './components/Footer';
 import { MobileStickyBar } from './components/MobileStickyBar';
 import { FloatingContactButtons } from './components/FloatingContactButtons';
 import { PrivacyConsentBanner } from './components/PrivacyConsentBanner';
-import { QuoteModal } from './components/QuoteModal';
-import { BlogDetailModal } from './components/BlogDetailModal';
 import { AmbientWaterBackground } from './components/AmbientWaterBackground';
 import { initUtmTracking } from './utils/utmTracking';
 import { initAnalytics } from './utils/tracking';
 
-// Pages
+// Critical Homepage eagerly loaded for instant FCP / LCP
 import { HomePage } from './pages/HomePage';
-import { AboutPage } from './pages/AboutPage';
-import { ServicesPage } from './pages/ServicesPage';
-import { WaterTankCleaningPage } from './pages/WaterTankCleaningPage';
-import { PipelineCleaningPage } from './pages/PipelineCleaningPage';
-import { ContactPage } from './pages/ContactPage';
-import { ServiceAreaPage } from './pages/ServiceAreaPage';
-import { LocationDetailPage } from './pages/LocationDetailPage';
-import { BlogPage } from './pages/BlogPage';
-import { BlogPostDetailPage } from './pages/BlogPostDetailPage';
-import { PortfolioPage } from './pages/PortfolioPage';
-import { TermsPage } from './pages/TermsPage';
-import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
-import { FaqPage } from './pages/FaqPage';
-import { AdminLoginPage } from './pages/AdminLoginPage';
-import { AdminDashboardPage } from './pages/AdminDashboardPage';
-import { ServiceDetailPage } from './pages/ServiceDetailPage';
-import { GetQuotePage } from './pages/GetQuotePage';
+
+// Code-split secondary pages for fast initial bundle
+const AboutPage = React.lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
+const ServicesPage = React.lazy(() => import('./pages/ServicesPage').then(m => ({ default: m.ServicesPage })));
+const WaterTankCleaningPage = React.lazy(() => import('./pages/WaterTankCleaningPage').then(m => ({ default: m.WaterTankCleaningPage })));
+const PipelineCleaningPage = React.lazy(() => import('./pages/PipelineCleaningPage').then(m => ({ default: m.PipelineCleaningPage })));
+const ContactPage = React.lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
+const ServiceAreaPage = React.lazy(() => import('./pages/ServiceAreaPage').then(m => ({ default: m.ServiceAreaPage })));
+const LocationDetailPage = React.lazy(() => import('./pages/LocationDetailPage').then(m => ({ default: m.LocationDetailPage })));
+const BlogPage = React.lazy(() => import('./pages/BlogPage').then(m => ({ default: m.BlogPage })));
+const BlogPostDetailPage = React.lazy(() => import('./pages/BlogPostDetailPage').then(m => ({ default: m.BlogPostDetailPage })));
+const PortfolioPage = React.lazy(() => import('./pages/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
+const TermsPage = React.lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
+const PrivacyPolicyPage = React.lazy(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
+const FaqPage = React.lazy(() => import('./pages/FaqPage').then(m => ({ default: m.FaqPage })));
+const ServiceDetailPage = React.lazy(() => import('./pages/ServiceDetailPage').then(m => ({ default: m.ServiceDetailPage })));
+const GetQuotePage = React.lazy(() => import('./pages/GetQuotePage').then(m => ({ default: m.GetQuotePage })));
+
+// Code-split Admin pages (Prevents downloading heavy admin tabs/tables on public site)
+const AdminLoginPage = React.lazy(() => import('./pages/AdminLoginPage').then(m => ({ default: m.AdminLoginPage })));
+const AdminDashboardPage = React.lazy(() => import('./pages/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })));
+
+// Code-split heavy modals
+const QuoteModal = React.lazy(() => import('./components/QuoteModal').then(m => ({ default: m.QuoteModal })));
+const BlogDetailModal = React.lazy(() => import('./components/BlogDetailModal').then(m => ({ default: m.BlogDetailModal })));
 
 import { BlogPost } from './types/blog';
+
+const PageLoadingFallback: React.FC = () => (
+  <div className="min-h-[50vh] flex flex-col items-center justify-center p-8 space-y-3" role="status" aria-label="Loading page">
+    <div className="w-9 h-9 rounded-full border-3 border-[#0D9488]/20 border-t-[#0D9488] animate-spin" />
+    <span className="text-xs text-[#64748B] font-medium">লোড হচ্ছে...</span>
+  </div>
+);
 
 function AppContent() {
   const { isAuthenticated } = useAdminAuth();
@@ -281,7 +294,7 @@ function AppContent() {
   };
 
   return (
-    <div className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-[#040D1A] text-white flex flex-col font-sans selection:bg-[#0284C7] selection:text-white">
+    <div className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-[#F5FAFC] text-[#172B3A] flex flex-col font-sans selection:bg-[#0D9488] selection:text-white">
       {/* Global Ambient Water Atmosphere (Layered fixed behind content) */}
       <AmbientWaterBackground />
 
@@ -293,7 +306,9 @@ function AppContent() {
 
       {/* Main Page Content */}
       <div className="relative z-10 flex-1">
-        {renderPage()}
+        <React.Suspense fallback={<PageLoadingFallback />}>
+          {renderPage()}
+        </React.Suspense>
       </div>
 
       {/* Footer */}
@@ -308,22 +323,26 @@ function AppContent() {
 
       {/* Instant Quote Request Modal */}
       {isQuoteModalOpen && (
-        <QuoteModal 
-          serviceName={selectedServiceName}
-          onClose={handleCloseQuoteModal} 
-        />
+        <React.Suspense fallback={null}>
+          <QuoteModal 
+            serviceName={selectedServiceName}
+            onClose={handleCloseQuoteModal} 
+          />
+        </React.Suspense>
       )}
 
       {/* Blog Post Detail Modal */}
       {selectedBlogPost && (
-        <BlogDetailModal
-          post={selectedBlogPost}
-          onClose={() => setSelectedBlogPost(null)}
-          onOpenQuoteModal={() => {
-            setSelectedBlogPost(null);
-            handleOpenQuoteModal();
-          }}
-        />
+        <React.Suspense fallback={null}>
+          <BlogDetailModal
+            post={selectedBlogPost}
+            onClose={() => setSelectedBlogPost(null)}
+            onOpenQuoteModal={() => {
+              setSelectedBlogPost(null);
+              handleOpenQuoteModal();
+            }}
+          />
+        </React.Suspense>
       )}
     </div>
   );

@@ -314,12 +314,23 @@ export const LeadsTab: React.FC<LeadsTabProps> = ({
                       }`}
                     >
                       <td className="py-3.5 px-4 font-mono font-medium text-blue-400">
-                        {lead.leadNumber || lead.id}
-                        {isIncomplete && (
-                          <span className="block text-[10px] text-amber-400 font-sans font-normal">
-                            Drop-off Recovery
-                          </span>
-                        )}
+                        <div>{lead.leadNumber || lead.id}</div>
+                        <div className="flex flex-col gap-0.5 mt-0.5">
+                          {lead.isSyncedToCloud === false ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-sans font-medium bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 w-max">
+                              Offline / Unsynced
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-sans font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 w-max">
+                              Cloud Synced
+                            </span>
+                          )}
+                          {isIncomplete && (
+                            <span className="text-[10px] text-amber-400 font-sans font-normal">
+                              Drop-off Recovery
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3.5 px-4">
                         <div className="font-semibold text-white flex items-center gap-1.5">

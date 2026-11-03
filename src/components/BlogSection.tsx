@@ -39,19 +39,19 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
   };
 
   return (
-    <section className="py-14 sm:py-20 bg-white border-b border-slate-200" id="blog" aria-labelledby="blog-heading">
+    <section className="py-14 sm:py-20 bg-white border-b border-[#E2E8F0]" id="blog" aria-labelledby="blog-heading">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="mb-8">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-[#0B2545] text-xs font-bold uppercase tracking-wider mb-2">
-            <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#E8F5F3] text-[#0D9488] text-xs font-bold uppercase tracking-wider mb-2 border border-[#0D9488]/30">
+            <BookOpen className="w-3.5 h-3.5 text-[#0D9488]" />
             <span>{lang === 'bn' ? 'পানি সুরক্ষা ও স্বাস্থ্য সচেতনতা' : 'Water Hygiene & Safety'}</span>
           </div>
-          <h2 id="blog-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h2 id="blog-heading" className="text-2xl sm:text-3xl md:text-4xl font-black text-[#123047] tracking-tight">
             Tips &amp; Guides
           </h2>
-          <div className="w-16 h-1 bg-amber-500 mt-2.5 rounded-full" aria-hidden="true" />
+          <div className="w-16 h-1 bg-[#0D9488] mt-2.5 rounded-full" aria-hidden="true" />
         </div>
 
         {/* Category Filter Pills */}
@@ -62,10 +62,10 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                 key={cat}
                 type="button"
                 onClick={() => setActiveCategory(cat)}
-                className={`min-h-[40px] px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0B2545] ${
+                className={`min-h-[40px] px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0D9488] ${
                   activeCategory === cat
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    ? 'bg-[#0D9488] text-white shadow-xs'
+                    : 'bg-[#F5FAFC] text-[#172B3A] border border-[#E2E8F0] hover:bg-[#E8F5F3]'
                 }`}
                 aria-pressed={activeCategory === cat}
               >
@@ -88,31 +88,31 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
                 key={post.id}
                 href={`/blog/${post.slug}`}
                 onClick={(e) => handlePostClick(post, e)}
-                className="group bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs hover:shadow-lg hover:border-slate-300 transition-all flex flex-col justify-between cursor-pointer block no-underline text-inherit focus-visible:outline-2 focus-visible:outline-[#0B2545]"
+                className="group bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-2xs hover:shadow-md hover:border-[#0D9488]/40 transition-all flex flex-col justify-between cursor-pointer block no-underline text-inherit focus-visible:outline-2 focus-visible:outline-[#0D9488]"
               >
                 <div>
                   <div className="mb-3.5">
-                    <span className="inline-block px-3 py-1 bg-emerald-700 text-white text-xs font-bold rounded-md tracking-wide shadow-2xs">
+                    <span className="inline-block px-3 py-1 bg-[#E8F5F3] text-[#0D9488] text-xs font-bold rounded-md tracking-wide border border-[#0D9488]/20">
                       {category}
                     </span>
                   </div>
 
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-[#0B2B5C] transition-colors leading-snug mb-3 line-clamp-3">
+                  <h3 className="text-base sm:text-lg font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors leading-snug mb-3 line-clamp-3">
                     {title}
                   </h3>
 
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-3 mb-4">
+                  <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed line-clamp-3 mb-4">
                     {excerpt}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="text-slate-500 flex items-center gap-1 font-medium">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+                <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between text-xs">
+                  <span className="text-[#64748B] flex items-center gap-1 font-medium">
+                    <Clock className="w-3.5 h-3.5 text-[#94A3B8]" aria-hidden="true" />
                     <span>{readTime}</span>
                   </span>
 
-                  <span className="font-bold text-cyan-800 group-hover:text-[#0B2B5C] flex items-center gap-1 transition-colors">
+                  <span className="font-bold text-[#0D9488] group-hover:text-[#0F766E] flex items-center gap-1 transition-colors">
                     <span>{lang === 'bn' ? 'সম্পূর্ণ পড়ুন' : 'Read Full Guide'}</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                   </span>

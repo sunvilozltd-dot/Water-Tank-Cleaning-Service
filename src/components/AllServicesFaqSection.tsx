@@ -4,11 +4,10 @@ import {
   ArrowRight, 
   Droplets, 
   Wrench, 
-  ChevronDown,
-  Search,
-  CheckCircle2,
-  Phone,
-  MessageCircle
+  ChevronDown, 
+  Search, 
+  CheckCircle2, 
+  Phone 
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useServicesFaqs } from '../utils/servicesFaqStore';
@@ -45,7 +44,6 @@ export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({ on
     );
   };
 
-  // Filter only water tank cleaning and pipeline cleaning FAQs
   const relevantFaqs = faqs.filter(f => 
     (f.category === 'water-tank-cleaning' || f.category === 'pipeline-cleaning') && 
     f.isActive !== false
@@ -73,27 +71,27 @@ export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({ on
     <section 
       id="homepage-all-faq" 
       aria-labelledby="homepage-faq-heading"
-      className="py-16 sm:py-24 bg-[#080A0D] border-b border-[#303743]"
+      className="py-16 sm:py-24 bg-white border-b border-[#E2E8F0]"
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Centered Heading */}
         <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-12">
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest text-[#2585FF] uppercase mb-2.5 bg-[#2585FF]/10 px-3 py-1 rounded-full border border-[#2585FF]/20">
-            <HelpCircle className="w-4 h-4 text-[#2585FF]" aria-hidden="true" />
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest text-[#0D9488] uppercase mb-2.5 bg-[#E8F5F3] px-3.5 py-1 rounded-full border border-[#0D9488]/30">
+            <HelpCircle className="w-4 h-4 text-[#0D9488]" aria-hidden="true" />
             <span>{lang === 'bn' ? 'সার্ভিস প্রশ্নোত্তর ডিরেক্টরি' : 'Services FAQ Directory'}</span>
           </div>
 
           <h2 
             id="homepage-faq-heading" 
-            className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight"
+            className="text-2xl sm:text-3xl md:text-4xl font-black text-[#123047] tracking-tight"
           >
             সকল সার্ভিসের সচরাচর জিজ্ঞাসিত প্রশ্নাবলী
           </h2>
 
-          <div className="w-20 h-1 bg-gradient-to-r from-transparent via-[#2585FF] to-transparent mx-auto my-3.5 rounded-full" />
+          <div className="w-20 h-1 bg-gradient-to-r from-transparent via-[#0D9488] to-transparent mx-auto my-3.5 rounded-full" />
 
-          <p className="text-sm sm:text-base text-[#B8C0CC] leading-relaxed">
+          <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">
             {lang === 'bn' 
               ? 'পানির ট্যাংক পরিষ্কার ও পাইপলাইন ফ্লাশিং সংক্রান্ত পদ্ধতি, খরচ, সময়সূচি ও প্রয়োজনীয় তথ্য।'
               : 'Detailed answers regarding Water Tank Cleaning and Water Pipeline Flushing methods, pricing, and timelines.'}
@@ -102,14 +100,14 @@ export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({ on
 
         {/* Filter Tabs for Water Tank & Pipeline Cleaning */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-2 p-1 bg-[#171C24] border border-[#303743] rounded-xl w-full sm:w-auto">
+          <div className="flex items-center gap-1.5 p-1 bg-[#F5FAFC] border border-[#E2E8F0] rounded-xl w-full sm:w-auto">
             <button
               type="button"
               onClick={() => setActiveCategory('all')}
               className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 activeCategory === 'all'
-                  ? 'bg-[#2585FF] text-white shadow-md shadow-[#2585FF]/30'
-                  : 'text-[#B8C0CC] hover:text-white hover:bg-[#202630]'
+                  ? 'bg-[#0D9488] text-white shadow-xs'
+                  : 'text-[#172B3A] hover:bg-[#E8F5F3]'
               }`}
             >
               {lang === 'bn' ? 'সকল প্রশ্নোত্তর' : 'All FAQs'} ({tankCount + pipeCount})
@@ -120,12 +118,12 @@ export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({ on
               onClick={() => setActiveCategory('water-tank-cleaning')}
               className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 activeCategory === 'water-tank-cleaning'
-                  ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/30'
-                  : 'text-[#B8C0CC] hover:text-white hover:bg-[#202630]'
+                  ? 'bg-[#0D9488] text-white shadow-xs'
+                  : 'text-[#172B3A] hover:bg-[#E8F5F3]'
               }`}
             >
-              <Droplets className="w-3.5 h-3.5 text-cyan-300" />
-              <span>{lang === 'bn' ? 'পানির ট্যাংক পরিষ্কার' : 'Water Tank Cleaning'}</span>
+              <Droplets className="w-3.5 h-3.5" />
+              <span>{lang === 'bn' ? 'পানির ট্যাংক' : 'Water Tank'}</span>
               <span className="text-[11px] opacity-80">({tankCount})</span>
             </button>
 
@@ -134,25 +132,25 @@ export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({ on
               onClick={() => setActiveCategory('pipeline-cleaning')}
               className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 activeCategory === 'pipeline-cleaning'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                  : 'text-[#B8C0CC] hover:text-white hover:bg-[#202630]'
+                  ? 'bg-[#0D9488] text-white shadow-xs'
+                  : 'text-[#172B3A] hover:bg-[#E8F5F3]'
               }`}
             >
-              <Wrench className="w-3.5 h-3.5 text-blue-300" />
-              <span>{lang === 'bn' ? 'পাইপলাইন পরিষ্কার' : 'Pipeline Cleaning'}</span>
+              <Wrench className="w-3.5 h-3.5" />
+              <span>{lang === 'bn' ? 'পাইপলাইন' : 'Pipeline'}</span>
               <span className="text-[11px] opacity-80">({pipeCount})</span>
             </button>
           </div>
 
           {/* Quick Search */}
           <div className="relative w-full sm:w-64">
-            <Search className="w-4 h-4 text-[#8A94A6] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={lang === 'bn' ? 'প্রশ্ন বা বিষয় খুঁজুন...' : 'Search question...'}
-              className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#171C24] border border-[#303743] text-xs sm:text-sm text-white placeholder-[#8A94A6] focus:outline-none focus:border-[#2585FF]"
+              className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-white border border-[#E2E8F0] text-xs sm:text-sm text-[#172B3A] placeholder-[#94A3B8] focus:outline-none focus:border-[#0D9488]"
             />
           </div>
         </div>
@@ -160,17 +158,17 @@ export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({ on
         {/* Questions and Answers Accordion List */}
         <div className="space-y-3 mb-10">
           {filteredFaqs.length === 0 ? (
-            <div className="p-8 text-center bg-[#171C24] rounded-2xl border border-[#303743]">
-              <HelpCircle className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-white">
+            <div className="p-8 text-center bg-[#F5FAFC] rounded-2xl border border-[#E2E8F0]">
+              <HelpCircle className="w-8 h-8 text-[#94A3B8] mx-auto mb-2" />
+              <p className="text-sm font-semibold text-[#172B3A]">
                 {lang === 'bn' ? 'কোনো প্রশ্ন পাওয়া যায়নি' : 'No matching questions found'}
               </p>
-              <p className="text-xs text-[#8A94A6] mt-1">
+              <p className="text-xs text-[#64748B] mt-1">
                 {lang === 'bn' ? 'ভিন্ন কোনো কী-ওয়ার্ড দিয়ে সার্চ করুন।' : 'Try searching with different keywords.'}
               </p>
             </div>
           ) : (
-            filteredFaqs.map((faq, index) => {
+            filteredFaqs.map((faq) => {
               const isOpen = openIds.includes(faq.id);
               const isTank = faq.category === 'water-tank-cleaning';
               const question = lang === 'bn' ? faq.questionBn : faq.questionEn;
@@ -181,8 +179,8 @@ export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({ on
                   key={faq.id}
                   className={`rounded-2xl transition-all duration-200 border ${
                     isOpen 
-                      ? 'bg-[#171C24] border-[#2585FF]/50 shadow-lg shadow-blue-950/20' 
-                      : 'bg-[#13171F] border-[#303743] hover:border-slate-600'
+                      ? 'bg-[#F5FAFC] border-[#0D9488]/40 shadow-xs' 
+                      : 'bg-white border-[#E2E8F0] hover:border-[#0D9488]/30 shadow-2xs'
                   }`}
                 >
                   <button
@@ -192,46 +190,37 @@ export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({ on
                     aria-expanded={isOpen}
                   >
                     <div className="flex items-start gap-3">
-                      {/* Category Badge Icon */}
-                      <span className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-0.5 border ${
-                        isTank 
-                          ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' 
-                          : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                      }`}>
+                      <span className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-0.5 bg-[#E8F5F3] text-[#0D9488]">
                         {isTank ? <Droplets className="w-4 h-4" /> : <Wrench className="w-4 h-4" />}
                       </span>
 
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                            isTank 
-                              ? 'bg-cyan-950/60 text-cyan-300 border-cyan-800/40' 
-                              : 'bg-blue-950/60 text-blue-300 border-blue-800/40'
-                          }`}>
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#E8F5F3] text-[#0D9488] border border-[#0D9488]/20">
                             {lang === 'bn' 
                               ? (isTank ? 'পানির ট্যাংক পরিষ্কার' : 'পাইপলাইন পরিষ্কার')
                               : (isTank ? 'Water Tank Cleaning' : 'Pipeline Cleaning')}
                           </span>
                         </div>
                         <h3 className={`text-sm sm:text-base font-bold transition-colors leading-snug ${
-                          isOpen ? 'text-[#2585FF]' : 'text-white'
+                          isOpen ? 'text-[#0D9488]' : 'text-[#123047]'
                         }`}>
                           {question}
                         </h3>
                       </div>
                     </div>
 
-                    <div className={`p-1.5 rounded-full border border-slate-700 transition-transform duration-200 mt-1 flex-shrink-0 ${
-                      isOpen ? 'rotate-180 bg-[#2585FF] border-[#2585FF] text-white' : 'text-slate-400 bg-[#202630]'
+                    <div className={`p-1.5 rounded-full border border-[#E2E8F0] transition-transform duration-200 mt-1 flex-shrink-0 ${
+                      isOpen ? 'rotate-180 bg-[#0D9488] border-[#0D9488] text-white' : 'text-[#64748B] bg-white'
                     }`}>
                       <ChevronDown className="w-4 h-4" />
                     </div>
                   </button>
 
                   {isOpen && (
-                    <div className="px-4 pb-5 sm:px-5 sm:pb-6 pt-1 text-[#B8C0CC] text-xs sm:text-sm leading-relaxed border-t border-[#303743]/60">
+                    <div className="px-4 pb-5 sm:px-5 sm:pb-6 pt-1 text-[#64748B] text-xs sm:text-sm leading-relaxed border-t border-[#E2E8F0]">
                       <div className="pl-11 pr-2 pt-2">
-                        <p className="bg-[#0C0F14] p-4 rounded-xl border border-[#202630] text-slate-200">
+                        <p className="bg-white p-4 rounded-xl border border-[#E2E8F0] text-[#172B3A]">
                           {answer}
                         </p>
                       </div>
@@ -244,13 +233,13 @@ export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({ on
         </div>
 
         {/* Action Bar / Contact & All FAQ Buttons */}
-        <div className="p-6 rounded-2xl bg-[#171C24] border border-[#303743] flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="p-6 rounded-2xl bg-[#F5FAFC] border border-[#E2E8F0] flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-center sm:text-left">
-            <h4 className="text-sm sm:text-base font-bold text-white flex items-center justify-center sm:justify-start gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <h4 className="text-sm sm:text-base font-bold text-[#123047] flex items-center justify-center sm:justify-start gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#0D9488]" />
               <span>{lang === 'bn' ? 'আরও কোনো প্রশ্ন বা বিশেষ জিজ্ঞাসা আছে?' : 'Have more questions about our cleaning?'}</span>
             </h4>
-            <p className="text-xs text-[#8A94A6] mt-1">
+            <p className="text-xs text-[#64748B] mt-1">
               {lang === 'bn' 
                 ? 'আমাদের টেকনিক্যাল এক্সপার্টরা সার্বক্ষণিক পরামর্শ ও ফ্রি কোটেশন দিতে প্রস্তুত।'
                 : 'Our technical specialists are always available for consultation and free quotations.'}
@@ -259,17 +248,17 @@ export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({ on
 
           <div className="flex flex-wrap items-center justify-center gap-2.5">
             <a
-              href={`tel:${business?.phone || '01712345678'}`}
-              className="px-4 py-2.5 rounded-xl bg-[#202630] hover:bg-[#2c3442] border border-[#303743] text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors"
+              href={`tel:${business?.phone || '01609999612'}`}
+              className="px-4 py-2.5 rounded-xl bg-[#123047] hover:bg-[#0f2638] text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors shadow-xs"
             >
-              <Phone className="w-4 h-4 text-[#2585FF]" />
+              <Phone className="w-4 h-4 text-[#38BDF8]" />
               <span>{lang === 'bn' ? 'সরাসরি কল করুন' : 'Call Now'}</span>
             </a>
 
             <button
               type="button"
               onClick={() => handleNavigate('/get-quote')}
-              className="px-5 py-2.5 rounded-xl bg-[#2585FF] hover:bg-[#1a73e8] text-white text-xs sm:text-sm font-extrabold flex items-center gap-1.5 transition-all shadow-md shadow-[#2585FF]/20 cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
             >
               <span>{lang === 'bn' ? 'ফ্রি কোটেশন নিন' : 'Get Free Quote'}</span>
               <ArrowRight className="w-4 h-4" />

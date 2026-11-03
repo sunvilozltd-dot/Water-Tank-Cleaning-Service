@@ -744,8 +744,8 @@ export const HomepageCmsTab: React.FC = () => {
                         : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
                     }`}
                   >
-                    <span className="w-3.5 h-3.5 rounded-full bg-[#0b2b5c] border border-blue-400"></span>
-                    <span>Deep Royal Blue</span>
+                    <span className="w-3.5 h-3.5 rounded-full bg-[#123047] border border-[#38BDF8]"></span>
+                    <span>Deep Navy</span>
                   </button>
                 </div>
               </div>

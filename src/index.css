@@ -2,26 +2,45 @@
 
 @layer base {
   :root {
-    --bg-primary: #040D1A;
-    --bg-secondary: #08162B;
-    --bg-card: #0D203A;
-    --bg-elevated: #132D50;
-    --text-primary: #FFFFFF;
-    --text-secondary: #C2D6EE;
-    --text-muted: #8AA4C4;
-    --accent-blue: #0284C7;
-    --accent-cyan: #06B6D4;
-    --accent-aqua: #38BDF8;
-    --accent-green: #10B981;
-    --border-subtle: #1E3A5F;
-    --border-water: rgba(56, 189, 248, 0.22);
+    /* Brand Official Color System */
+    --color-deep-navy: #123047;
+    --color-teal: #0D9488;
+    --color-teal-hover: #0F766E;
+    --color-water-blue: #38BDF8;
+    --color-clean-white: #FFFFFF;
+    --color-soft-bg: #F5FAFC;
+    --color-soft-aqua: #E8F5F3;
+    --color-text-primary: #172B3A;
+    --color-text-secondary: #64748B;
+    --color-border: #E2E8F0;
+    --color-whatsapp: #25D366;
+    --color-call: #123047;
+    --color-special-offer: #F59E0B;
+    --color-success: #16A34A;
+    --color-warning: #D97706;
+    --color-error: #DC2626;
+
+    /* Semantic Mappings */
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F5FAFC;
+    --bg-card: #FFFFFF;
+    --bg-elevated: #E8F5F3;
+    --text-primary: #172B3A;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --accent-blue: #123047;
+    --accent-cyan: #38BDF8;
+    --accent-teal: #0D9488;
+    --accent-aqua: #E8F5F3;
+    --border-subtle: #E2E8F0;
+    --border-water: rgba(13, 148, 136, 0.2);
   }
 
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
-    background-color: #040D1A;
-    color: #FFFFFF;
+    background-color: #F5FAFC;
+    color: #172B3A;
     overflow-x: hidden;
     max-width: 100vw;
   }
@@ -30,15 +49,15 @@
     font-family: 'Plus Jakarta Sans', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     min-height: 100vh;
     touch-action: manipulation;
-    background-color: #040D1A;
-    color: #FFFFFF;
+    background-color: #F5FAFC;
+    color: #172B3A;
     overflow-x: hidden;
     max-width: 100vw;
   }
 
-  /* Accessible focus rings with fresh aqua blue */
+  /* Accessible focus rings with fresh teal */
   :focus-visible {
-    outline: 2px solid #38BDF8;
+    outline: 2px solid #0D9488;
     outline-offset: 2px;
   }
 
@@ -62,21 +81,21 @@
     }
   }
 
-  /* Aqua-Tinted Custom Scrollbar */
+  /* Clean Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: #040D1A;
+    background: #F5FAFC;
   }
   ::-webkit-scrollbar-thumb {
-    background: #132D50;
+    background: #CBD5E1;
     border-radius: 4px;
-    border: 1px solid rgba(56, 189, 248, 0.2);
+    border: 1px solid #E2E8F0;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #0284C7;
+    background: #0D9488;
   }
 }
 
@@ -98,13 +117,13 @@
 /* 2. Slow gentle water wave drift */
 @keyframes wave-flow-slow {
   0% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(-25px, 6px, 0); }
+  50% { transform: translate3d(-20px, 4px, 0); }
   100% { transform: translate3d(0, 0, 0); }
 }
 
 @keyframes wave-flow-reverse {
   0% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(25px, -6px, 0); }
+  50% { transform: translate3d(20px, -4px, 0); }
   100% { transform: translate3d(0, 0, 0); }
 }
 
@@ -122,10 +141,10 @@
 @keyframes water-ripple-expand {
   0% {
     transform: scale(0.85);
-    opacity: 0.65;
+    opacity: 0.45;
   }
   50% {
-    opacity: 0.35;
+    opacity: 0.25;
   }
   100% {
     transform: scale(1.6);
@@ -145,23 +164,23 @@
   animation: water-ripple-expand 9s cubic-bezier(0.25, 1, 0.5, 1) infinite 6s;
 }
 
-/* 4. Realistic light caustic shimmer & rays */
+/* 4. Realistic light caustic shimmer */
 @keyframes caustic-drift {
   0% {
     transform: translate(0%, 0%) scale(1);
-    opacity: 0.32;
+    opacity: 0.22;
   }
   33% {
-    transform: translate(3%, 2%) scale(1.05);
-    opacity: 0.45;
+    transform: translate(2%, 1.5%) scale(1.03);
+    opacity: 0.32;
   }
   66% {
-    transform: translate(-2%, 3%) scale(0.98);
-    opacity: 0.28;
+    transform: translate(-1.5%, 2%) scale(0.98);
+    opacity: 0.20;
   }
   100% {
     transform: translate(0%, 0%) scale(1);
-    opacity: 0.32;
+    opacity: 0.22;
   }
 }
 
@@ -173,12 +192,12 @@
 /* 5. Soft specular water highlight gleam */
 @keyframes water-gleam {
   0%, 100% {
-    opacity: 0.25;
-    transform: translateX(-5%);
+    opacity: 0.15;
+    transform: translateX(-4%);
   }
   50% {
-    opacity: 0.55;
-    transform: translateX(5%);
+    opacity: 0.35;
+    transform: translateX(4%);
   }
 }
 
@@ -189,12 +208,12 @@
 /* 6. Gentle floating water orb pulse */
 @keyframes water-glow-pulse {
   0%, 100% {
-    opacity: 0.22;
+    opacity: 0.12;
     transform: scale(1);
   }
   50% {
-    opacity: 0.38;
-    transform: scale(1.08);
+    opacity: 0.24;
+    transform: scale(1.06);
   }
 }
 
@@ -203,30 +222,27 @@
 }
 
 /* ------------------------------------------------------------- */
-/* WATER-THEMED UTILITY CLASSES                                  */
+/* BRAND-THEMED UTILITY CLASSES                                  */
 /* ------------------------------------------------------------- */
 
-/* Frosted glass card with clean aqua accent */
+/* Clean White Card with subtle border and crisp shadow */
 .water-glass-card {
-  background: rgba(10, 25, 46, 0.78);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(56, 189, 248, 0.18);
-  box-shadow: 0 10px 30px -10px rgba(2, 132, 199, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 18px -2px rgba(18, 48, 71, 0.06);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .water-glass-card:hover {
-  border-color: rgba(56, 189, 248, 0.42);
-  box-shadow: 0 14px 40px -10px rgba(6, 182, 212, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  border-color: #0D9488;
+  box-shadow: 0 10px 30px -4px rgba(13, 148, 136, 0.12);
 }
 
-/* Frosted text readability shield for hero content */
+/* Clean text shield for readability */
 .water-text-shield {
-  background: rgba(4, 13, 26, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(56, 189, 248, 0.18);
-  box-shadow: 0 16px 40px -10px rgba(2, 8, 20, 0.6);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 12px 36px -6px rgba(18, 48, 71, 0.08);
 }
-

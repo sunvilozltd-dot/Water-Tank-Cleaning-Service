@@ -2,9 +2,10 @@ import React from 'react';
 import { SeoHead } from '../components/SeoHead';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { SmartQuoteWizard } from '../components/SmartQuoteWizard';
+import { FastMobileQuoteForm } from '../components/FastMobileQuoteForm';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
-import { ShieldCheck, Phone, MessageCircle, Clock, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Phone, MessageCircle, Clock, CheckCircle2, Zap, SlidersHorizontal } from 'lucide-react';
 import { trackWhatsAppClick } from '../utils/tracking';
 
 interface GetQuotePageProps {
@@ -14,11 +15,12 @@ interface GetQuotePageProps {
 export const GetQuotePage: React.FC<GetQuotePageProps> = ({ onNavigate }) => {
   const { lang } = useLanguage();
   const { business } = useSiteConfig();
+  const [activeTab, setActiveTab] = React.useState<'fast' | 'detailed'>('fast');
 
   const rawWhatsapp = (business.whatsappNumber || '8801609999612').replace(/[^0-9]/g, '');
 
   return (
-    <main className="min-h-screen bg-transparent text-white py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-10">
+    <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-10">
       <SeoHead
         title={lang === 'bn' ? 'ফ্রি কোটেশন ও প্রাইসিং | সানভিলোজ ক্লিন কেয়ার' : 'Get a Free Quote | Sunviloz Clean Care Dhaka'}
         description="Calculate estimated water tank cleaning and pipeline descaling costs in Dhaka. Simple 4-step quotation form with instant WhatsApp booking."
@@ -33,50 +35,86 @@ export const GetQuotePage: React.FC<GetQuotePageProps> = ({ onNavigate }) => {
 
       {/* Page Header */}
       <div className="text-center max-w-3xl mx-auto space-y-3">
-        <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 inline-flex items-center gap-1.5">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+        <span className="text-xs font-bold uppercase tracking-wider text-[#0D9488] inline-flex items-center gap-1.5 bg-[#E8F5F3] px-3 py-1 rounded-full border border-[#0D9488]/20">
+          <ShieldCheck className="w-4 h-4 text-[#16A34A]" />
           <span>{lang === 'bn' ? 'স্বচ্ছ ও নির্ভরযোগ্য সার্ভিস কোটেশন' : 'Transparent & Honest Quotations'}</span>
         </span>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#123047] tracking-tight">
           {lang === 'bn' 
-            ? 'সহজ ৪ ধাপে পানির ট্যাংকের সঠিক কোটেশন নিন' 
-            : 'Get an Accurate Water Tank Cleaning Quote in 4 Steps'}
+            ? 'সহজ ও দ্রুত পানির ট্যাংকের সঠিক কোটেশন নিন' 
+            : 'Get an Accurate Water Tank Cleaning Quote'}
         </h1>
-        <p className="text-xs sm:text-sm md:text-base text-[#B8C0CC] leading-relaxed max-w-2xl mx-auto">
+        <p className="text-xs sm:text-sm md:text-base text-[#64748B] leading-relaxed max-w-2xl mx-auto">
           {lang === 'bn'
-            ? 'আপনার ট্যাংকের ধরন, ধারণক্ষমতা ও এলাকা নির্বাচন করে কয়েক সেকেন্ডের মধ্যে প্রফেশনাল কোটেশন রিকোয়েস্ট পাঠান।'
-            : 'Select your tank type, capacity, and Dhaka locality to receive an upfront estimate with zero hidden costs.'}
+            ? 'আপনার সুবিধানুযায়ী ১ মিনিটে দ্রুত ফর্ম পূরণ করুন অথবা ৪ ধাপের বিস্তারিত ক্যালকুলেটর ব্যবহার করুন।'
+            : 'Fill out our 1-minute quick form or use the step-by-step calculator wizard for an exact estimate.'}
         </p>
 
         {/* Quick Highlights */}
-        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-2 text-xs text-[#B8C0CC]">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-2 text-xs text-[#64748B]">
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#28C76F]" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A]" />
             <span>{lang === 'bn' ? 'কোনো হিডেন চার্জ নেই' : 'No hidden fees'}</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#28C76F]" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A]" />
             <span>{lang === 'bn' ? 'ফুড-গ্রেড জীবাণুমুক্তকরণ' : 'Food-grade safe sanitization'}</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#28C76F]" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A]" />
             <span>{lang === 'bn' ? 'হোয়াটসঅ্যাপে দ্রুত উত্তর' : 'Fast WhatsApp confirmation'}</span>
           </span>
         </div>
+
+        {/* Tab Selection Switch */}
+        <div className="pt-3 flex justify-center">
+          <div className="inline-flex p-1 bg-white border border-[#E2E8F0] rounded-2xl shadow-sm">
+            <button
+              type="button"
+              onClick={() => setActiveTab('fast')}
+              className={`px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                activeTab === 'fast'
+                  ? 'bg-[#0D9488] text-white shadow-md'
+                  : 'text-[#64748B] hover:text-[#123047]'
+              }`}
+            >
+              <Zap className="w-4 h-4 text-amber-300" />
+              <span>{lang === 'bn' ? '১ মিনিটে দ্রুত কোটেশন' : 'Fast 1-Min Quote'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('detailed')}
+              className={`px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                activeTab === 'detailed'
+                  ? 'bg-[#0D9488] text-white shadow-md'
+                  : 'text-[#64748B] hover:text-[#123047]'
+              }`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              <span>{lang === 'bn' ? 'বিস্তারিত উইজার্ড' : 'Detailed Wizard'}</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Main Quote Wizard Form Container */}
+      {/* Main Quote Form Container */}
       <div className="max-w-3xl mx-auto">
-        <SmartQuoteWizard sourceContext="Get Quote Page" />
+        {activeTab === 'fast' ? (
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-[#E2E8F0] shadow-xl border-t-4 border-t-[#0D9488]">
+            <FastMobileQuoteForm sourceContext="Get Quote Page (Fast Tab)" />
+          </div>
+        ) : (
+          <SmartQuoteWizard sourceContext="Get Quote Page (Wizard Tab)" />
+        )}
       </div>
 
       {/* Alternative Contact Assistance Card */}
-      <div className="max-w-3xl mx-auto bg-[#11151B] border border-[#303743] rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-5 text-center sm:text-left">
+      <div className="max-w-3xl mx-auto bg-white border border-[#E2E8F0] rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-5 text-center sm:text-left shadow-md">
         <div className="space-y-1">
-          <h3 className="text-base sm:text-lg font-bold text-white">
+          <h3 className="text-base sm:text-lg font-bold text-[#123047]">
             {lang === 'bn' ? 'ফর্ম পূরণ করতে সময় নেই?' : 'Need an Immediate Estimate?'}
           </h3>
-          <p className="text-xs sm:text-sm text-[#B8C0CC]">
+          <p className="text-xs sm:text-sm text-[#64748B]">
             {lang === 'bn' 
               ? 'সরাসরি আমাদের হোয়াটসঅ্যাপে ট্যাংকের ছবি পাঠান বা ফোন করুন।' 
               : 'Send a photo of your tank on WhatsApp or call our hotline for quick pricing.'}
@@ -86,9 +124,9 @@ export const GetQuotePage: React.FC<GetQuotePageProps> = ({ onNavigate }) => {
         <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
           <a
             href={`tel:${business.phone}`}
-            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#171C24] hover:bg-[#202630] text-white border border-[#303743] font-bold text-xs sm:text-sm transition-all flex items-center gap-2"
+            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#123047] hover:bg-[#1b4363] text-white font-bold text-xs sm:text-sm transition-all flex items-center gap-2 shadow-sm"
           >
-            <Phone className="w-4 h-4 text-[#2585FF]" />
+            <Phone className="w-4 h-4 text-[#38BDF8]" />
             <span>{business.displayPhone}</span>
           </a>
 
@@ -97,15 +135,13 @@ export const GetQuotePage: React.FC<GetQuotePageProps> = ({ onNavigate }) => {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackWhatsAppClick({ source: 'get_quote_page_bottom' })}
-            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#28C76F] hover:bg-[#22aa5e] text-white font-bold text-xs sm:text-sm transition-all flex items-center gap-2 shadow-lg shadow-[#28C76F]/20"
+            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs sm:text-sm transition-all flex items-center gap-2 shadow-md shadow-[#25D366]/20"
           >
-            <MessageCircle className="w-4 h-4 text-white" />
-            <span>WhatsApp</span>
+            <MessageCircle className="w-4 h-4" />
+            <span>{lang === 'bn' ? 'WhatsApp চ্যাট' : 'Chat on WhatsApp'}</span>
           </a>
         </div>
       </div>
     </main>
   );
 };
-
-export default GetQuotePage;

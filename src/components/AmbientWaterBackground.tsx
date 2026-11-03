@@ -18,41 +18,41 @@ export const AmbientWaterBackground: React.FC = () => {
       className="fixed inset-0 w-full h-full pointer-events-none select-none overflow-hidden z-0"
       aria-hidden="true"
     >
-      {/* 1. Base Oceanic Deep Navy Color Base */}
+      {/* 1. Base Clean Fresh Water Foundation Gradient */}
       <div 
         className="absolute inset-0 w-full h-full"
         style={{
-          background: 'linear-gradient(180deg, #040D1A 0%, #06152A 30%, #071932 60%, #051022 85%, #030A14 100%)'
+          background: 'linear-gradient(180deg, #FFFFFF 0%, #F5FAFC 35%, #F0F9FB 70%, #F5FAFC 100%)'
         }}
       />
 
-      {/* 2. Soft Ambient Aqua Orbs (Clean Water Depths) */}
+      {/* 2. Soft Ambient Aqua & Water Blue Glimmers */}
       <div 
-        className={`absolute top-[10%] -left-32 w-[600px] h-[600px] rounded-full blur-[140px] opacity-15 ${reducedMotion ? '' : 'animate-water-glow'}`}
+        className={`absolute top-[8%] -left-32 w-[550px] h-[550px] rounded-full blur-[140px] opacity-25 ${reducedMotion ? '' : 'animate-water-glow'}`}
         style={{
-          background: 'radial-gradient(circle, #0284C7 0%, #06B6D4 40%, transparent 70%)'
+          background: 'radial-gradient(circle, #38BDF8 0%, #E0F2FE 50%, transparent 75%)'
         }}
       />
 
       <div 
-        className={`absolute top-[45%] -right-32 w-[700px] h-[700px] rounded-full blur-[160px] opacity-12 ${reducedMotion ? '' : 'animate-water-glow'}`}
+        className={`absolute top-[45%] -right-32 w-[600px] h-[600px] rounded-full blur-[160px] opacity-20 ${reducedMotion ? '' : 'animate-water-glow'}`}
         style={{
-          background: 'radial-gradient(circle, #0EA5E9 0%, #0369A1 50%, transparent 75%)',
+          background: 'radial-gradient(circle, #0D9488 0%, #CCFBF1 50%, transparent 75%)',
           animationDelay: '-4s'
         }}
       />
 
       <div 
-        className={`absolute top-[80%] left-1/3 w-[650px] h-[650px] rounded-full blur-[150px] opacity-10 ${reducedMotion ? '' : 'animate-water-glow'}`}
+        className={`absolute top-[80%] left-1/3 w-[550px] h-[550px] rounded-full blur-[150px] opacity-20 ${reducedMotion ? '' : 'animate-water-glow'}`}
         style={{
-          background: 'radial-gradient(circle, #38BDF8 0%, #0284C7 45%, transparent 70%)',
+          background: 'radial-gradient(circle, #38BDF8 0%, #E8F5F3 50%, transparent 75%)',
           animationDelay: '-8s'
         }}
       />
 
-      {/* 3. Subtle Caustic Refraction Lines across entire page background */}
+      {/* 3. Subtle Caustic Refraction Lines */}
       <svg 
-        className="absolute inset-0 w-full h-full opacity-[0.035] mix-blend-screen"
+        className="absolute inset-0 w-full h-full opacity-[0.025]"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="none"
       >
@@ -60,19 +60,19 @@ export const AmbientWaterBackground: React.FC = () => {
           <path 
             d="M 0,70 C 70,30 140,110 210,70 C 280,30 350,110 420,70" 
             fill="none" 
-            stroke="#38BDF8" 
+            stroke="#0D9488" 
             strokeWidth="1.2" 
           />
           <path 
             d="M 0,140 C 70,180 140,100 210,140 C 280,180 350,100 420,140" 
             fill="none" 
-            stroke="#06B6D4" 
+            stroke="#38BDF8" 
             strokeWidth="1" 
           />
           <path 
             d="M 0,210 C 70,170 140,250 210,210 C 280,170 350,250 420,210" 
             fill="none" 
-            stroke="#0284C7" 
+            stroke="#0D9488" 
             strokeWidth="1" 
           />
         </pattern>

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { QuoteLead, LeadStatus, LeadPriority } from '../../types';
+import React, { useState, useEffect } from 'react';
+import { QuoteLead, LeadStatus, LeadPriority, LeadNotificationRecord } from '../../types';
 import { 
   X, 
   Phone, 
@@ -12,9 +12,12 @@ import {
   FileText,
   User,
   CheckCircle2,
-  Trash2
+  Trash2,
+  Mail,
+  RefreshCw
 } from 'lucide-react';
 import { formatWhatsAppUrl } from '../../utils/whatsapp';
+import { fetchLeadNotification, retryLeadNotification } from '../../services/leadService';
 
 interface LeadDetailModalProps {
   lead: QuoteLead | null;
@@ -37,6 +40,31 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
   const [quotedAmount, setQuotedAmount] = useState<number | undefined>(lead.quotedAmount || lead.calculatedEstimate);
   const [scheduledDate, setScheduledDate] = useState(lead.scheduledDate || '');
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // Email Notification Status & Retry state
+  const [notificationRecord, setNotificationRecord] = useState<LeadNotificationRecord | null>(null);
+  const [isRetryingNotif, setIsRetryingNotif] = useState(false);
+  const [notifFeedback, setNotifFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (lead?.id) {
+      fetchLeadNotification(lead.id).then(record => {
+        setNotificationRecord(record);
+      });
+    }
+  }, [lead?.id]);
+
+  const handleRetryNotification = async () => {
+    if (!lead?.id) return;
+    setIsRetryingNotif(true);
+    setNotifFeedback(null);
+    const eventType = (lead.status === 'Incomplete' || lead.isAbandoned) ? 'abandoned_lead' : 'complete_lead';
+    const res = await retryLeadNotification(lead.id, eventType);
+    setIsRetryingNotif(false);
+    setNotifFeedback(res.message);
+    const updated = await fetchLeadNotification(lead.id);
+    if (updated) setNotificationRecord(updated);
+  };
 
   const handleSave = () => {
     onSave({
@@ -289,6 +317,88 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
               placeholder="e.g. Customer requested team at 10 AM, 4th floor rooftop tank..."
               className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
             />
+          </div>
+
+          {/* Email Notification Status & Retry System */}
+          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-sky-400" />
+                <span className="text-xs font-bold text-white uppercase tracking-wider">Email Notification Status</span>
+              </div>
+              {notificationRecord ? (
+                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                  notificationRecord.status === 'sent' 
+                    ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/60'
+                    : notificationRecord.status === 'processing'
+                    ? 'bg-blue-950 text-blue-400 border border-blue-800/60 animate-pulse'
+                    : notificationRecord.status === 'pending'
+                    ? 'bg-amber-950 text-amber-400 border border-amber-800/60 animate-pulse'
+                    : 'bg-rose-950 text-rose-400 border border-rose-800/60'
+                }`}>
+                  {notificationRecord.status.toUpperCase()}
+                </span>
+              ) : (
+                <span className="text-[11px] text-slate-500 font-medium">No record yet</span>
+              )}
+            </div>
+
+            <div className="text-xs text-slate-300 space-y-1">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Recipient:</span>
+                <span className="font-mono text-slate-200">{notificationRecord?.recipient || 'sunvilozltd@gmail.com'}</span>
+              </div>
+              {notificationRecord?.sent_at && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Sent At:</span>
+                  <span className="text-slate-200">{new Date(notificationRecord.sent_at).toLocaleString()}</span>
+                </div>
+              )}
+              {notificationRecord?.resend_message_id && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Resend ID:</span>
+                  <span className="font-mono text-slate-400 text-[10px]">{notificationRecord.resend_message_id}</span>
+                </div>
+              )}
+              {notificationRecord?.error_message && (
+                <div className="p-2 mt-1 rounded bg-rose-950/40 border border-rose-900/40 text-rose-300 text-[11px]">
+                  Error: {notificationRecord.error_message}
+                </div>
+              )}
+              {notificationRecord && (
+                <div className="flex justify-between text-[11px] text-slate-400 pt-1">
+                  <span>Retries: {notificationRecord.retry_count || 0} / {notificationRecord.max_retries || 3}</span>
+                  {notificationRecord.next_retry_at && notificationRecord.status !== 'sent' && (
+                    <span className="text-amber-400">Next retry: {new Date(notificationRecord.next_retry_at).toLocaleTimeString()}</span>
+                  )}
+                  {notificationRecord.last_retry_at && !notificationRecord.next_retry_at && (
+                    <span>Last retry: {new Date(notificationRecord.last_retry_at).toLocaleTimeString()}</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {notifFeedback && (
+              <div className="text-xs text-sky-300 bg-sky-950/40 border border-sky-800/50 p-2 rounded">
+                {notifFeedback}
+              </div>
+            )}
+
+            <div className="flex justify-end pt-1">
+              <button
+                type="button"
+                onClick={handleRetryNotification}
+                disabled={isRetryingNotif || notificationRecord?.status === 'sent'}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  notificationRecord?.status === 'sent'
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                    : 'bg-sky-600 hover:bg-sky-500 text-white shadow'
+                }`}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRetryingNotif ? 'animate-spin' : ''}`} />
+                <span>{isRetryingNotif ? 'Sending Email...' : notificationRecord?.status === 'sent' ? 'Notification Sent' : 'Retry Email Notification'}</span>
+              </button>
+            </div>
           </div>
         </div>
 

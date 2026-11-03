@@ -16,7 +16,7 @@ export const ServiceAreaPage: React.FC<ServiceAreaPageProps> = ({
   const { lang } = useLanguage();
 
   return (
-    <main className="min-h-screen bg-[#080A0D] text-white py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
+    <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
       <SeoHead
         title="Service Areas & Coverage Across Dhaka | Sunviloz Clean Care"
         description="Comprehensive water tank and pipeline cleaning coverage across all Dhaka locations: Gulshan, Banani, Dhanmondi, Uttara, Bashundhara, Mirpur, and Old Dhaka."
