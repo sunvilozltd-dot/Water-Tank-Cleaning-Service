@@ -16,7 +16,7 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onNavigate
       <SeoHead
         title={lang === 'bn' ? 'গোপনীয়তা নীতি | সানভিলোজ ক্লিন কেয়ার' : 'Privacy Policy - Sunviloz Clean Care Dhaka'}
         description="Privacy policy and data handling information for Sunviloz Clean Care in Dhaka."
-        canonicalUrl="https://water-tank-cleaning-service.vercel.app/privacy-policy"
+        canonicalUrl="https://sunvilozcleancare.com/privacy-policy"
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'গোপনীয়তা নীতি' : 'Privacy Policy', href: '/privacy-policy' }]} />
 

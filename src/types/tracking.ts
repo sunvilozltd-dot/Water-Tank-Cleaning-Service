@@ -34,11 +34,15 @@ export type TrackEventPlatform = 'all' | 'meta' | 'ga4' | 'gtm' | 'gads' | 'capi
 export interface TrackingEventLogItem {
   id: string;
   eventName: string;
-  eventId: string;
-  platform: TrackEventPlatform;
+  eventId?: string;
+  platform?: TrackEventPlatform;
   params: Record<string, any>;
   timestamp: string;
-  status: 'dispatched' | 'blocked_by_consent' | 'deduplicated' | 'simulated';
+  status?: 'dispatched' | 'blocked_by_consent' | 'deduplicated' | 'simulated';
+  channel?: string;
+  metaStatus?: string;
+  gaStatus?: string;
+  isConversion?: boolean;
 }
 
 export interface StandardTrackParams {

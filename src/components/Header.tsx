@@ -331,8 +331,8 @@ export const Header: React.FC<HeaderProps> = ({
             })}
           </nav>
 
-          {/* Desktop & Tablet Action Buttons */}
-          <div className="hidden sm:flex items-center gap-2.5">
+          {/* Desktop Action Buttons (1024px+) */}
+          <div className="hidden lg:flex items-center gap-2.5">
             {/* Direct Call Button (Deep Navy #123047) */}
             {headerConfig.phoneVisible && (
               <a
@@ -372,13 +372,35 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Mobile Menu Action Triggers */}
-          <div className="flex items-center gap-2 sm:hidden">
+          {/* Mobile & Tablet Action Triggers (<1024px) */}
+          <div className="flex items-center gap-2 lg:hidden">
+            {headerConfig.phoneVisible && (
+              <a
+                href={`tel:${headerConfig.phone}`}
+                className="hidden sm:inline-flex items-center justify-center p-2 min-h-[44px] min-w-[44px] rounded-xl bg-[#123047] text-white hover:bg-[#0f2638] transition-colors"
+                aria-label={`Call ${headerConfig.phoneDisplay}`}
+              >
+                <Phone className="w-4 h-4 text-[#38BDF8]" aria-hidden="true" />
+              </a>
+            )}
+
+            {headerConfig.whatsappVisible && (
+              <a
+                href={`https://wa.me/${headerConfig.whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(headerConfig.whatsappMessage)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden xs:inline-flex items-center justify-center p-2 min-h-[44px] min-w-[44px] rounded-xl bg-[#25D366] text-white hover:bg-[#20ba5a] transition-colors"
+                aria-label="Chat on WhatsApp"
+              >
+                <MessageCircle className="w-4 h-4 text-white" aria-hidden="true" />
+              </a>
+            )}
+
             {headerConfig.ctaVisible && (
               <button
                 type="button"
                 onClick={() => onOpenQuoteModal()}
-                className="px-3 min-h-[40px] text-xs font-bold rounded-xl bg-[#0D9488] text-white flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
+                className="px-3 py-2 min-h-[44px] text-xs font-bold rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
               >
                 {lang === 'bn' ? headerConfig.ctaTextBn : headerConfig.ctaTextEn}
               </button>
@@ -387,7 +409,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl bg-[#F5FAFC] border border-[#E2E8F0] text-[#123047] hover:bg-[#E8F5F3] focus-visible:outline-2 focus-visible:outline-[#0D9488] cursor-pointer"
+              className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-[#F5FAFC] border border-[#E2E8F0] text-[#123047] hover:bg-[#E8F5F3] focus-visible:outline-2 focus-visible:outline-[#0D9488] cursor-pointer"
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={mobileMenuOpen}
             >
@@ -397,9 +419,9 @@ export const Header: React.FC<HeaderProps> = ({
 
         </div>
 
-        {/* Dynamic Mobile Dropdown Menu */}
+        {/* Dynamic Mobile Dropdown Menu with safe scroll */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-[#E2E8F0] bg-white px-4 pt-3 pb-6 space-y-3 shadow-xl animate-fadeIn text-[#172B3A]" role="dialog" aria-modal="true" aria-label="Mobile Navigation Menu">
+          <div className="lg:hidden border-t border-[#E2E8F0] bg-white px-4 pt-3 pb-8 space-y-3 shadow-2xl animate-fadeIn text-[#172B3A] max-h-[calc(100vh-80px)] overflow-y-auto" role="dialog" aria-modal="true" aria-label="Mobile Navigation Menu">
             {/* Quick Contact Row */}
             <div className="grid grid-cols-2 gap-2 pb-2 border-b border-[#E2E8F0]">
               {headerConfig.phoneVisible && (

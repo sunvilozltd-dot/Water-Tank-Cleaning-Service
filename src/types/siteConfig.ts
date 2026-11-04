@@ -39,11 +39,29 @@ export interface HeroConfig {
   ctaCallTextBn: string;
   bgImageUrl?: string;
   bgVideoUrl?: string;
-  // Hero Video & Background Customization
+  // Hero Dual-Video Customization
   videoEnabled?: boolean;
-  videoUrl?: string; // Desktop video URL or local path
-  mobileVideoUrl?: string; // Mobile video URL or local path
-  posterImageUrl?: string; // Fallback / preload poster image
+  videoUrl?: string; // Video 1: Desktop video URL or local path
+  video2Url?: string; // Video 2: Secondary video URL or local path
+  video3Url?: string; // Video 3: Third video URL or local path
+  video1TitleEn?: string;
+  video1TitleBn?: string;
+  video2TitleEn?: string;
+  video2TitleBn?: string;
+  video3TitleEn?: string;
+  video3TitleBn?: string;
+  video1SubtitleEn?: string;
+  video1SubtitleBn?: string;
+  video2SubtitleEn?: string;
+  video2SubtitleBn?: string;
+  video3SubtitleEn?: string;
+  video3SubtitleBn?: string;
+  mobileVideoUrl?: string; // Video 1 mobile-friendly source
+  mobileVideo2Url?: string; // Video 2 mobile-friendly source
+  mobileVideo3Url?: string; // Video 3 mobile-friendly source
+  posterImageUrl?: string; // Video 1 fallback poster
+  posterImage2Url?: string; // Video 2 fallback poster
+  posterImage3Url?: string; // Video 3 fallback poster
   overlayOpacity?: number; // Subtle dark overlay opacity e.g. 0.70 (70%)
   overlayColor?: 'navy' | 'black' | 'darkBlue';
   visualHeadingEn?: string;
@@ -76,6 +94,9 @@ export interface BusinessConfig {
   googleSiteVerification?: string;
   googleAnalyticsId?: string;
   metaPixelId?: string;
+  googleBusinessProfileUrl?: string;
+  googleReviewsUrl?: string;
+  googleMapsDirectionsUrl?: string;
   canonicalBaseUrl: string;
   trustBadges: { en: string; bn: string }[];
   pricing: {

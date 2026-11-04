@@ -24,7 +24,7 @@ export const GetQuotePage: React.FC<GetQuotePageProps> = ({ onNavigate }) => {
       <SeoHead
         title={lang === 'bn' ? 'ফ্রি কোটেশন ও প্রাইসিং | সানভিলোজ ক্লিন কেয়ার' : 'Get a Free Quote | Sunviloz Clean Care Dhaka'}
         description="Calculate estimated water tank cleaning and pipeline descaling costs in Dhaka. Simple 4-step quotation form with instant WhatsApp booking."
-        canonicalUrl="https://water-tank-cleaning-service.vercel.app/get-quote"
+        canonicalUrl="https://sunvilozcleancare.com/get-quote"
       />
 
       <Breadcrumbs

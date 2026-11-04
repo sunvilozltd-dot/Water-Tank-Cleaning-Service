@@ -10,12 +10,20 @@ export const PrivacyConsentBanner: React.FC = () => {
   const [marketingAllowed, setMarketingAllowed] = useState(consent.marketing);
 
   useEffect(() => {
-    // Only show if consent is required by admin and user hasn't explicitly set preferences yet
+    // Only show automatically on first arrival if consent hasn't been explicitly decided yet
     if (settings.consentRequired && !consent.timestamp) {
       setIsOpen(true);
     } else {
       setIsOpen(false);
     }
+
+    // Support re-opening consent settings from footer or privacy policy
+    const handleReopen = () => {
+      setShowPreferences(true);
+      setIsOpen(true);
+    };
+    window.addEventListener('sunviloz_open_consent_preferences', handleReopen);
+    return () => window.removeEventListener('sunviloz_open_consent_preferences', handleReopen);
   }, [settings.consentRequired, consent.timestamp]);
 
   if (!isOpen) return null;

@@ -19,7 +19,7 @@ export const FloatingContactButtons: React.FC<FloatingContactButtonsProps> = ({
   const whatsappUrl = `https://wa.me/${rawWhatsapp}?text=${encodeURIComponent(defaultMsg)}`;
 
   return (
-    <div className="fixed bottom-20 right-3.5 sm:bottom-6 sm:right-6 z-40 flex flex-col items-end gap-2.5">
+    <div className="hidden sm:flex fixed bottom-6 right-6 z-40 flex-col items-end gap-2.5">
       {/* Expanded quick contact tray */}
       {isOpen && (
         <div 

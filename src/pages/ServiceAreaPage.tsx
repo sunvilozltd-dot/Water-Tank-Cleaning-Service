@@ -20,7 +20,7 @@ export const ServiceAreaPage: React.FC<ServiceAreaPageProps> = ({
       <SeoHead
         title="Service Areas & Coverage Across Dhaka | Sunviloz Clean Care"
         description="Comprehensive water tank and pipeline cleaning coverage across all Dhaka locations: Gulshan, Banani, Dhanmondi, Uttara, Bashundhara, Mirpur, and Old Dhaka."
-        canonicalUrl="https://water-tank-cleaning-service.vercel.app/service-areas"
+        canonicalUrl="https://sunvilozcleancare.com/service-areas"
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'সার্ভিস এরিয়া' : 'Service Areas', href: '/service-areas' }]} />
       <ServiceAreaSection 

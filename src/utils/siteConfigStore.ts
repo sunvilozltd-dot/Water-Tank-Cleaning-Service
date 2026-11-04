@@ -43,11 +43,29 @@ export const DEFAULT_HERO_CONFIG: HeroConfig = {
   ctaCallTextEn: 'Call 01609-999612',
   ctaCallTextBn: 'কল করুন 01609-999612',
   bgImageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-  // Hero Full-Width Video Settings
+  // Hero Tri-Video Settings (Responsive Side-by-Side on Desktop, Stacked on Mobile)
   videoEnabled: true,
   videoUrl: '/videos/tank-cleaning-desktop.mp4',
-  mobileVideoUrl: '/videos/tank-cleaning-mobile.mp4',
-  posterImageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
+  video2Url: '/videos/tank-cleaning-mobile.mp4',
+  video3Url: 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4',
+  video1TitleEn: 'Rooftop Tank Cleaning (150-Bar Rotary Jet)',
+  video1TitleBn: '১. ছাদের ট্যাংক ক্লিনিং (১৫০ বার রোটারি জেট)',
+  video2TitleEn: 'Underground Reserve Tank & Sludge Extraction',
+  video2TitleBn: '২. আন্ডারগ্রাউন্ড রিজার্ভার ও স্লাজ উত্তোলন',
+  video3TitleEn: 'Water Supply Pipeline Descaling & Sanitization',
+  video3TitleBn: '৩. পানির পাইপলাইন ফ্লাশিং ও জীবাণুমুক্তকরণ',
+  video1SubtitleEn: '150-bar rotary water jet removing algae & sediment without surface erosion',
+  video1SubtitleBn: 'উচ্চচাপের রোটারি জেটে প্লাস্টিক বা কংক্রিট অক্ষত রেখে শ্যাওলা পরিষ্কার',
+  video2SubtitleEn: 'Submersible mud slurry extraction pump clearing thick WASA line silt',
+  video2SubtitleBn: 'সাবমারসিবল পাম্পে মাটির নিচের গভীর কাদা ও ভারী স্লাজ উত্তোলন',
+  video3SubtitleEn: 'Hydrodynamic pipe descaling flushing iron, rust & biofilms without wall damage',
+  video3SubtitleBn: 'দেয়াল না ভেঙে হাইড্রো-পালস পদ্ধতিতে পাইপলাইনের ভেতরের মরিচা ও শ্যাওলা পরিষ্কার',
+  mobileVideoUrl: '/videos/tank-cleaning-desktop.mp4',
+  mobileVideo2Url: '/videos/tank-cleaning-mobile.mp4',
+  mobileVideo3Url: 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4',
+  posterImageUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
+  posterImage2Url: '/assets/aistudio/hero-underground-poster.jpg',
+  posterImage3Url: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75',
   overlayOpacity: 0.72,
   overlayColor: 'navy',
   visualHeadingBn: 'অত্যাধুনিক মেকানাইজড ওয়াটার ট্যাংক ক্লিনিং',
@@ -81,7 +99,7 @@ export const INITIAL_FULL_SITE_CONFIG: FullSiteConfig = {
   seo: {
     defaultMetaTitle: 'Professional Water Tank Cleaning Service in Dhaka | Sunviloz Clean Care',
     defaultMetaDescription: 'Professional rooftop & underground water tank cleaning, pipeline cleaning, and sanitization in Dhaka. Transparent pricing, modern equipment, hygienic service.',
-    canonicalBaseUrl: 'https://water-tank-cleaning-service.vercel.app',
+    canonicalBaseUrl: 'https://sunvilozcleancare.com',
     indexingAllowed: true,
     socialOgImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75'
   },
@@ -121,15 +139,28 @@ export const getStoredSiteConfig = (): FullSiteConfig => {
 
     mergedSections.sort((a, b) => a.order - b.order);
 
+    const sanitizedBusiness = {
+      ...INITIAL_FULL_SITE_CONFIG.business,
+      ...(parsed.business || {}),
+      canonicalBaseUrl: (!parsed.business?.canonicalBaseUrl || parsed.business.canonicalBaseUrl.includes('water-tank-cleaning-service.vercel.app'))
+        ? 'https://sunvilozcleancare.com'
+        : parsed.business.canonicalBaseUrl,
+      pricing: {
+        ...INITIAL_FULL_SITE_CONFIG.business.pricing,
+        ...(parsed.business?.pricing || {})
+      }
+    };
+
+    const sanitizedSeo = {
+      ...INITIAL_FULL_SITE_CONFIG.seo,
+      ...(parsed.seo || {}),
+      canonicalBaseUrl: (!parsed.seo?.canonicalBaseUrl || parsed.seo.canonicalBaseUrl.includes('water-tank-cleaning-service.vercel.app'))
+        ? 'https://sunvilozcleancare.com'
+        : parsed.seo.canonicalBaseUrl
+    };
+
     return {
-      business: { 
-        ...INITIAL_FULL_SITE_CONFIG.business, 
-        ...(parsed.business || {}),
-        pricing: {
-          ...INITIAL_FULL_SITE_CONFIG.business.pricing,
-          ...(parsed.business?.pricing || {})
-        }
-      },
+      business: sanitizedBusiness,
       announcement: { ...INITIAL_FULL_SITE_CONFIG.announcement, ...(parsed.announcement || {}) },
       hero: { ...INITIAL_FULL_SITE_CONFIG.hero, ...(parsed.hero || {}) },
       sections: mergedSections,
@@ -138,7 +169,7 @@ export const getStoredSiteConfig = (): FullSiteConfig => {
       faqs: parsed.faqs || INITIAL_FULL_SITE_CONFIG.faqs,
       reviews: parsed.reviews || INITIAL_FULL_SITE_CONFIG.reviews,
       areas: parsed.areas || INITIAL_FULL_SITE_CONFIG.areas,
-      seo: { ...INITIAL_FULL_SITE_CONFIG.seo, ...(parsed.seo || {}) },
+      seo: sanitizedSeo,
       images: { ...INITIAL_FULL_SITE_CONFIG.images, ...(parsed.images || {}) }
     };
   } catch (err) {

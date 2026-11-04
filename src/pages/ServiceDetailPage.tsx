@@ -133,7 +133,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
       <SeoHead
         title={`${title} - SUNVILOZ Clean & Care Dhaka`}
         description={service.metaDesc || service.shortDesc || description}
-        canonicalUrl={`https://water-tank-cleaning-service.vercel.app/services/${service.slug}`}
+        canonicalUrl={`https://sunvilozcleancare.com/services/${service.slug}`}
       />
       
       <Breadcrumbs 

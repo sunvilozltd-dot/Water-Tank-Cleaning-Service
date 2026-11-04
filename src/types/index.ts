@@ -341,6 +341,8 @@ export interface ProjectItem {
   relatedServiceSlug?: string;
   featured?: boolean;
   videoUrl?: string;
+  customerConsentGranted?: boolean;
+  sourceType?: 'verified_job' | 'customer_upload' | 'company_work';
 }
 
 export interface WorkVideoItem {

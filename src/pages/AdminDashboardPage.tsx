@@ -18,10 +18,12 @@ import { TrackingTab } from '../components/AdminPanel/TrackingTab';
 import { SettingsTab } from '../components/AdminPanel/SettingsTab';
 import { AuditLogsTab } from '../components/AdminPanel/AuditLogsTab';
 import { AdminUsersTab } from '../components/AdminPanel/AdminUsersTab';
+import { ReviewsTab } from '../components/AdminPanel/ReviewsTab';
 import { FreeUsageMonitoringTab } from '../components/AdminPanel/FreeUsageMonitoringTab';
 
 import { QuoteLead, LeadStatus, ServiceItem, ProjectItem, VideoItem } from '../types';
 import { BlogPost } from '../types/blog';
+import { getAllReviewsForAdmin, REVIEWS_CHANGED_EVENT } from '../services/reviewService';
 import { getLeads, updateLeadStatus, updateLeadDetails, deleteLead } from '../services/leadService';
 import { getServices, saveService, deleteService } from '../utils/servicesStore';
 import { getProjects, saveProject, deleteProject } from '../utils/portfolioStore';
@@ -40,6 +42,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [pendingReviewsCount, setPendingReviewsCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   // Modals
@@ -49,18 +52,20 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
   const loadData = async () => {
     setLoading(true);
     try {
-      const [leadsData, srvData, projData, vidData, postData] = await Promise.all([
+      const [leadsData, srvData, projData, vidData, postData, revData] = await Promise.all([
         getLeads(),
         getServices(),
         getProjects(),
         getVideos(),
-        getBlogPosts()
+        getBlogPosts(),
+        getAllReviewsForAdmin()
       ]);
       setLeads(leadsData);
       setServices(srvData);
       setProjects(projData);
       setVideos(vidData);
       setPosts(postData);
+      setPendingReviewsCount(revData.filter(r => r.status === 'pending' && !r.isSpam).length);
     } catch (e) {
       console.error('Failed to load admin data:', e);
     } finally {
@@ -71,11 +76,15 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
   useEffect(() => {
     loadData();
 
-    const handleServicesChanged = () => {
+    const handleDataChanged = () => {
       loadData();
     };
-    window.addEventListener('sunviloz_services_changed', handleServicesChanged);
-    return () => window.removeEventListener('sunviloz_services_changed', handleServicesChanged);
+    window.addEventListener('sunviloz_services_changed', handleDataChanged);
+    window.addEventListener(REVIEWS_CHANGED_EVENT, handleDataChanged);
+    return () => {
+      window.removeEventListener('sunviloz_services_changed', handleDataChanged);
+      window.removeEventListener(REVIEWS_CHANGED_EVENT, handleDataChanged);
+    };
   }, []);
 
   const handleUpdateLeadStatus = async (id: string, status: LeadStatus) => {
@@ -154,6 +163,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
           currentTab={currentTab}
           onTabChange={setCurrentTab}
           pendingLeadsCount={pendingLeadsCount}
+          pendingReviewsCount={pendingReviewsCount}
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl overflow-y-auto">
@@ -167,6 +177,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
               onOpenExportModal={() => setIsExportModalOpen(true)}
               onDeleteLead={handleDeleteLead}
             />
+          )}
+
+          {currentTab === 'reviews' && (
+            <ReviewsTab />
           )}
 
           {currentTab === 'services' && (

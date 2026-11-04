@@ -19,7 +19,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       <SeoHead
         title="Sunviloz Clean Care - Professional Water Tank Cleaning Service Dhaka"
         description="High-pressure hygienic water tank and pipeline cleaning across all areas in Dhaka. Underground & rooftop overhead water tank wash with German technology."
-        canonicalUrl="https://water-tank-cleaning-service.vercel.app/"
+        canonicalUrl="https://sunvilozcleancare.com/"
       />
       <HomepageDynamicRenderer
         onOpenQuoteModal={onOpenQuoteModal}

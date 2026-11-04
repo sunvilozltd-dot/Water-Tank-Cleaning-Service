@@ -1,4 +1,15 @@
 // Analytics and Conversion Tracking utility for Sunviloz Clean Care
+// Unified with trackingService to enforce strict privacy, Google Consent Mode v2, and zero PII.
+
+import { 
+  trackEvent as serviceTrackEvent, 
+  initGoogleConsentMode, 
+  getTrackingSettings, 
+  applyTrackingScripts,
+  getUserConsent,
+  setUserConsent,
+  withdrawUserConsent
+} from '../services/trackingService';
 
 export interface TrackingEvent {
   id: string;
@@ -7,259 +18,105 @@ export interface TrackingEvent {
   params?: Record<string, any>;
 }
 
-const EVENTS_STORAGE_KEY = 'sunviloz_events_log';
-
 /**
- * Strips PII (Personally Identifiable Information) like full names, phone numbers,
- * and emails before sending to public analytics scripts (GA4 / Meta Pixel) or client logs.
+ * Dispatches an event to the centralized tracking manager.
+ * Respects user consent, strips all PII, and logs to local debug stream.
  */
-function sanitizeParams(params: Record<string, any>): Record<string, any> {
-  const sanitized: Record<string, any> = {};
-  const forbiddenKeys = [
-    'name', 
-    'phone', 
-    'whatsapp', 
-    'email', 
-    'customerName', 
-    'customerPhone', 
-    'address', 
-    'userEmail', 
-    'password'
-  ];
-  
-  for (const [key, value] of Object.entries(params)) {
-    if (!forbiddenKeys.includes(key)) {
-      sanitized[key] = value;
-    }
-  }
-  return sanitized;
-}
-
-// 3-second deduplication cache to prevent double-firing identical conversion events
-const recentEventTimestamps = new Map<string, number>();
-
-function isDuplicateConversionEvent(eventName: string, params: Record<string, any>): boolean {
-  // Only deduplicate high-value conversion events
-  if (!['lead_saved', 'whatsapp_click', 'phone_click', 'booking_confirmed'].includes(eventName)) {
-    return false;
-  }
-  const key = `${eventName}_${params.lead_number || params.source || ''}`;
-  const now = Date.now();
-  const lastTime = recentEventTimestamps.get(key) || 0;
-  if (now - lastTime < 3500) {
-    return true;
-  }
-  recentEventTimestamps.set(key, now);
-  return false;
+export function trackEvent(
+  eventName: string, 
+  params: Record<string, any> = {}, 
+  options: { isConversion?: boolean } = {}
+): void {
+  serviceTrackEvent(eventName, params, options);
 }
 
 /**
- * Dispatches an event to Google Analytics (GA4), Meta Pixel (FB), and local event log.
- * Guaranteed never to crash or block user actions. Never logs sensitive customer PII.
+ * Standardized Conversion Event Helpers (Section 8)
+ * - phone_call_click
+ * - whatsapp_click
+ * - quote_form_start
+ * - quote_form_submit
+ * - contact_form_submit
+ * - google_maps_click
+ * - google_review_click
  */
-export function trackEvent(eventName: string, params: Record<string, any> = {}): void {
-  const safeParams = sanitizeParams(params);
 
-  // Prevent duplicate firing of conversion events (e.g. accidental double-click)
-  if (isDuplicateConversionEvent(eventName, safeParams)) {
-    return;
-  }
-
-  const timestamp = new Date().toISOString();
-
-  // 1. Log sanitized events in dev mode
-  try {
-    if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
-      // Safe development debug log without PII
-      console.log(`[Event Tracked: ${eventName}]`, safeParams);
-    }
-  } catch {
-    // Ignore environment error
-  }
-
-  // 2. Local event log for lead review & analytics verification
-  try {
-    const raw = localStorage.getItem(EVENTS_STORAGE_KEY);
-    const events: TrackingEvent[] = raw ? JSON.parse(raw) : [];
-    events.unshift({
-      id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-      name: eventName,
-      timestamp,
-      params: safeParams
-    });
-    // Keep max 100 recent events
-    if (events.length > 100) events.length = 100;
-    localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
-  } catch (err) {
-    // Safe failure
-  }
-
-  // 3. Google Analytics 4 (gtag) dispatch
-  try {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', eventName, safeParams);
-    }
-  } catch (err) {
-    // Safe failure
-  }
-
-  // 4. Meta Pixel (fbq) dispatch
-  try {
-    if (typeof window !== 'undefined' && (window as any).fbq) {
-      if (eventName === 'lead_saved' || eventName === 'quote_submitted') {
-        (window as any).fbq('track', 'Lead', safeParams);
-      } else if (eventName === 'whatsapp_click' || eventName === 'whatsapp_opened') {
-        (window as any).fbq('track', 'Contact', { channel: 'whatsapp', ...safeParams });
-      } else if (eventName === 'phone_click') {
-        (window as any).fbq('track', 'Contact', { channel: 'phone', ...safeParams });
-      } else if (eventName === 'booking_confirmed') {
-        (window as any).fbq('track', 'Schedule', safeParams);
-      } else {
-        (window as any).fbq('trackCustom', eventName, safeParams);
-      }
-    }
-  } catch (err) {
-    // Safe failure
-  }
+export function trackPhoneClick(sourceOrMetadata: string | Record<string, any> = {}): void {
+  const metadata = typeof sourceOrMetadata === 'string' ? { source: sourceOrMetadata } : (sourceOrMetadata || {});
+  trackEvent('phone_call_click', { channel: 'phone', ...metadata }, { isConversion: true });
 }
 
-/**
- * Standardized Journey Event Trackers
- */
+export function trackWhatsAppClick(sourceOrMetadata: string | Record<string, any> = {}): void {
+  const metadata = typeof sourceOrMetadata === 'string' ? { source: sourceOrMetadata } : (sourceOrMetadata || {});
+  trackEvent('whatsapp_click', { channel: 'whatsapp', ...metadata }, { isConversion: true });
+}
+
 export function trackFormStarted(source = 'quote_wizard'): void {
-  trackEvent('form_started', { source });
+  trackEvent('quote_form_start', { source });
 }
 
 export function trackFormStepCompleted(stepNumber: number, stepName: string, metadata: Record<string, any> = {}): void {
-  trackEvent('form_step_completed', {
+  trackEvent('quote_form_step_completed', {
     step_number: stepNumber,
     step_name: stepName,
     ...metadata
   });
 }
 
+/**
+ * Only fire successful form conversion events AFTER the backend/database confirms successful submission.
+ */
 export function trackLeadSaved(leadNumber: string, metadata: Record<string, any> = {}): void {
-  trackEvent('lead_saved', {
+  trackEvent('quote_form_submit', {
     lead_number: leadNumber,
-    ...metadata
-  });
+    service_type: metadata.serviceType || 'Water Tank Cleaning',
+    tank_type: metadata.tankType,
+    area: metadata.area || 'Dhaka',
+    estimated_amount: metadata.estimatedPrice ? Number(metadata.estimatedPrice) : undefined
+  }, { isConversion: true });
 }
 
-export function trackWhatsAppClick(
-  leadNumberOrOptions?: string | { leadNumber?: string; source?: string }, 
-  source = 'quote_modal'
-): void {
-  let leadNumber: string | undefined;
-  let finalSource = source;
-
-  if (typeof leadNumberOrOptions === 'object' && leadNumberOrOptions !== null) {
-    leadNumber = leadNumberOrOptions.leadNumber;
-    finalSource = leadNumberOrOptions.source || source;
-  } else {
-    leadNumber = leadNumberOrOptions;
-  }
-
-  trackEvent('whatsapp_click', {
-    lead_number: leadNumber,
-    source: finalSource
-  });
+export function trackContactFormSubmit(metadata: Record<string, any> = {}): void {
+  trackEvent('contact_form_submit', metadata, { isConversion: true });
 }
 
-export function trackPhoneClick(source = 'general_call'): void {
-  trackEvent('phone_click', {
-    source,
-    channel: 'phone'
-  });
+export function trackGoogleMapsClick(metadata: Record<string, any> = {}): void {
+  trackEvent('google_maps_click', { platform: 'google_maps', ...metadata }, { isConversion: true });
 }
 
-export function trackBookingConfirmed(leadNumber: string): void {
-  trackEvent('booking_confirmed', {
-    lead_number: leadNumber
-  });
+export function trackGoogleReviewClick(metadata: Record<string, any> = {}): void {
+  trackEvent('google_review_click', { platform: 'google_reviews', ...metadata }, { isConversion: true });
 }
 
-export function trackPageView(pagePath: string, metadata: Record<string, any> = {}): void {
-  trackEvent('page_view', {
-    page_path: pagePath,
-    ...metadata
-  });
-}
-
-export function getTrackedEvents(): TrackingEvent[] {
-  try {
-    const raw = localStorage.getItem(EVENTS_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function clearTrackedEvents(): void {
-  try {
-    localStorage.removeItem(EVENTS_STORAGE_KEY);
-  } catch {
-    // Ignore
+export function trackPageView(pagePath: string, pageTitle?: string): void {
+  const consent = getUserConsent();
+  if (consent.analytics && typeof window !== 'undefined') {
+    const w = window as any;
+    if (typeof w.gtag === 'function') {
+      w.gtag('event', 'page_view', {
+        page_path: pagePath,
+        page_title: pageTitle || document.title
+      });
+    }
   }
 }
 
 /**
- * Dynamically bootstraps Google Analytics 4 and Meta Pixel if IDs are configured in environment variables.
- * Safe fallback when unconfigured, preventing any script errors or ad blockers from breaking the site.
+ * Initializes tracking safely:
+ * Sets Google Consent Mode v2 default 'denied' states first.
+ * Does NOT inject non-essential scripts unless consent is already verified.
  */
 export function initAnalytics(): void {
   if (typeof window === 'undefined') return;
 
   try {
-    const gaId = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GA_MEASUREMENT_ID) || '';
-    if (gaId && typeof gaId === 'string' && gaId.startsWith('G-')) {
-      if (!document.getElementById('ga4-script')) {
-        const script = document.createElement('script');
-        script.id = 'ga4-script';
-        script.async = true;
-        script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-        document.head.appendChild(script);
-
-        (window as any).dataLayer = (window as any).dataLayer || [];
-        function gtag(...args: any[]) {
-          (window as any).dataLayer.push(args);
-        }
-        (window as any).gtag = gtag;
-        gtag('js', new Date());
-        gtag('config', gaId, { send_page_view: false });
-      }
-    }
-
-    const pixelId = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_META_PIXEL_ID) || '';
-    if (pixelId && typeof pixelId === 'string' && pixelId.length >= 8) {
-      if (!document.getElementById('meta-pixel-script')) {
-        (function (f: any, b: any, e: any, v: any, n?: any, t?: any, s?: any) {
-          if (f.fbq) return;
-          n = f.fbq = function () {
-            n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
-          };
-          if (!f._fbq) f._fbq = n;
-          n.push = n;
-          n.loaded = true;
-          n.version = '2.0';
-          n.queue = [];
-          t = b.createElement(e);
-          t.async = true;
-          t.id = 'meta-pixel-script';
-          t.src = v;
-          s = b.getElementsByTagName(e)[0];
-          if (s && s.parentNode) {
-            s.parentNode.insertBefore(t, s);
-          } else {
-            b.head.appendChild(t);
-          }
-        })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-        if (typeof (window as any).fbq === 'function') {
-          (window as any).fbq('init', pixelId);
-        }
-      }
-    }
-  } catch {
-    // Non-blocking
+    initGoogleConsentMode();
+    getTrackingSettings().then(settings => {
+      applyTrackingScripts(settings);
+    });
+  } catch (err) {
+    console.warn('Analytics initialization safe notice:', err);
   }
 }
 
+export { getUserConsent, setUserConsent, withdrawUserConsent };

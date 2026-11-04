@@ -212,7 +212,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
       <SeoHead
         title={`${title} | Sunviloz Clean Care`}
         description={post.seo?.metaDescription || excerpt}
-        canonicalUrl={`https://water-tank-cleaning-service.vercel.app/blog/${post.slug}`}
+        canonicalUrl={`https://sunvilozcleancare.com/blog/${post.slug}`}
         ogType="article"
       />
 

@@ -68,7 +68,10 @@ export interface HomepageSection {
   imageUrl?: string;
   videoUrl?: string;
   mobileVideoUrl?: string;
+  video3Url?: string;
+  mobileVideo3Url?: string;
   posterImageUrl?: string;
+  posterImage3Url?: string;
   youtubeUrl?: string;
   youtubeVideoId?: string;
   buttonText?: string;

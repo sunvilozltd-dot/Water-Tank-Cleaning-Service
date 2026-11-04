@@ -23,11 +23,15 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose, on
       location: 'Bashundhara, Dhaka',
       locationBn: 'বসুন্ধরা, ঢাকা',
       capacity: '3,000 Liters',
-      beforeImage: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=800&q=75',
-      afterImage: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=75',
+      beforeImage: '',
+      afterImage: '',
+      beforeImg: '',
+      afterImg: '',
       description: '',
       descriptionBn: '',
-      completedDate: '2026-09-15'
+      completedDate: new Date().toISOString().split('T')[0],
+      customerConsentGranted: true,
+      sourceType: 'company_work'
     }
   );
 
@@ -124,7 +128,9 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose, on
       beforeImage: formData.beforeImage || formData.beforeImg || '',
       beforeImg: formData.beforeImage || formData.beforeImg || '',
       afterImage: formData.afterImage || formData.afterImg || '',
-      afterImg: formData.afterImage || formData.afterImg || ''
+      afterImg: formData.afterImage || formData.afterImg || '',
+      customerConsentGranted: formData.customerConsentGranted !== false,
+      sourceType: formData.sourceType || 'company_work'
     };
 
     onSave(finalData);
@@ -360,6 +366,26 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose, on
               className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white mb-2"
               placeholder="১৮ মাস জমে থাকা শক্ত শ্যাওলা ও বালুর আস্তরণ দূর করে রোটারি জেটে জীবাণুমুক্ত করা হয়েছে।"
             />
+          </div>
+
+          {/* Customer Consent & Privacy Check */}
+          <div className="p-3 bg-cyan-950/30 border border-cyan-800/40 rounded-xl space-y-1.5">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.customerConsentGranted !== false}
+                onChange={(e) => setFormData({ ...formData, customerConsentGranted: e.target.checked })}
+                className="mt-0.5 w-4 h-4 rounded text-cyan-500 focus:ring-cyan-400 bg-slate-950 border-slate-700"
+              />
+              <div>
+                <span className="text-xs font-semibold text-cyan-200 block">
+                  গ্রাহকের ছবি প্রকাশের লিখিত/মৌখিক অনুমতি রয়েছে (Customer Consent Granted)
+                </span>
+                <span className="text-[11px] text-slate-400 block leading-relaxed">
+                  গ্রাহকের সম্মতি ব্যতীত কোনো আবাসিক ভবনের ছবি ওয়েবসাইটে আপলোড বা প্রদর্শন করা সম্পূর্ণ নিষিদ্ধ। সম্মতি থাকলেই এটি ওয়েবসাইটে দৃশ্যমান হবে।
+                </span>
+              </div>
+            </label>
           </div>
         </div>
 

@@ -13,7 +13,7 @@ import { FloatingContactButtons } from './components/FloatingContactButtons';
 import { PrivacyConsentBanner } from './components/PrivacyConsentBanner';
 import { AmbientWaterBackground } from './components/AmbientWaterBackground';
 import { initUtmTracking } from './utils/utmTracking';
-import { initAnalytics } from './utils/tracking';
+import { initAnalytics, trackPageView } from './utils/tracking';
 
 // Critical Homepage eagerly loaded for instant FCP / LCP
 import { HomePage } from './pages/HomePage';
@@ -34,6 +34,7 @@ const PrivacyPolicyPage = React.lazy(() => import('./pages/PrivacyPolicyPage').t
 const FaqPage = React.lazy(() => import('./pages/FaqPage').then(m => ({ default: m.FaqPage })));
 const ServiceDetailPage = React.lazy(() => import('./pages/ServiceDetailPage').then(m => ({ default: m.ServiceDetailPage })));
 const GetQuotePage = React.lazy(() => import('./pages/GetQuotePage').then(m => ({ default: m.GetQuotePage })));
+const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 // Code-split Admin pages (Prevents downloading heavy admin tabs/tables on public site)
 const AdminLoginPage = React.lazy(() => import('./pages/AdminLoginPage').then(m => ({ default: m.AdminLoginPage })));
@@ -88,13 +89,14 @@ function AppContent() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Global route-change scroll reset - ALWAYS start every page from the very top!
+  // Global route-change scroll reset & page view tracking
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.scrollTo(0, 0);
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
     }
+    trackPageView(currentPath);
   }, [currentPath]);
 
   // Canonical redirection for service landing pages, legacy areas, and legal routes
@@ -112,6 +114,9 @@ function AppContent() {
       } else if (currentPath === '/services/underground-tank-cleaning') {
         window.history.replaceState(null, '', '/services/underground-water-tank-cleaning');
         setCurrentPath('/services/underground-water-tank-cleaning');
+      } else if (currentPath === '/services/overhead-water-tank-cleaning') {
+        window.history.replaceState(null, '', '/services/overhead-tank-cleaning');
+        setCurrentPath('/services/overhead-tank-cleaning');
       } else if (currentPath === '/areas' || currentPath === '/areas/') {
         window.history.replaceState(null, '', '/service-areas');
         setCurrentPath('/service-areas');
@@ -283,14 +288,19 @@ function AppContent() {
       return <FaqPage />;
     }
 
-    // Default: Home Page
-    return (
-      <HomePage
-        onOpenQuoteModal={handleOpenQuoteModal}
-        onOpenBlogModal={(post) => setSelectedBlogPost(post)}
-        onNavigate={navigate}
-      />
-    );
+    // Home Page
+    if (currentPath === '/' || currentPath === '') {
+      return (
+        <HomePage
+          onOpenQuoteModal={handleOpenQuoteModal}
+          onOpenBlogModal={(post) => setSelectedBlogPost(post)}
+          onNavigate={navigate}
+        />
+      );
+    }
+
+    // Explicit 404 Not Found Page for all invalid URLs
+    return <NotFoundPage onNavigate={navigate} />;
   };
 
   return (

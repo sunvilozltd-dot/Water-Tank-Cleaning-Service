@@ -87,10 +87,10 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-[#F5FAFC] hover:bg-[#E8F5F3] text-[#64748B] hover:text-[#172B3A] border border-[#E2E8F0] flex items-center justify-center transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0D9488]"
+              className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-[#F5FAFC] hover:bg-[#E8F5F3] text-[#64748B] hover:text-[#172B3A] border border-[#E2E8F0] flex items-center justify-center transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0D9488]"
               aria-label="Close modal"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>

@@ -7,6 +7,7 @@ export interface SeoProps {
   canonicalPath?: string;
   canonicalUrl?: string;
   ogType?: 'website' | 'article' | 'service';
+  ogImage?: string;
   noIndex?: boolean;
   serviceSchema?: {
     name: string;
@@ -34,6 +35,7 @@ export const SeoHead: React.FC<SeoProps> = ({
   canonicalPath = '/',
   canonicalUrl: customCanonicalUrl,
   ogType = 'website',
+  ogImage,
   noIndex = false,
   serviceSchema,
   faqSchema,
@@ -43,6 +45,7 @@ export const SeoHead: React.FC<SeoProps> = ({
   const metaDesc = description || 
     'Professional water tank cleaning service in Dhaka for rooftop, underground and residential or commercial water tanks. Request a free quotation on WhatsApp.';
   const canonicalUrl = customCanonicalUrl || `${BUSINESS_CONFIG.canonicalBaseUrl}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`;
+  const socialImage = ogImage || `${BUSINESS_CONFIG.canonicalBaseUrl}/assets/aistudio/hero-rooftop-poster.jpg`;
 
   useEffect(() => {
     // 1. Update document title
@@ -109,6 +112,24 @@ export const SeoHead: React.FC<SeoProps> = ({
     setMeta('og:description', metaDesc);
     setMeta('og:url', canonicalUrl);
     setMeta('og:type', ogType);
+    setMeta('og:image', socialImage);
+    setMeta('og:site_name', 'Sunviloz Clean Care');
+
+    // 5B. Update Twitter Cards
+    const setTwitter = (name: string, content: string) => {
+      let tag = document.querySelector(`meta[name="${name}"]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute('name', name);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', content);
+    };
+
+    setTwitter('twitter:card', 'summary_large_image');
+    setTwitter('twitter:title', fullTitle);
+    setTwitter('twitter:description', metaDesc);
+    setTwitter('twitter:image', socialImage);
 
     // 6. Update Google Site Verification if configured
     if (BUSINESS_CONFIG.googleSiteVerification) {

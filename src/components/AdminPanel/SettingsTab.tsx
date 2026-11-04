@@ -14,6 +14,9 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ onGoToHeroVideo }) => 
   const [phone, setPhone] = useState(business.phone);
   const [email, setEmail] = useState(business.email);
   const [address, setAddress] = useState(business.address);
+  const [googleBusinessProfileUrl, setGoogleBusinessProfileUrl] = useState(business.googleBusinessProfileUrl || '');
+  const [googleReviewsUrl, setGoogleReviewsUrl] = useState(business.googleReviewsUrl || '');
+  const [googleMapsDirectionsUrl, setGoogleMapsDirectionsUrl] = useState(business.googleMapsDirectionsUrl || '');
   const [headlineBn, setHeadlineBn] = useState(hero.headingBn || 'ঢাকায় প্রফেশনাল ওয়াটার ট্যাংক ক্লিনিং সার্ভিস');
   const [saved, setSaved] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -23,7 +26,14 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ onGoToHeroVideo }) => 
   const activeLogo = headerConfig.logoUrl || images?.logo || '';
 
   const handleSave = () => {
-    updateBusinessConfig({ phone, email, address });
+    updateBusinessConfig({ 
+      phone, 
+      email, 
+      address,
+      googleBusinessProfileUrl,
+      googleReviewsUrl,
+      googleMapsDirectionsUrl
+    });
     updateHeroConfig({ headingBn: headlineBn });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -250,6 +260,49 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ onGoToHeroVideo }) => 
               className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs"
             />
             <p className="text-[11px] text-slate-500 mt-1">Default: &quot;ঢাকায় প্রফেশনাল ওয়াটার ট্যাংক ক্লিনিং সার্ভিস&quot;</p>
+          </div>
+        </div>
+
+        {/* Google Business Profile & Maps Integration */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3 md:col-span-2">
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <span>Google Business Profile &amp; Reviews (গুগল বিজনেস ও রিভিউ)</span>
+          </h3>
+          <p className="text-xs text-slate-400">
+            Configure your verified Google Business Profile, Google Reviews submission URL, and Google Maps direction links. These links appear across the public footer, contact page, and reviews section.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Google Business Profile URL</label>
+              <input
+                type="url"
+                value={googleBusinessProfileUrl}
+                onChange={(e) => setGoogleBusinessProfileUrl(e.target.value)}
+                placeholder="https://maps.google.com/?q=Sunviloz..."
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Google Reviews URL</label>
+              <input
+                type="url"
+                value={googleReviewsUrl}
+                onChange={(e) => setGoogleReviewsUrl(e.target.value)}
+                placeholder="https://search.google.com/local/writereview?..."
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Google Maps Directions URL</label>
+              <input
+                type="url"
+                value={googleMapsDirectionsUrl}
+                onChange={(e) => setGoogleMapsDirectionsUrl(e.target.value)}
+                placeholder="https://maps.google.com/maps/dir/..."
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs font-mono"
+              />
+            </div>
           </div>
         </div>
       </div>

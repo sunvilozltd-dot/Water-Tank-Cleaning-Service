@@ -274,9 +274,153 @@ export const LeadsTab: React.FC<LeadsTabProps> = ({
         </div>
       </div>
 
-      {/* Leads Table */}
+      {/* Leads Container (Mobile Cards + Desktop Table) */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+        {/* Mobile View (< md): Touch-Friendly Cards */}
+        <div className="block md:hidden divide-y divide-slate-800">
+          {filteredLeads.length === 0 ? (
+            <div className="py-10 text-center text-slate-500 text-sm px-4">
+              No leads found matching your criteria.
+            </div>
+          ) : (
+            filteredLeads.map((lead) => {
+              const isIncomplete = 
+                lead.isAbandoned || 
+                lead.status === 'Incomplete' || 
+                lead.status === 'incomplete' || 
+                lead.status === 'Abandoned' || 
+                lead.status === 'abandoned';
+
+              return (
+                <div 
+                  key={`mobile-${lead.id}`}
+                  className={`p-4 space-y-3 transition-colors ${
+                    isIncomplete ? 'bg-amber-950/15' : 'hover:bg-slate-800/40'
+                  }`}
+                >
+                  {/* Top Bar: Lead # & Status Badge */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-mono text-xs font-semibold text-blue-400">
+                        {lead.leadNumber || lead.id}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        {lead.isSyncedToCloud === false ? (
+                          <span className="text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30">
+                            Offline
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                            Cloud Synced
+                          </span>
+                        )}
+                        {isIncomplete && (
+                          <span className="text-[10px] font-semibold text-amber-300 bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/40">
+                            Drop-off Recovery
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="shrink-0 flex flex-col items-end gap-1">
+                      {getStatusBadge(lead)}
+                      {getPriorityBadge(lead.priority || 'medium')}
+                    </div>
+                  </div>
+
+                  {/* Customer Info */}
+                  <div className="space-y-1">
+                    <div className="font-bold text-sm text-white flex items-center gap-1.5">
+                      <span>{lead.name}</span>
+                      {isIncomplete && (
+                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <a 
+                        href={`tel:${lead.phone}`}
+                        className="text-cyan-400 hover:text-blue-300 font-mono font-medium underline"
+                      >
+                        {lead.phone}
+                      </a>
+                      <span className="text-slate-500">•</span>
+                      <span className="text-slate-300 truncate">{lead.area || 'Dhaka'}</span>
+                    </div>
+                    {lead.address && (
+                      <p className="text-[11px] text-slate-400 line-clamp-1">{lead.address}</p>
+                    )}
+                  </div>
+
+                  {/* Service & Price */}
+                  <div className="flex items-center justify-between text-xs bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80">
+                    <div className="truncate pr-2">
+                      <div className="text-slate-200 font-medium truncate">{lead.serviceType || 'Water Tank Cleaning'}</div>
+                      <div className="text-[11px] text-slate-400 truncate">
+                        {lead.tankType || 'Tank'} {lead.tankCapacity ? `• ${lead.tankCapacity}` : ''}
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="text-[10px] text-slate-400 uppercase font-semibold">Est. Price</div>
+                      <div className="font-mono font-bold text-emerald-400 text-sm">
+                        {lead.calculatedEstimate ? `৳${lead.calculatedEstimate.toLocaleString()}` : 'Custom / TBD'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons (Touch Target >= 44px) */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <a
+                      href={isIncomplete 
+                        ? generateAbandonedLeadRecoveryWhatsAppUrl(lead) 
+                        : formatWhatsAppUrl(lead)
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`flex-1 min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                        isIncomplete
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
+                          : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-600/30'
+                      }`}
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>{isIncomplete ? 'Recover on WhatsApp' : 'WhatsApp'}</span>
+                    </a>
+
+                    <a
+                      href={`tel:${lead.phone}`}
+                      className="min-h-[44px] min-w-[44px] px-3 py-2 bg-blue-950/80 hover:bg-blue-900/80 text-blue-300 rounded-xl border border-blue-800/60 flex items-center justify-center transition-colors cursor-pointer"
+                      title="Call customer directly"
+                    >
+                      <Phone className="w-4 h-4" />
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => onSelectLead(lead)}
+                      className="min-h-[44px] min-w-[44px] px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+                      title="View full lead details"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+
+                    {onDeleteLead && (
+                      <button
+                        type="button"
+                        onClick={() => setLeadToDelete(lead)}
+                        className="min-h-[44px] min-w-[44px] px-3 py-2 bg-rose-950/60 hover:bg-rose-900/60 text-rose-400 rounded-xl border border-rose-800/40 flex items-center justify-center transition-colors cursor-pointer"
+                        title="Delete Lead"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop View (>= md): Full Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-300">
             <thead className="bg-slate-950/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
               <tr>

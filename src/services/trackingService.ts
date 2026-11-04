@@ -1,12 +1,14 @@
-import { TrackingSettings, ConsentPreferences, TrackingEventLogItem, StandardTrackParams } from '../types/tracking';
+import { TrackingSettings, ConsentPreferences, TrackingEventLogItem, StandardTrackParams, TrackEventPlatform } from '../types/tracking';
 import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
 
-const TRACKING_SETTINGS_KEY = 'sunviloz_tracking_settings_v2';
-const CONSENT_STORAGE_KEY = 'sunviloz_cookie_consent_v2';
-const RECENT_EVENTS_KEY = 'sunviloz_recent_tracking_events_v2';
+const TRACKING_SETTINGS_KEY = 'sunviloz_tracking_settings_v3';
+const CONSENT_STORAGE_KEY = 'sunviloz_cookie_consent_v3';
+const RECENT_EVENTS_KEY = 'sunviloz_recent_tracking_events_v3';
 
 export const TRACKING_SETTINGS_EVENT = 'sunviloz_tracking_settings_changed';
 export const TRACKING_LOG_EVENT = 'sunviloz_tracking_event_logged';
+export const CONSENT_CHANGED_EVENT = 'sunviloz_consent_preferences_changed';
+export const OPEN_CONSENT_MODAL_EVENT = 'sunviloz_open_consent_preferences';
 
 export const DEFAULT_TRACKING_SETTINGS: TrackingSettings = {
   id: 'primary',
@@ -23,18 +25,15 @@ export const DEFAULT_TRACKING_SETTINGS: TrackingSettings = {
   googleAdsConversionLabel: '',
   googleSearchConsoleCode: '',
   debugMode: false,
-  consentRequired: false,
-  consentBannerTitle: 'We value your privacy & clean water',
-  consentBannerDesc: 'We use cookies and telemetry to improve your booking experience, measure site performance, and protect customer communications.',
+  consentRequired: true, // Default: consent is strictly required before non-essential tracking
+  consentBannerTitle: 'We value your privacy & water safety',
+  consentBannerDesc: 'We use essential cookies for website operation. Analytics and marketing cookies are only enabled if you explicitly grant permission.',
   updatedAt: new Date().toISOString()
 };
 
-const recentEventIds = new Set<string>();
-
-export function generateEventId(): string {
-  return 'evt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-}
-
+/**
+ * Strips PII (Personally Identifiable Information) before logging or sending to analytics
+ */
 function sanitizeParams(params: Record<string, any>): Record<string, any> {
   const sanitized: Record<string, any> = {};
   const forbiddenKeys = [
@@ -58,6 +57,154 @@ function sanitizeParams(params: Record<string, any>): Record<string, any> {
   return sanitized;
 }
 
+export function generateEventId(): string {
+  return 'evt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+}
+
+// 3.5s deduplication cache to prevent accidental double-firing of high-value conversion events
+const recentEventTimestamps = new Map<string, number>();
+
+function isDuplicateConversionEvent(eventName: string, params: Record<string, any>): boolean {
+  const conversionEvents = [
+    'lead_saved', 
+    'quote_submitted', 
+    'quote_form_submit',
+    'contact_form_submit', 
+    'phone_call_click', 
+    'whatsapp_click',
+    'google_maps_click',
+    'google_review_click',
+    'booking_confirmed'
+  ];
+  if (!conversionEvents.includes(eventName)) return false;
+
+  const key = `${eventName}_${params.lead_number || params.source || params.channel || ''}`;
+  const now = Date.now();
+  const lastTime = recentEventTimestamps.get(key) || 0;
+  if (now - lastTime < 3500) {
+    return true;
+  }
+  recentEventTimestamps.set(key, now);
+  return false;
+}
+
+/**
+ * Returns user consent preferences.
+ * CRITICAL RULE: For new visitors (no stored preference), analytics and marketing MUST default to false!
+ */
+export function getUserConsent(): ConsentPreferences {
+  if (typeof window === 'undefined') {
+    return { necessary: true, analytics: false, marketing: false };
+  }
+  try {
+    const raw = localStorage.getItem(CONSENT_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        necessary: true,
+        analytics: Boolean(parsed.analytics),
+        marketing: Boolean(parsed.marketing),
+        timestamp: parsed.timestamp
+      };
+    }
+  } catch {
+    // Ignore
+  }
+  // New visitor: analytics=false, marketing=false strictly until explicit consent
+  return { necessary: true, analytics: false, marketing: false };
+}
+
+/**
+ * Checks whether user has made an explicit choice regarding cookie consent
+ */
+export function hasUserDecidedConsent(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const raw = localStorage.getItem(CONSENT_STORAGE_KEY);
+    return Boolean(raw && JSON.parse(raw)?.timestamp);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Updates user consent preferences and adjusts Google Consent Mode v2 + scripts
+ */
+export function setUserConsent(prefs: Partial<ConsentPreferences>): void {
+  const full: ConsentPreferences = {
+    necessary: true,
+    analytics: Boolean(prefs.analytics),
+    marketing: Boolean(prefs.marketing),
+    timestamp: new Date().toISOString()
+  };
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(full));
+    window.dispatchEvent(new CustomEvent(CONSENT_CHANGED_EVENT, { detail: full }));
+  }
+
+  // Update Google Consent Mode v2
+  updateGoogleConsentMode(full);
+
+  // Apply or update tracking scripts dynamically based on updated consent
+  getTrackingSettings().then(settings => {
+    applyTrackingScripts(settings);
+  });
+}
+
+/**
+ * Consent Withdrawal: Allows the user to revoke all non-essential consent at any time.
+ * Stops future tracking, updates Consent Mode v2 to denied, and cleans up active script sessions.
+ */
+export function withdrawUserConsent(): void {
+  setUserConsent({ analytics: false, marketing: false });
+  // Remove or disable trackers if active
+  if (typeof window !== 'undefined') {
+    // Notify window that consent was withdrawn
+    console.info('[Sunviloz Privacy] Non-essential tracking consent withdrawn by user.');
+  }
+}
+
+/**
+ * Initializes Google Consent Mode v2 with default 'denied' settings
+ */
+export function initGoogleConsentMode(): void {
+  if (typeof window === 'undefined') return;
+
+  const currentConsent = getUserConsent();
+  const w = window as any;
+  w.dataLayer = w.dataLayer || [];
+  function gtag(...args: any[]) {
+    w.dataLayer.push(args);
+  }
+  w.gtag = w.gtag || gtag;
+
+  // Set Consent Mode v2 default
+  gtag('consent', 'default', {
+    ad_storage: currentConsent.marketing ? 'granted' : 'denied',
+    ad_user_data: currentConsent.marketing ? 'granted' : 'denied',
+    ad_personalization: currentConsent.marketing ? 'granted' : 'denied',
+    analytics_storage: currentConsent.analytics ? 'granted' : 'denied',
+    wait_for_update: 500
+  });
+}
+
+/**
+ * Updates Google Consent Mode v2 dynamically
+ */
+export function updateGoogleConsentMode(consent: ConsentPreferences): void {
+  if (typeof window === 'undefined') return;
+  const w = window as any;
+  if (typeof w.gtag === 'function') {
+    w.gtag('consent', 'update', {
+      ad_storage: consent.marketing ? 'granted' : 'denied',
+      ad_user_data: consent.marketing ? 'granted' : 'denied',
+      ad_personalization: consent.marketing ? 'granted' : 'denied',
+      analytics_storage: consent.analytics ? 'granted' : 'denied'
+    });
+  }
+}
+
 export async function getTrackingSettings(): Promise<TrackingSettings> {
   let settings = DEFAULT_TRACKING_SETTINGS;
   if (typeof window !== 'undefined') {
@@ -68,6 +215,16 @@ export async function getTrackingSettings(): Promise<TrackingSettings> {
       }
     } catch {
       // Ignore
+    }
+  }
+
+  // Also check environment variables for fallback IDs
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    if (!settings.ga4MeasurementId && import.meta.env.VITE_GA_MEASUREMENT_ID) {
+      settings.ga4MeasurementId = String(import.meta.env.VITE_GA_MEASUREMENT_ID).trim();
+    }
+    if (!settings.metaPixelId && import.meta.env.VITE_META_PIXEL_ID) {
+      settings.metaPixelId = String(import.meta.env.VITE_META_PIXEL_ID).trim();
     }
   }
 
@@ -83,11 +240,11 @@ export async function getTrackingSettings(): Promise<TrackingSettings> {
         settings = {
           id: data.id || 'primary',
           metaEnabled: Boolean(data.meta_enabled),
-          metaPixelId: data.meta_pixel_id || '',
+          metaPixelId: data.meta_pixel_id || settings.metaPixelId,
           metaTestEventCode: data.meta_test_event_code || '',
           metaCapiEnabled: Boolean(data.meta_capi_enabled),
           googleAnalyticsEnabled: Boolean(data.google_analytics_enabled),
-          ga4MeasurementId: data.ga4_measurement_id || '',
+          ga4MeasurementId: data.ga4_measurement_id || settings.ga4MeasurementId,
           googleTagManagerEnabled: Boolean(data.google_tag_manager_enabled),
           gtmContainerId: data.gtm_container_id || '',
           googleAdsEnabled: Boolean(data.google_ads_enabled),
@@ -95,7 +252,7 @@ export async function getTrackingSettings(): Promise<TrackingSettings> {
           googleAdsConversionLabel: data.google_ads_conversion_label || '',
           googleSearchConsoleCode: data.google_search_console_code || '',
           debugMode: Boolean(data.debug_mode),
-          consentRequired: Boolean(data.consent_required),
+          consentRequired: data.consent_required !== undefined ? Boolean(data.consent_required) : true,
           consentBannerTitle: data.consent_banner_title || DEFAULT_TRACKING_SETTINGS.consentBannerTitle,
           consentBannerDesc: data.consent_banner_desc || DEFAULT_TRACKING_SETTINGS.consentBannerDesc,
           updatedAt: data.updated_at
@@ -148,17 +305,9 @@ export async function saveTrackingSettings(settings: TrackingSettings): Promise<
         updated_at: updated.updatedAt
       };
 
-      const { error } = await supabase
-        .from('tracking_settings')
-        .upsert(payload, { onConflict: 'id' });
-
-      if (error) {
-        console.error('Supabase save tracking_settings error:', error);
-        return false;
-      }
+      await supabase.from('tracking_settings').upsert(payload, { onConflict: 'id' });
       return true;
-    } catch (err) {
-      console.error('Failed to save tracking settings to Supabase:', err);
+    } catch {
       return false;
     }
   }
@@ -166,34 +315,15 @@ export async function saveTrackingSettings(settings: TrackingSettings): Promise<
   return true;
 }
 
-export function getUserConsent(): ConsentPreferences {
-  if (typeof window === 'undefined') {
-    return { necessary: true, analytics: true, marketing: true };
-  }
-  try {
-    const raw = localStorage.getItem(CONSENT_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // Ignore
-  }
-  return { necessary: true, analytics: true, marketing: true };
-}
-
-export function setUserConsent(prefs: Partial<ConsentPreferences>): void {
-  const full: ConsentPreferences = {
-    necessary: true,
-    analytics: prefs.analytics !== undefined ? prefs.analytics : true,
-    marketing: prefs.marketing !== undefined ? prefs.marketing : true,
-    timestamp: new Date().toISOString()
-  };
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(full));
-  }
-}
-
+/**
+ * Centralized Tracking Script Manager:
+ * Only injects GA4, GTM, or Meta Pixel scripts AFTER user grants explicit consent!
+ * Prevents duplicate script tags and enforces format validations.
+ */
 export function applyTrackingScripts(settings: TrackingSettings): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
+  // 1. Google Search Console Verification (Essential meta tag, safe without consent)
   const gscCode = settings.googleSearchConsoleCode?.trim();
   const existingGsc = document.querySelector('meta[name="google-site-verification"]');
   if (gscCode) {
@@ -205,58 +335,81 @@ export function applyTrackingScripts(settings: TrackingSettings): void {
       meta.content = gscCode;
       document.head.appendChild(meta);
     }
-  } else if (existingGsc) {
+  } else if (existingGsc && !existingGsc.getAttribute('content')) {
     existingGsc.remove();
   }
 
-  const gtmId = settings.gtmContainerId?.trim();
-  if (settings.googleTagManagerEnabled && gtmId && !document.getElementById('sunviloz-gtm-script')) {
-    const script = document.createElement('script');
-    script.id = 'sunviloz-gtm-script';
-    script.async = true;
-    script.innerHTML = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'dataLayer','${gtmId}');`;
-    document.head.appendChild(script);
-  }
+  const consent = getUserConsent();
 
+  // 2. Google Analytics 4 (Requires Analytics Consent!)
   const ga4Id = settings.ga4MeasurementId?.trim();
-  if (settings.googleAnalyticsEnabled && ga4Id && !document.getElementById('sunviloz-ga4-script')) {
-    const gScript = document.createElement('script');
-    gScript.id = 'sunviloz-ga4-script';
-    gScript.async = true;
-    gScript.src = `https://www.googletagmanager.com/gtag/js?id=${ga4Id}`;
-    document.head.appendChild(gScript);
+  const isValidGa4 = ga4Id && /^G-[A-Z0-9]+$/i.test(ga4Id);
 
-    const initScript = document.createElement('script');
-    initScript.id = 'sunviloz-ga4-init';
-    initScript.innerHTML = `
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
+  if (settings.googleAnalyticsEnabled && isValidGa4 && consent.analytics) {
+    if (!document.getElementById('sunviloz-ga4-script')) {
+      const gScript = document.createElement('script');
+      gScript.id = 'sunviloz-ga4-script';
+      gScript.async = true;
+      gScript.src = `https://www.googletagmanager.com/gtag/js?id=${ga4Id}`;
+      document.head.appendChild(gScript);
+
+      const w = window as any;
+      w.dataLayer = w.dataLayer || [];
+      function gtag(...args: any[]) {
+        w.dataLayer.push(args);
+      }
+      w.gtag = w.gtag || gtag;
       gtag('js', new Date());
-      gtag('config', '${ga4Id}', { send_page_view: false });
-    `;
-    document.head.appendChild(initScript);
+      gtag('config', ga4Id, { send_page_view: false });
+    }
+  } else if (!consent.analytics) {
+    // If analytics consent is not granted, remove injected script tag if present
+    const existing = document.getElementById('sunviloz-ga4-script');
+    if (existing) existing.remove();
   }
 
+  // 3. Google Tag Manager (Requires Analytics or Marketing Consent)
+  const gtmId = settings.gtmContainerId?.trim();
+  const isValidGtm = gtmId && /^GTM-[A-Z0-9]+$/i.test(gtmId);
+
+  if (settings.googleTagManagerEnabled && isValidGtm && (consent.analytics || consent.marketing)) {
+    if (!document.getElementById('sunviloz-gtm-script')) {
+      const script = document.createElement('script');
+      script.id = 'sunviloz-gtm-script';
+      script.async = true;
+      script.innerHTML = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'dataLayer','${gtmId}');`;
+      document.head.appendChild(script);
+    }
+  }
+
+  // 4. Meta Pixel (Requires Marketing Consent!)
   const pixelId = settings.metaPixelId?.trim();
-  if (settings.metaEnabled && pixelId && !document.getElementById('sunviloz-meta-pixel')) {
-    const pScript = document.createElement('script');
-    pScript.id = 'sunviloz-meta-pixel';
-    pScript.innerHTML = `
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '${pixelId}');
-    `;
-    document.head.appendChild(pScript);
+  const isValidPixel = pixelId && /^[0-9]{8,18}$/.test(pixelId);
+
+  if (settings.metaEnabled && isValidPixel && consent.marketing) {
+    if (!document.getElementById('sunviloz-meta-pixel')) {
+      const pScript = document.createElement('script');
+      pScript.id = 'sunviloz-meta-pixel';
+      pScript.innerHTML = `
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '${pixelId}');
+      `;
+      document.head.appendChild(pScript);
+    }
+  } else if (!consent.marketing) {
+    const existing = document.getElementById('sunviloz-meta-pixel');
+    if (existing) existing.remove();
   }
 }
 
@@ -294,145 +447,96 @@ export function clearRecentTrackingLogs(): void {
   }
 }
 
+/**
+ * Dispatches tracking events to GA4 and Meta Pixel only when user consent is granted.
+ * Strict privacy enforcement: NO customer PII is ever sent.
+ */
 export function trackEvent(
   eventName: string,
   params: StandardTrackParams = {},
-  options: { eventId?: string; isConversion?: boolean } = {}
-): string {
-  const eventId = options.eventId || generateEventId();
-  const safeParams = sanitizeParams(params);
-  const now = new Date().toISOString();
+  options: { eventId?: string; isConversion?: boolean; platform?: TrackEventPlatform } = {}
+): void {
+  if (typeof window === 'undefined') return;
 
-  if (recentEventIds.has(eventId)) {
-    return eventId;
+  const safeParams = sanitizeParams(params);
+
+  // Deduplicate rapid repeat events
+  if (isDuplicateConversionEvent(eventName, safeParams)) {
+    return;
   }
-  recentEventIds.add(eventId);
-  setTimeout(() => recentEventIds.delete(eventId), 30000);
 
   const consent = getUserConsent();
-  const isMarketingAllowed = consent.marketing;
-  const isAnalyticsAllowed = consent.analytics;
+  const eventId = options.eventId || generateEventId();
+  const timestamp = new Date().toISOString();
 
-  if (isAnalyticsAllowed && typeof window !== 'undefined' && (window as any).gtag) {
+  // 1. Google Analytics 4 (Requires Analytics Consent)
+  let gaStatus: 'dispatched' | 'blocked' | 'consent_denied' = 'consent_denied';
+  if (consent.analytics) {
     try {
-      (window as any).gtag('event', eventName, {
-        event_id: eventId,
-        ...safeParams
-      });
-    } catch {
-      // Safe failure
-    }
-  }
-
-  if (isMarketingAllowed && options.isConversion && typeof window !== 'undefined' && (window as any).gtag) {
-    try {
-      (window as any).gtag('event', 'conversion', {
-        event_id: eventId,
-        ...safeParams
-      });
-    } catch {
-      // Safe failure
-    }
-  }
-
-  if (isMarketingAllowed && typeof window !== 'undefined' && (window as any).fbq) {
-    try {
-      if (eventName === 'page_view') {
-        (window as any).fbq('track', 'PageView', {}, { eventID: eventId });
-      } else if (eventName === 'service_view' || eventName === 'view_content') {
-        (window as any).fbq('track', 'ViewContent', {
-          content_name: safeParams.service_name || safeParams.content_name,
-          content_category: safeParams.content_category || 'Cleaning Services',
-          content_ids: safeParams.service_id ? [safeParams.service_id] : undefined,
-          content_type: 'product'
-        }, { eventID: eventId });
-      } else if (eventName === 'lead' || eventName === 'generate_lead' || eventName === 'quote_submitted') {
-        (window as any).fbq('track', 'Lead', safeParams, { eventID: eventId });
-      } else if (eventName === 'contact' || eventName === 'phone_click' || eventName === 'whatsapp_click') {
-        (window as any).fbq('track', 'Contact', safeParams, { eventID: eventId });
-      } else if (eventName === 'schedule' || eventName === 'booking_confirmed') {
-        (window as any).fbq('track', 'Schedule', safeParams, { eventID: eventId });
-      } else if (eventName === 'purchase') {
-        (window as any).fbq('track', 'Purchase', safeParams, { eventID: eventId });
+      const w = window as any;
+      if (typeof w.gtag === 'function') {
+        w.gtag('event', eventName, {
+          event_id: eventId,
+          ...safeParams
+        });
+        gaStatus = 'dispatched';
       } else {
-        (window as any).fbq('trackCustom', eventName, safeParams, { eventID: eventId });
+        gaStatus = 'blocked';
       }
     } catch {
-      // Safe failure
+      gaStatus = 'blocked';
     }
   }
 
+  // 2. Meta Pixel (Requires Marketing Consent)
+  let metaStatus: 'dispatched' | 'blocked' | 'consent_denied' = 'consent_denied';
+  if (consent.marketing) {
+    try {
+      const w = window as any;
+      if (typeof w.fbq === 'function') {
+        if (eventName === 'quote_submitted' || eventName === 'quote_form_submit' || eventName === 'lead_saved') {
+          w.fbq('track', 'Lead', safeParams, { eventID: eventId });
+        } else if (eventName === 'whatsapp_click') {
+          w.fbq('track', 'Contact', { channel: 'whatsapp', ...safeParams }, { eventID: eventId });
+        } else if (eventName === 'phone_call_click' || eventName === 'phone_click') {
+          w.fbq('track', 'Contact', { channel: 'phone', ...safeParams }, { eventID: eventId });
+        } else if (eventName === 'booking_confirmed') {
+          w.fbq('track', 'Schedule', safeParams, { eventID: eventId });
+        } else {
+          w.fbq('trackCustom', eventName, safeParams, { eventID: eventId });
+        }
+        metaStatus = 'dispatched';
+      } else {
+        metaStatus = 'blocked';
+      }
+    } catch {
+      metaStatus = 'blocked';
+    }
+  }
+
+  // 3. Local Audit Log (Safe, no PII)
   logDebugEvent({
     id: eventId,
-    eventName,
     eventId,
-    platform: 'all',
+    eventName,
+    timestamp,
+    platform: options.platform || 'all',
+    status: (metaStatus === 'dispatched' || gaStatus === 'dispatched') ? 'dispatched' : 'blocked_by_consent',
+    channel: options.isConversion ? 'conversion' : 'event',
+    metaStatus,
+    gaStatus,
     params: safeParams,
-    timestamp: now,
-    status: isAnalyticsAllowed || isMarketingAllowed ? 'dispatched' : 'blocked_by_consent'
-  });
-
-  return eventId;
-}
-
-export function trackPageView(pagePath: string, title?: string): void {
-  trackEvent('page_view', {
-    page_path: pagePath,
-    page_title: title || (typeof document !== 'undefined' ? document.title : '')
+    isConversion: options.isConversion
   });
 }
 
-export function trackServiceView(service: { id?: string; title: string; slug: string; category?: string }): void {
-  trackEvent('service_view', {
-    service_id: service.id || service.slug,
-    service_name: service.title,
-    service_slug: service.slug,
-    content_name: service.title,
-    content_category: service.category || 'Water Tank Cleaning'
-  });
-}
-
-export function trackPhoneClick(location: string): void {
-  trackEvent('phone_click', {
-    button_name: 'Hotline Call',
-    button_location: location
-  }, { isConversion: true });
-}
-
-export function trackWhatsAppClick(location: string, serviceSlug?: string): void {
-  trackEvent('whatsapp_click', {
-    button_name: 'WhatsApp Chat',
-    button_location: location,
-    service_slug: serviceSlug
-  }, { isConversion: true });
-}
-
-export function trackCtaClick(ctaName: string, location: string, targetUrl?: string): void {
-  trackEvent('cta_click', {
-    button_name: ctaName,
-    button_location: location,
-    target_url: targetUrl
-  });
-}
-
-export function trackBookingStart(serviceType?: string): void {
-  trackEvent('service_booking_start', {
-    service_type: serviceType || 'Water Tank Cleaning'
-  });
-}
-
-export function trackBookingSubmit(leadNumber: string, serviceType?: string, estimatedPrice?: number | string): void {
-  trackEvent('lead', {
-    lead_number: leadNumber,
-    service_type: serviceType || 'Water Tank Cleaning',
-    value: typeof estimatedPrice === 'number' ? estimatedPrice : Number(String(estimatedPrice || '').replace(/\D/g, '')) || 1200,
-    currency: 'BDT'
-  }, { isConversion: true });
-}
-
-export function trackVideoPlay(videoTitle: string, videoId?: string): void {
+/**
+ * Convenience helper to track video play events
+ */
+export function trackVideoPlay(title: string, videoId: string): void {
   trackEvent('video_play', {
-    video_title: videoTitle,
+    video_title: title,
     video_id: videoId
   });
 }
+

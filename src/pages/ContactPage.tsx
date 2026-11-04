@@ -16,7 +16,7 @@ export const ContactPage: React.FC = () => {
       <SeoHead
         title="Contact Sunviloz Clean Care - Water Tank Cleaning Hotline Dhaka"
         description="Get in touch with Sunviloz Clean Care for water tank cleaning in Dhaka. Call 01609-999612 or WhatsApp for instant service booking and quick response."
-        canonicalUrl="https://water-tank-cleaning-service.vercel.app/contact"
+        canonicalUrl="https://sunvilozcleancare.com/contact"
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'যোগাযোগ' : 'Contact Us', href: '/contact' }]} />
 
@@ -82,6 +82,32 @@ export const ContactPage: React.FC = () => {
               <div>
                 <span className="text-[11px] text-[#64748B] block font-medium">Operating Hours</span>
                 <span className="text-xs font-semibold text-[#123047]">Saturday - Friday: 7:00 AM - 10:00 PM (Everyday)</span>
+              </div>
+            </div>
+
+            {/* Google Business Profile & Directions Card */}
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-white to-[#F5FAFC] border border-[#E2E8F0] shadow-sm space-y-3">
+              <span className="text-[11px] font-bold text-[#0D9488] uppercase tracking-wider block">
+                Google Verified Location &amp; Directions
+              </span>
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href={business.googleMapsDirectionsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-2 rounded-xl bg-[#123047] hover:bg-[#1b4363] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-[#38BDF8]" />
+                  <span>Google Maps Directions</span>
+                </a>
+                <a
+                  href={business.googleReviewsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <span>⭐ Write a Google Review</span>
+                </a>
               </div>
             </div>
           </div>

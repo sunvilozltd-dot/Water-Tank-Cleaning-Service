@@ -226,33 +226,70 @@ export const Footer: React.FC<FooterProps> = ({
               </ul>
             </div>
 
-            {/* Col 5: Contact Info */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-sm text-white uppercase tracking-wider">
-                {lang === 'bn' ? 'অফিস ও সহায়তা' : 'Contact & Support'}
-              </h3>
-              <ul className="space-y-2.5 text-xs">
-                <li className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-[#38BDF8] shrink-0 mt-0.5" aria-hidden="true" />
-                  <span>Dhaka, Bangladesh</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-[#25D366] shrink-0" aria-hidden="true" />
-                  <a href={`tel:${BUSINESS_CONFIG.phone}`} className="hover:text-white transition-colors">
-                    {BUSINESS_CONFIG.displayPhone}
+            {/* Col 5: Contact Info & Google Business Profile */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="font-bold text-sm text-white uppercase tracking-wider">
+                  {lang === 'bn' ? 'অফিস ও সহায়তা' : 'Contact & Support'}
+                </h3>
+                <ul className="space-y-2 text-xs">
+                  <li className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-[#38BDF8] shrink-0 mt-0.5" aria-hidden="true" />
+                    <span>Dhaka, Bangladesh</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-[#25D366] shrink-0" aria-hidden="true" />
+                    <a href={`tel:${BUSINESS_CONFIG.phone}`} className="hover:text-white transition-colors">
+                      {BUSINESS_CONFIG.displayPhone}
+                    </a>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-[#38BDF8] shrink-0" aria-hidden="true" />
+                    <a href={`mailto:${BUSINESS_CONFIG.email}`} className="hover:text-white transition-colors break-all">
+                      {BUSINESS_CONFIG.email}
+                    </a>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Clock className="w-4 h-4 text-slate-300 shrink-0 mt-0.5" aria-hidden="true" />
+                    <span>{lang === 'bn' ? BUSINESS_CONFIG.operatingHoursBn : BUSINESS_CONFIG.operatingHours}</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Google Verified Business Links */}
+              <div className="pt-2 border-t border-slate-700/60 space-y-2 text-xs">
+                <div className="font-bold text-[11px] uppercase tracking-wider text-[#38BDF8]">
+                  {lang === 'bn' ? 'গুগল প্রোফাইল ও ম্যাপস' : 'Google Business Profile'}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <a
+                    href={BUSINESS_CONFIG.googleMapsDirectionsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => {
+                      if (typeof window !== 'undefined' && (window as any).gtag) {
+                        (window as any).gtag('event', 'google_maps_click', { platform: 'google_maps' });
+                      }
+                    }}
+                    className="hover:text-white text-slate-300 inline-flex items-center gap-1.5"
+                  >
+                    <span>📍 {lang === 'bn' ? 'গুগল ম্যাপে লোকেশন ও ডিরেকশন' : 'Google Maps Directions'}</span>
                   </a>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-[#38BDF8] shrink-0" aria-hidden="true" />
-                  <a href={`mailto:${BUSINESS_CONFIG.email}`} className="hover:text-white transition-colors break-all">
-                    {BUSINESS_CONFIG.email}
+                  <a
+                    href={BUSINESS_CONFIG.googleReviewsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => {
+                      if (typeof window !== 'undefined' && (window as any).gtag) {
+                        (window as any).gtag('event', 'google_review_click', { platform: 'google_reviews' });
+                      }
+                    }}
+                    className="hover:text-[#F59E0B] text-amber-300 inline-flex items-center gap-1.5"
+                  >
+                    <span>⭐ {lang === 'bn' ? 'গুগলে ৫-স্টার রিভিউ দিন' : 'Rate us on Google Reviews'}</span>
                   </a>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Clock className="w-4 h-4 text-slate-300 shrink-0 mt-0.5" aria-hidden="true" />
-                  <span>{lang === 'bn' ? BUSINESS_CONFIG.operatingHoursBn : BUSINESS_CONFIG.operatingHours}</span>
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -278,6 +315,20 @@ export const Footer: React.FC<FooterProps> = ({
                 className="hover:text-[#38BDF8] transition-colors cursor-pointer"
               >
                 Terms & Conditions
+              </button>
+              <span aria-hidden="true">•</span>
+              {/* Cookie Preferences & Consent Withdrawal Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('sunviloz_open_consent_preferences'));
+                  }
+                }}
+                className="hover:text-cyan-400 text-slate-300 underline underline-offset-2 transition-colors cursor-pointer"
+                title="Manage cookie consent & privacy options"
+              >
+                {lang === 'bn' ? 'কুকি সেটিংস ও সম্মতি' : 'Cookie Preferences'}
               </button>
               <span aria-hidden="true">•</span>
               <button

@@ -1,4 +1,5 @@
 import { ServiceItem, FaqItem, ReviewItem, ProcessStep, AreaInfo, ArticleItem } from '../types';
+import { getProductionDomain, DEFAULT_GOOGLE_CONFIG } from '../config/siteDomain';
 
 export const BUSINESS_CONFIG = {
   name: 'Sunviloz Clean Care',
@@ -16,11 +17,16 @@ export const BUSINESS_CONFIG = {
   operatingHours: '8:00 AM - 8:00 PM (Everyday, 7 Days a week)',
   operatingHoursBn: 'সকাল ৮:০০ - রাত ৮:০০ (সপ্তাহের ৭ দিন খোলা)',
   
+  // Google Business Profile & Maps Config (Configurable by Admin)
+  googleBusinessProfileUrl: DEFAULT_GOOGLE_CONFIG.businessProfileUrl,
+  googleReviewsUrl: DEFAULT_GOOGLE_CONFIG.reviewsUrl,
+  googleMapsDirectionsUrl: DEFAULT_GOOGLE_CONFIG.directionsUrl,
+
   // SEO & Verification Config
   googleSiteVerification: '',
   googleAnalyticsId: '',
   metaPixelId: '',
-  canonicalBaseUrl: 'https://water-tank-cleaning-service.vercel.app',
+  canonicalBaseUrl: getProductionDomain(),
 
   // Value propositions
   trustBadges: [
@@ -1069,45 +1075,7 @@ export const FAQS_DATA: FaqItem[] = [
   }
 ];
 
-export const REVIEWS_DATA: ReviewItem[] = [
-  {
-    id: 'rev-1',
-    customerName: 'Tanvir Hossain',
-    area: 'Bashundhara R/A, Block C',
-    service: 'Rooftop & Underground Tank Cleaning',
-    rating: 5,
-    date: '2026-08-14',
-    comment: 'Sunviloz Clean Care cleaned both our underground reserve and 2 rooftop tanks in Bashundhara. The team arrived on time with proper high-pressure equipment. The amount of mud they removed was unbelievable. Very polite and professional work.',
-    isVerified: false
-  },
-  {
-    id: 'rev-2',
-    customerName: 'Nasrin Akhter',
-    area: 'Uttara, Sector 7',
-    service: 'Rooftop Water Tank Cleaning',
-    rating: 5,
-    date: '2026-07-28',
-    comment: 'Booked via WhatsApp. They responded within minutes and came the next morning. Cleaned our 1500L PVC tank thoroughly and did not make any mess on the roof. Transparent pricing as discussed.',
-    isVerified: false
-  },
-  {
-    id: 'rev-3',
-    customerName: 'M. Rahman (Building Secretary)',
-    area: 'Gulshan 2',
-    service: 'Apartment Building Tank Cleaning',
-    rating: 5,
-    date: '2026-08-02',
-    comment: 'Arranged cleaning for our 6-story residential building. They managed the water drain timing carefully so residents had minimal water downtime. Highly recommended for apartment committees.',
-    isVerified: false
-  },
-  {
-    id: 'rev-4',
-    customerName: 'Dr. Shahriar Kabir',
-    area: 'Dhanmondi, Road 11/A',
-    service: 'Underground Reserve Tank Cleaning',
-    rating: 5,
-    date: '2026-06-19',
-    comment: 'Cleaned a 15-year-old reserve tank that had thick sludge at the bottom. Used mud pump and suction vacuum. The water is visibly clearer now and the bad smell is completely gone.',
-    isVerified: false
-  }
-];
+// Verified customer reviews collected via Google Reviews or verified customer submissions.
+// Production defaults remain clean and un-fabricated.
+export const REVIEWS_DATA: ReviewItem[] = [];
+
