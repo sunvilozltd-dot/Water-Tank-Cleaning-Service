@@ -227,6 +227,9 @@ export const Header: React.FC<HeaderProps> = ({
               <img
                 src={activeLogoUrl}
                 alt={headerConfig.logoAlt || `${headerConfig.brandName} Logo`}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
                 style={{
                   width: `${headerConfig.logoWidth || 40}px`,
                   height: `${headerConfig.logoHeight || 40}px`

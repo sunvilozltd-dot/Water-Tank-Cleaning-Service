@@ -60,6 +60,9 @@ export const Footer: React.FC<FooterProps> = ({
                   <img
                     src={activeLogoUrl}
                     alt={headerConfig.logoAlt || `${headerConfig.brandName || 'Sunviloz'} Logo`}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = 'none';
+                    }}
                     style={{
                       width: `${headerConfig.logoWidth || 40}px`,
                       height: `${headerConfig.logoHeight || 40}px`

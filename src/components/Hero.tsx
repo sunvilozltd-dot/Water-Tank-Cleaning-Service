@@ -188,6 +188,9 @@ export const Hero: React.FC<HeroProps> = () => {
                   <img 
                     src={video1Poster} 
                     alt="Cleaning Service Video 1" 
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=75';
+                    }}
                     className="absolute inset-0 w-full h-full object-contain bg-black" 
                   />
                 )}
@@ -252,10 +255,13 @@ export const Hero: React.FC<HeroProps> = () => {
                   <img 
                     src={video2Poster} 
                     alt="Cleaning Service Video 2" 
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=75';
+                    }}
                     className="absolute inset-0 w-full h-full object-contain bg-black" 
                   />
                 )}
-
+ 
                 {/* Subtle Floating Media Controls (Play/Pause & Mute/Unmute) */}
                 <div 
                   className="absolute bottom-2 right-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm p-1 rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
@@ -269,7 +275,7 @@ export const Hero: React.FC<HeroProps> = () => {
                   >
                     {isPlaying2 ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-white" />}
                   </button>
-
+ 
                   <button
                     type="button"
                     onClick={toggleMute2}
@@ -282,7 +288,7 @@ export const Hero: React.FC<HeroProps> = () => {
               </>
             )}
           </div>
-
+ 
           {/* ================= VIDEO 3 ================= */}
           <div 
             className="w-full md:col-span-2 lg:col-span-1 md:w-1/2 md:mx-auto lg:w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-black relative shadow-lg group cursor-pointer"
@@ -310,12 +316,15 @@ export const Hero: React.FC<HeroProps> = () => {
                 >
                   <source src={video3Url} type="video/mp4" />
                 </video>
-
+ 
                 {/* Poster fallback when video load fails */}
                 {hasError3 && video3Poster && (
                   <img 
                     src={video3Poster} 
                     alt="Cleaning Service Video 3" 
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75';
+                    }}
                     className="absolute inset-0 w-full h-full object-contain bg-black" 
                   />
                 )}
