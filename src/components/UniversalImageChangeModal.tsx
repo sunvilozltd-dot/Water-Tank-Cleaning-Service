@@ -14,8 +14,8 @@ import {
   Camera
 } from 'lucide-react';
 import { getMediaItems } from '../services/mediaService';
-import { MediaItem } from '../types/media';
 import { compressImageFile } from '../utils/imageCompressor';
+import { uploadImageToSupabase } from '../services/imageSyncService';
 
 export interface UniversalImageChangeModalProps {
   isOpen: boolean;
