@@ -16,7 +16,9 @@ import {
   AlertTriangle,
   Clock,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  ArrowUpDown,
+  X
 } from 'lucide-react';
 import { CustomerReview, ReviewStatus } from '../../types/review';
 import { 
@@ -27,17 +29,24 @@ import {
   markReviewAsSpam,
   REVIEWS_CHANGED_EVENT
 } from '../../services/reviewService';
+import { logAdminAction } from '../../services/auditService';
+import { useAdminAuth } from '../../context/AdminAuthContext';
+import { supabase, isSupabaseConfigured } from '../../utils/supabaseClient';
 
 export const ReviewsTab: React.FC = () => {
+  const { adminUser } = useAdminAuth();
   const [reviews, setReviews] = useState<CustomerReview[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
-  const [searchQuery, setSearchQuery] = useState('');
   
-  // Modals / Actions state
+  // Tab & Filters
+  const [activeTab, setActiveTab] = useState<'published' | 'all' | 'rejected' | 'pending'>('published');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [ratingFilter, setRatingFilter] = useState<'all' | number>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'highest' | 'lowest'>('newest');
+
+  // Modals & Confirmation
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [rejectModalReview, setRejectModalReview] = useState<CustomerReview | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [deleteConfirmationReview, setDeleteConfirmationReview] = useState<CustomerReview | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const fetchReviews = async () => {
@@ -60,12 +69,82 @@ export const ReviewsTab: React.FC = () => {
     };
 
     window.addEventListener(REVIEWS_CHANGED_EVENT, handleReviewsChanged);
+
+    let channel: any = null;
+    if (isSupabaseConfigured()) {
+      try {
+        channel = supabase
+          .channel('admin:customer_reviews')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'customer_reviews' },
+            () => {
+              fetchReviews();
+            }
+          )
+          .subscribe();
+      } catch (err) {
+        console.warn('Realtime admin reviews notice:', err);
+      }
+    }
+
     return () => {
       window.removeEventListener(REVIEWS_CHANGED_EVENT, handleReviewsChanged);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 
   // Action Handlers
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmationReview) return;
+    const target = deleteConfirmationReview;
+    setActionLoading(target.id);
+    try {
+      const success = await deleteReview(target.id);
+      if (success) {
+        await logAdminAction(
+          adminUser?.email || 'admin@sunviloz.com',
+          'Deleted Customer Review',
+          'Review',
+          target.id,
+          `Customer: ${target.customerName}, Rating: ${target.rating}★, Service: ${target.serviceType}`
+        );
+        setDeleteConfirmationReview(null);
+        await fetchReviews();
+      } else {
+        alert('ডাটাবেজ থেকে রিভিউ মুছে ফেলতে ব্যর্থ হয়েছে।');
+      }
+    } catch (err) {
+      alert('রিভিউ মুছে ফেলতে ত্রুটি দেখা দিয়েছে।');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleMarkSpam = async (id: string, name: string) => {
+    if (!window.confirm(`আপনি কি "${name}"-এর রিভিউটিকে স্প্যাম হিসেবে চিহ্নিত করতে চান? এটি ওয়েবসাইট থেকে সরানো হবে।`)) {
+      return;
+    }
+    setActionLoading(id);
+    try {
+      await markReviewAsSpam(id);
+      await logAdminAction(
+        adminUser?.email || 'admin@sunviloz.com',
+        'Marked Review as Spam',
+        'Review',
+        id,
+        `Customer: ${name}`
+      );
+      await fetchReviews();
+    } catch (err) {
+      alert('স্প্যাম মার্ক করতে ব্যর্থ হয়েছে');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleApprove = async (id: string) => {
     setActionLoading(id);
     try {
@@ -78,61 +157,23 @@ export const ReviewsTab: React.FC = () => {
     }
   };
 
-  const handleConfirmReject = async () => {
-    if (!rejectModalReview) return;
-    setActionLoading(rejectModalReview.id);
-    try {
-      await rejectReview(rejectModalReview.id, rejectionReason.trim() || undefined);
-      setRejectModalReview(null);
-      setRejectionReason('');
-      await fetchReviews();
-    } catch (err) {
-      alert('বাতিল করতে ব্যর্থ হয়েছে');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`আপনি কি নিশ্চিত যে "${name}"-এর রিভিউটি চিরতরে মুছে ফেলতে চান?`)) {
-      return;
-    }
-    setActionLoading(id);
-    try {
-      await deleteReview(id);
-      await fetchReviews();
-    } catch (err) {
-      alert('মুছে ফেলতে ব্যর্থ হয়েছে');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleMarkSpam = async (id: string) => {
-    if (!window.confirm('এই রিভিউটিকে স্প্যাম হিসেবে চিহ্নিত করতে চান? এটি স্বয়ংক্রিয়ভাবে বাতিল তালিকায় চলে যাবে।')) {
-      return;
-    }
-    setActionLoading(id);
-    try {
-      await markReviewAsSpam(id);
-      await fetchReviews();
-    } catch (err) {
-      alert('স্প্যাম মার্ক করতে ব্যর্থ হয়েছে');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  // Filter reviews
+  // Counts
+  const publishedCount = reviews.filter(r => (r.status === 'published' || r.status === 'approved') && !r.isSpam).length;
   const pendingCount = reviews.filter(r => r.status === 'pending' && !r.isSpam).length;
-  const approvedCount = reviews.filter(r => r.status === 'approved' && !r.isSpam).length;
   const rejectedCount = reviews.filter(r => r.status === 'rejected' || r.isSpam).length;
 
+  // Filter & Sort
   const filteredReviews = reviews.filter((r) => {
-    // Tab filter
-    if (activeTab === 'pending' && (r.status !== 'pending' || r.isSpam)) return false;
-    if (activeTab === 'approved' && (r.status !== 'approved' || r.isSpam)) return false;
-    if (activeTab === 'rejected' && (r.status !== 'rejected' && !r.isSpam)) return false;
+    const isLive = (r.status === 'published' || r.status === 'approved') && !r.isSpam;
+    const isRejected = r.status === 'rejected' || r.isSpam;
+    const isPending = r.status === 'pending' && !r.isSpam;
+
+    if (activeTab === 'published' && !isLive) return false;
+    if (activeTab === 'rejected' && !isRejected) return false;
+    if (activeTab === 'pending' && !isPending) return false;
+
+    // Rating filter
+    if (ratingFilter !== 'all' && Math.round(r.rating) !== ratingFilter) return false;
 
     // Search query
     if (searchQuery.trim()) {
@@ -145,6 +186,22 @@ export const ReviewsTab: React.FC = () => {
     }
 
     return true;
+  });
+
+  const sortedReviews = [...filteredReviews].sort((a, b) => {
+    if (sortBy === 'newest') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    if (sortBy === 'oldest') {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    }
+    if (sortBy === 'highest') {
+      return b.rating - a.rating;
+    }
+    if (sortBy === 'lowest') {
+      return a.rating - b.rating;
+    }
+    return 0;
   });
 
   const formatDate = (dateStr?: string) => {
@@ -168,13 +225,13 @@ export const ReviewsTab: React.FC = () => {
           <div className="space-y-1">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
               <Star className="w-3.5 h-3.5 fill-amber-400" />
-              <span>Customer Reviews Moderation Engine</span>
+              <span>Customer Reviews &amp; Moderation Engine</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white">
               গ্রাহক রিভিউ ও রেটিং ব্যবস্থাপনা
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
-              Google Account দিয়ে ভেরিফাইড গ্রাহক রিভিউসমূহ পরিচালনা করুন। নতুন রিভিউ অনুমোদনের আগ পর্যন্ত ওয়েবসাইটে প্রদর্শিত হবে না।
+              Google Account দিয়ে ভেরিফাইড গ্রাহক রিভিউসমূহ সরাসরি ওয়েবসাইটে প্রকাশিত হয়। অপ্রয়োজনীয় বা নীতিমালা ভঙ্গকারী রিভিউ এখান থেকে পার্মানেন্ট মুছে ফেলতে পারবেন।
             </p>
           </div>
 
@@ -182,7 +239,7 @@ export const ReviewsTab: React.FC = () => {
             type="button"
             onClick={fetchReviews}
             disabled={loading}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-colors shrink-0 self-start sm:self-auto"
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-colors shrink-0 self-start sm:self-auto cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>রিফ্রেশ করুন</span>
@@ -193,55 +250,19 @@ export const ReviewsTab: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6">
           <button
             type="button"
-            onClick={() => setActiveTab('pending')}
+            onClick={() => setActiveTab('published')}
             className={`p-3.5 rounded-2xl border transition-all text-left cursor-pointer ${
-              activeTab === 'pending'
-                ? 'bg-amber-500/15 border-amber-500/50 text-white shadow-lg shadow-amber-500/10'
-                : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold">অপেক্ষমান (Pending)</span>
-              <Clock className="w-4 h-4 text-amber-400" />
-            </div>
-            <div className="text-2xl font-black text-amber-400 mt-1">
-              {pendingCount}
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('approved')}
-            className={`p-3.5 rounded-2xl border transition-all text-left cursor-pointer ${
-              activeTab === 'approved'
+              activeTab === 'published'
                 ? 'bg-emerald-500/15 border-emerald-500/50 text-white shadow-lg shadow-emerald-500/10'
                 : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold">অনুমোদিত (Approved)</span>
+              <span className="text-xs font-semibold">লাইভ / প্রকাশিত</span>
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             </div>
             <div className="text-2xl font-black text-emerald-400 mt-1">
-              {approvedCount}
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('rejected')}
-            className={`p-3.5 rounded-2xl border transition-all text-left cursor-pointer ${
-              activeTab === 'rejected'
-                ? 'bg-rose-500/15 border-rose-500/50 text-white shadow-lg shadow-rose-500/10'
-                : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold">বাতিলকৃত (Rejected)</span>
-              <XCircle className="w-4 h-4 text-rose-400" />
-            </div>
-            <div className="text-2xl font-black text-rose-400 mt-1">
-              {rejectedCount}
+              {publishedCount}
             </div>
           </button>
 
@@ -262,36 +283,116 @@ export const ReviewsTab: React.FC = () => {
               {reviews.length}
             </div>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('rejected')}
+            className={`p-3.5 rounded-2xl border transition-all text-left cursor-pointer ${
+              activeTab === 'rejected'
+                ? 'bg-rose-500/15 border-rose-500/50 text-white shadow-lg shadow-rose-500/10'
+                : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold">বাতিল / স্প্যাম</span>
+              <XCircle className="w-4 h-4 text-rose-400" />
+            </div>
+            <div className="text-2xl font-black text-rose-400 mt-1">
+              {rejectedCount}
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('pending')}
+            className={`p-3.5 rounded-2xl border transition-all text-left cursor-pointer ${
+              activeTab === 'pending'
+                ? 'bg-amber-500/15 border-amber-500/50 text-white shadow-lg shadow-amber-500/10'
+                : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold">অপেক্ষমান (Pending)</span>
+              <Clock className="w-4 h-4 text-amber-400" />
+            </div>
+            <div className="text-2xl font-black text-amber-400 mt-1">
+              {pendingCount}
+            </div>
+          </button>
         </div>
       </div>
 
-      {/* Search Input Bar */}
-      <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 p-2.5 rounded-2xl">
-        <Search className="w-4 h-4 text-slate-400 ml-2" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="গ্রাহকের নাম, ইমেইল, সার্ভিস কিংবা রিভিউর বিবরণী দিয়ে সার্চ করুন..."
-          className="flex-1 bg-transparent text-white text-xs sm:text-sm focus:outline-none placeholder-slate-500"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="text-xs text-slate-400 hover:text-white px-2"
-          >
-            Clear
-          </button>
-        )}
+      {/* Control Bar: Search + Star Filter + Sort By */}
+      <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          
+          {/* Search Input */}
+          <div className="flex-1 flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl">
+            <Search className="w-4 h-4 text-slate-400 shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="গ্রাহকের নাম, ইমেইল, কিংবা রিভিউর বিষয় দিয়ে সার্চ করুন..."
+              className="flex-1 bg-transparent text-white text-xs sm:text-sm focus:outline-none placeholder-slate-500"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-xs text-slate-400 hover:text-white px-1.5"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* Rating Filter Dropdown */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs text-slate-400 font-semibold flex items-center gap-1">
+              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+              <span>স্টার ফিল্টার:</span>
+            </span>
+            <select
+              value={ratingFilter}
+              onChange={(e) => setRatingFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              className="bg-slate-950 border border-slate-800 text-white text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-blue-500"
+            >
+              <option value="all">সব স্টার (All Ratings)</option>
+              <option value="5">৫ স্টার (5 Stars)</option>
+              <option value="4">৪ স্টার (4 Stars)</option>
+              <option value="3">৩ স্টার (3 Stars)</option>
+              <option value="2">২ স্টার (2 Stars)</option>
+              <option value="1">১ স্টার (1 Star)</option>
+            </select>
+          </div>
+
+          {/* Sort By Dropdown */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs text-slate-400 font-semibold flex items-center gap-1">
+              <ArrowUpDown className="w-3.5 h-3.5 text-blue-400" />
+              <span>সর্টিং:</span>
+            </span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="bg-slate-950 border border-slate-800 text-white text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-blue-500"
+            >
+              <option value="newest">সর্বশেষ তারিখ (Newest First)</option>
+              <option value="oldest">পুরোনো তারিখ (Oldest First)</option>
+              <option value="highest">সর্বোচ্চ রেটিং (Highest Rating)</option>
+              <option value="lowest">সর্বনিম্ন রেটিং (Lowest Rating)</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Review List */}
       {loading ? (
         <div className="py-16 text-center text-slate-400 space-y-3">
           <RefreshCw className="w-8 h-8 animate-spin mx-auto text-[#0D9488]" />
-          <p className="text-xs">রিভিউ লোড হচ্ছে...</p>
+          <p className="text-xs">ডাটাবেজ থেকে রিভিউ লোড হচ্ছে...</p>
         </div>
-      ) : filteredReviews.length === 0 ? (
+      ) : sortedReviews.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center space-y-3">
           <div className="w-12 h-12 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center mx-auto">
             <Star className="w-6 h-6" />
@@ -300,18 +401,16 @@ export const ReviewsTab: React.FC = () => {
             কোনো রিভিউ পাওয়া যায়নি
           </h4>
           <p className="text-xs text-slate-400 max-w-sm mx-auto">
-            {activeTab === 'pending'
-              ? 'বর্তমানে অনুমোদনের অপেক্ষায় কোনো রিভিউ নেই।'
-              : 'এই ক্যাটাগরিতে কোনো রিভিউ পাওয়া যায়নি।'}
+            ফিল্টারের সাথে মিলে এমন কোনো রিভিউ পাওয়া যায়নি।
           </p>
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredReviews.map((review) => {
+          {sortedReviews.map((review) => {
             const isLoading = actionLoading === review.id;
-            const isApproved = review.status === 'approved';
+            const isLive = (review.status === 'published' || review.status === 'approved') && !review.isSpam;
             const isPending = review.status === 'pending';
-            const isRejected = review.status === 'rejected';
+            const isRejected = review.status === 'rejected' || review.isSpam;
 
             return (
               <div
@@ -344,204 +443,189 @@ export const ReviewsTab: React.FC = () => {
 
                         {/* Status Badge */}
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          isApproved 
+                          isLive
                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' 
                             : isPending 
                             ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' 
                             : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                         }`}>
-                          {isApproved ? 'Approved (অনুমোদিত)' : isPending ? 'Pending (অপেক্ষমান)' : 'Rejected (বাতিল)'}
+                          {isLive ? 'লাইভ / প্রকাশিত' : isPending ? 'অপেক্ষমান' : 'বাতিল / স্প্যাম'}
                         </span>
-
-                        {review.isSpam && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white">
-                            SPAM
-                          </span>
-                        )}
                       </div>
 
-                      {/* Customer Email (Admin Only view) */}
-                      <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
-                        <span className="flex items-center gap-1 text-slate-300">
-                          <Mail className="w-3.5 h-3.5 text-[#38BDF8]" />
+                      {/* Admin-only private customer email */}
+                      {review.customerEmail && (
+                        <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1 font-mono">
+                          <Mail className="w-3.5 h-3.5 text-slate-500" />
                           <span>{review.customerEmail}</span>
-                          <span className="text-[10px] text-slate-500">(পাবলিকলি গোপন)</span>
-                        </span>
-
-                        <span>•</span>
-
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-slate-500" />
-                          <span>{formatDate(review.createdAt)}</span>
-                        </span>
-                      </div>
+                          <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.2 rounded font-sans">Admin Only</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Rating Stars */}
-                  <div className="flex items-center gap-1 text-amber-400 bg-slate-950/70 px-3 py-1.5 rounded-xl border border-slate-800 shrink-0 self-start">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star
-                        key={s}
-                        className={`w-4 h-4 ${review.rating >= s ? 'fill-amber-400 text-amber-400' : 'text-slate-700'}`}
-                      />
-                    ))}
-                    <span className="ml-1 text-xs font-black text-white">{review.rating}.0</span>
-                  </div>
-                </div>
-
-                {/* Service Tag & Description */}
-                <div className="space-y-2">
-                  <div className="inline-block px-3 py-1 bg-slate-950 text-[#38BDF8] border border-slate-800 rounded-lg text-xs font-semibold">
-                    সার্ভিস: {review.serviceType}
-                  </div>
-
-                  <p className="text-xs sm:text-sm text-slate-200 leading-relaxed bg-slate-950/50 p-3.5 rounded-xl border border-slate-800">
-                    "{review.description}"
-                  </p>
-
-                  {review.rejectionReason && (
-                    <div className="text-xs text-rose-300 bg-rose-950/30 p-2.5 rounded-lg border border-rose-800/40">
-                      <strong>বাতিলের কারণ:</strong> {review.rejectionReason}
+                  {/* Stars + Date */}
+                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between gap-1">
+                    <div className="flex items-center gap-1 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          className={`w-3.5 h-3.5 ${
+                            s <= review.rating
+                              ? 'fill-amber-400 text-amber-400'
+                              : 'text-slate-600'
+                          }`}
+                        />
+                      ))}
+                      <span className="text-xs font-bold ml-1 text-white">{review.rating}.0</span>
                     </div>
-                  )}
+
+                    <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-1">
+                      <Calendar className="w-3 h-3 text-slate-500" />
+                      <span>{formatDate(review.createdAt)}</span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Optional Customer Attached Photo */}
+                {/* Service Tag */}
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800/80 text-[#38BDF8] text-xs font-medium border border-slate-700/60">
+                  <span>সার্ভিস: {review.serviceType}</span>
+                </div>
+
+                {/* Review Description */}
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-950/40 p-3.5 rounded-xl border border-slate-800/60">
+                  {review.description}
+                </p>
+
+                {/* Customer Photo Preview (if uploaded) */}
                 {review.photoUrl && (
-                  <div className="flex items-center gap-3 pt-1">
-                    <div
+                  <div>
+                    <button
+                      type="button"
                       onClick={() => setPhotoPreview(review.photoUrl || null)}
-                      className="relative w-24 h-16 rounded-xl overflow-hidden border border-slate-700 cursor-pointer group shrink-0"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-950/40 border border-blue-800/60 text-blue-300 text-xs font-semibold hover:bg-blue-900/40 transition-colors"
                     >
-                      <img src={review.photoUrl} alt="Attached" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Eye className="w-4 h-4 text-white" />
-                      </div>
-                    </div>
-                    <span className="text-xs text-slate-400">গ্রাহকের যুক্ত করা ছবি (ক্লিক করে বড় দেখুন)</span>
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>কাস্টমার ফটো দেখুন (Click to view image)</span>
+                    </button>
                   </div>
                 )}
 
-                {/* Action Buttons Toolbar */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800">
-                  <div className="text-[11px] text-slate-500">
+                {/* Action Buttons */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800/80">
+                  <div className="text-[11px] text-slate-500 font-mono">
                     ID: {review.id}
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* Approve Button */}
-                    {!isApproved && (
+                  <div className="flex items-center gap-2">
+                    {/* Approve button if pending */}
+                    {isPending && (
                       <button
                         type="button"
-                        disabled={isLoading}
                         onClick={() => handleApprove(review.id)}
-                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow"
+                        disabled={isLoading}
+                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>অনুমোদন করুন (Approve)</span>
+                        <span>অনুমোদন করুন</span>
                       </button>
                     )}
 
-                    {/* Reject Button */}
+                    {/* Mark as Spam */}
                     {!isRejected && (
                       <button
                         type="button"
+                        onClick={() => handleMarkSpam(review.id, review.customerName)}
                         disabled={isLoading}
-                        onClick={() => setRejectModalReview(review)}
-                        className="px-3.5 py-1.5 bg-amber-600/30 hover:bg-amber-600 text-amber-200 hover:text-white border border-amber-600/40 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"
+                        className="px-3 py-1.5 bg-amber-950/40 hover:bg-amber-900/50 text-amber-400 border border-amber-800/60 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                       >
-                        <XCircle className="w-3.5 h-3.5" />
-                        <span>বাতিল করুন (Reject)</span>
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                        <span>স্প্যাম হিসেবে ফ্ল্যাগ করুন</span>
                       </button>
                     )}
 
-                    {/* Mark as Spam Button */}
-                    {!review.isSpam && (
-                      <button
-                        type="button"
-                        disabled={isLoading}
-                        onClick={() => handleMarkSpam(review.id)}
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-rose-950 text-slate-300 hover:text-rose-300 border border-slate-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
-                      >
-                        <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Spam</span>
-                      </button>
-                    )}
-
-                    {/* Delete Button */}
+                    {/* Delete Permanently */}
                     <button
                       type="button"
+                      onClick={() => setDeleteConfirmationReview(review)}
                       disabled={isLoading}
-                      onClick={() => handleDelete(review.id, review.customerName)}
-                      className="px-3 py-1.5 bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white border border-slate-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
+                      className="px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>ডিলিট</span>
+                      <span>মুছে ফেলুন (Delete)</span>
                     </button>
                   </div>
                 </div>
-
               </div>
             );
           })}
         </div>
       )}
 
-      {/* Reject Modal */}
-      {rejectModalReview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <XCircle className="w-5 h-5 text-rose-500" />
-              <span>রিভিউ বাতিলকরণ (Reject Review)</span>
-            </h3>
-
-            <p className="text-xs text-slate-400 leading-relaxed">
-              আপনি কি নিশ্চিত যে <strong>"{rejectModalReview.customerName}"</strong>-এর রিভিউটি বাতিল করতে চান? বাতিলকৃত রিভিউ কখনো পাবলিক ওয়েবসাইটে প্রদর্শিত হবে না।
-            </p>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                বাতিলের কারণ (ঐচ্ছিক):
-              </label>
-              <textarea
-                rows={2}
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="যেমন: অনুচিত ভাষা, স্প্যাম বা অসম্পূর্ণ বিবরণ..."
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-rose-500"
-              />
+      {/* Delete Confirmation Modal with Audit Trail notice */}
+      {deleteConfirmationReview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto border border-rose-500/20">
+              <AlertTriangle className="w-6 h-6" />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="text-center space-y-1">
+              <h3 className="text-base font-bold text-white">
+                রিভিউটি চিরতরে মুছে ফেলতে চান?
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                <span className="font-semibold text-white">&quot;{deleteConfirmationReview.customerName}&quot;</span>-এর এই রিভিউটি মুছে ফেললে এটি Supabase ডাটাবেজ এবং ওয়েবসাইট থেকে চিরতরে মুছে যাবে।
+              </p>
+            </div>
+
+            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1">
+              <div><strong className="text-slate-300">সার্ভিস:</strong> {deleteConfirmationReview.serviceType}</div>
+              <div><strong className="text-slate-300">রেটিং:</strong> {deleteConfirmationReview.rating} স্টার</div>
+              <div className="line-clamp-2"><strong className="text-slate-300">বিবরণী:</strong> {deleteConfirmationReview.description}</div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => setRejectModalReview(null)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                onClick={() => setDeleteConfirmationReview(null)}
+                className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
-                বাতিল
+                বাতিল (Cancel)
               </button>
               <button
                 type="button"
-                onClick={handleConfirmReject}
-                className="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow"
+                onClick={handleConfirmDelete}
+                disabled={actionLoading === deleteConfirmationReview.id}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5"
               >
-                বাতিল নিশ্চিত করুন
+                {actionLoading === deleteConfirmationReview.id ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                <span>হ্যাঁ, মুছে ফেলুন</span>
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Photo Preview Modal */}
+      {/* Photo Lightbox Modal */}
       {photoPreview && (
-        <div
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-fadeIn"
           onClick={() => setPhotoPreview(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md cursor-pointer animate-fadeIn"
         >
-          <div className="relative max-w-2xl max-h-[90vh] rounded-2xl overflow-hidden bg-black shadow-2xl">
-            <img src={photoPreview} alt="Customer Photo" className="w-full h-full object-contain" />
+          <div className="relative max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-2 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setPhotoPreview(null)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-slate-950/80 text-white flex items-center justify-center hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <img src={photoPreview} alt="Customer uploaded" className="w-full h-auto max-h-[80vh] object-contain rounded-2xl" />
           </div>
         </div>
       )}

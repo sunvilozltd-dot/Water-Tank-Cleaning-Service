@@ -12,8 +12,23 @@ const REVIEWS_STORAGE_KEY = 'sunviloz_customer_reviews_master_v1';
 const GOOGLE_USER_SESSION_KEY = 'sunviloz_google_reviewer_session';
 export const REVIEWS_CHANGED_EVENT = 'sunviloz_customer_reviews_changed';
 
-// Initial state starts completely honest with NO fake reviews as requested
+// Initial state starts clean with authentic reviews
 const INITIAL_REVIEWS: CustomerReview[] = [];
+
+/**
+ * Generates a valid standard RFC4122 v4 UUID for database compatibility.
+ * Prevents "invalid input syntax for type uuid" error in Supabase Postgres.
+ */
+export function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 /**
  * Strips HTML tags and malicious characters to prevent XSS attacks
@@ -56,7 +71,7 @@ function setCachedReviews(reviews: CustomerReview[]): void {
 }
 
 /**
- * Retrieves public approved reviews from Supabase with local fallback.
+ * Retrieves public published reviews from Supabase with local fallback.
  * Strictly hides customer email to protect privacy.
  */
 export async function getPublicApprovedReviews(): Promise<PublicCustomerReview[]> {
@@ -67,7 +82,7 @@ export async function getPublicApprovedReviews(): Promise<PublicCustomerReview[]
       const { data, error } = await supabase
         .from('customer_reviews')
         .select('id, customer_name, service_type, rating, description, photo_url, avatar_url, is_verified_google, created_at, approved_at, status, is_spam')
-        .eq('status', 'approved')
+        .in('status', ['published', 'approved'])
         .eq('is_spam', false)
         .order('created_at', { ascending: false });
 
@@ -75,32 +90,37 @@ export async function getPublicApprovedReviews(): Promise<PublicCustomerReview[]
         const mapped: CustomerReview[] = data.map((item: any) => ({
           id: item.id,
           customerName: item.customer_name,
-          customerEmail: '', // Never populate private email for public requests
+          customerEmail: '', // Strictly omitted for privacy
           serviceType: item.service_type,
           rating: Number(item.rating),
           description: item.description,
           photoUrl: item.photo_url || undefined,
           avatarUrl: item.avatar_url || undefined,
-          status: 'approved',
+          status: item.status as CustomerReview['status'],
           isVerifiedGoogle: Boolean(item.is_verified_google),
           createdAt: item.created_at,
-          approvedAt: item.approved_at
+          approvedAt: item.approved_at || item.created_at
         }));
         
-        // Merge with approved items in cache
-        const nonSupabase = reviews.filter(r => r.status === 'approved' && !mapped.some(m => m.id === r.id));
+        // Merge with published items in cache
+        const nonSupabase = reviews.filter(
+          r => (r.status === 'published' || r.status === 'approved') && !mapped.some(m => m.id === r.id)
+        );
         reviews = [...mapped, ...nonSupabase];
+        setCachedReviews(reviews);
       }
     } catch (err) {
-      console.warn('Could not fetch approved reviews from Supabase, using local store:', err);
+      console.warn('Could not fetch reviews from Supabase, using local store:', err);
     }
   }
 
-  // Filter only approved & non-spam reviews
-  const approvedOnly = reviews.filter(r => r.status === 'approved' && !r.isSpam);
+  // Filter only published & non-spam reviews
+  const publishedOnly = reviews.filter(
+    r => (r.status === 'published' || r.status === 'approved') && !r.isSpam
+  );
 
   // Return public format with email completely omitted
-  return approvedOnly.map(r => ({
+  return publishedOnly.map(r => ({
     id: r.id,
     customerName: r.customerName,
     serviceType: r.serviceType,
@@ -115,7 +135,7 @@ export async function getPublicApprovedReviews(): Promise<PublicCustomerReview[]
 }
 
 /**
- * Retrieves all reviews (Pending, Approved, Rejected) for Admin Dashboard
+ * Retrieves all reviews for Admin Dashboard
  */
 export async function getAllReviewsForAdmin(): Promise<CustomerReview[]> {
   let reviews: CustomerReview[] = getCachedReviews();
@@ -147,7 +167,6 @@ export async function getAllReviewsForAdmin(): Promise<CustomerReview[]> {
           approvedAt: item.approved_at
         }));
 
-        // Merge keeping local pending if not synced
         const nonDb = reviews.filter(r => !fromDb.some(d => d.id === r.id));
         reviews = [...fromDb, ...nonDb];
         setCachedReviews(reviews);
@@ -194,7 +213,7 @@ export async function hasAlreadyReviewedService(
         return true;
       }
     } catch {
-      // Fallback to local
+      // Fallback
     }
   }
 
@@ -202,8 +221,9 @@ export async function hasAlreadyReviewedService(
 }
 
 /**
- * Submits a new customer review.
- * Always created in 'pending' status for admin approval.
+ * Submits a new customer review with Instant Publishing.
+ * Publishes immediately without pending review status bottleneck.
+ * Verifies real Supabase insertion before showing success message.
  */
 export async function submitCustomerReview(
   payload: ReviewSubmissionPayload
@@ -215,7 +235,7 @@ export async function submitCustomerReview(
 
   // Validation
   if (!cleanName || cleanName.length < 2) {
-    return { success: false, message: 'অনুগ্রহ করে আপনার সঠিক নাম প্রদান করুন (Name is required)' };
+    return { success: false, message: 'অনুগ্রহ করে আপনার নাম প্রদান করুন (Name is required)' };
   }
   if (!cleanEmail || !cleanEmail.includes('@')) {
     return { success: false, message: 'Google অ্যাকাউন্টের ভ্যালিড ইমেইল প্রয়োজন (Valid Google email is required)' };
@@ -235,12 +255,15 @@ export async function submitCustomerReview(
   if (isDuplicate) {
     return { 
       success: false, 
-      message: 'আপনি এই Google Account দিয়ে ইতিমধ্যে এই সার্ভিসের জন্য একটি রিভিউ দিয়েছেন। আপনি চাইলে অন্য কোনো সার্ভিসের জন্য রিভিউ দিতে পারেন।' 
+      message: 'আপনি এই Google Account দিয়ে ইতিমধ্যে এই সার্ভিসের জন্য একটি রিভিউ দিয়েছেন। অন্য কোনো সার্ভিসের জন্য রিভিউ দিতে ড্রপডাউন পরিবর্তন করুন।' 
     };
   }
 
+  const reviewId = generateUUID();
+  const now = new Date().toISOString();
+
   const newReview: CustomerReview = {
-    id: 'rev_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+    id: reviewId,
     customerName: cleanName,
     customerEmail: cleanEmail,
     googleUserId: payload.googleUserId,
@@ -249,18 +272,15 @@ export async function submitCustomerReview(
     description: cleanDesc,
     photoUrl: payload.photoUrl,
     avatarUrl: payload.avatarUrl,
-    status: 'pending', // Strictly pending until admin approval!
+    status: 'published', // Instantly published as requested!
     isVerifiedGoogle: true,
     isSpam: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    createdAt: now,
+    updatedAt: now,
+    approvedAt: now
   };
 
-  // 1. Save to local store
-  const existing = getCachedReviews();
-  setCachedReviews([newReview, ...existing]);
-
-  // 2. Save to Supabase
+  // 1. Save directly to Supabase Central Database
   if (isSupabaseConfigured()) {
     try {
       const { error } = await supabase
@@ -275,40 +295,55 @@ export async function submitCustomerReview(
           description: newReview.description,
           photo_url: newReview.photoUrl || null,
           avatar_url: newReview.avatarUrl || null,
-          status: 'pending',
+          status: 'published',
           is_verified_google: true,
-          is_spam: false
+          is_spam: false,
+          created_at: now,
+          updated_at: now,
+          approved_at: now
         });
 
       if (error) {
-        console.warn('Supabase insert note (cached locally):', error.message);
+        console.error('Supabase review insert error:', error.message);
+        return {
+          success: false,
+          message: 'ডাটাবেজে রিভিউ সংরক্ষণ করতে সমস্যা হয়েছে: ' + error.message
+        };
       }
-    } catch (err) {
-      console.warn('Could not insert review to Supabase:', err);
+    } catch (err: any) {
+      console.error('Could not insert review to Supabase:', err);
+      return {
+        success: false,
+        message: 'ডাটাবেজ সংযোগে ত্রুটি দেখা দিয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।'
+      };
     }
   }
 
+  // 2. On verified success, save to local cache for instant zero-latency feedback
+  const existing = getCachedReviews();
+  setCachedReviews([newReview, ...existing]);
+
   return {
     success: true,
-    message: 'আপনার রিভিউটি সফলভাবে জমা হয়েছে! সানভিলোজ ক্লিন কেয়ার টিমের যাচাইয়ের পর এটি ওয়েবসাইটে প্রকাশিত হবে।',
+    message: 'আপনার রিভিউটি সফলভাবে প্রকাশিত হয়েছে! সানভিলোজ ক্লিন কেয়ারের ওপর আস্থা রাখার জন্য ধন্যবাদ।',
     review: newReview
   };
 }
 
 /**
- * Admin action: Approve a review
+ * Admin action: Approve a review (if in pending status)
  */
 export async function approveReview(id: string): Promise<boolean> {
   const reviews = getCachedReviews();
   const now = new Date().toISOString();
-  const updated = reviews.map(r => r.id === id ? { ...r, status: 'approved' as const, approvedAt: now, updatedAt: now } : r);
+  const updated = reviews.map(r => r.id === id ? { ...r, status: 'published' as const, approvedAt: now, updatedAt: now } : r);
   setCachedReviews(updated);
 
   if (isSupabaseConfigured()) {
     try {
       await supabase
         .from('customer_reviews')
-        .update({ status: 'approved', approved_at: now, updated_at: now })
+        .update({ status: 'published', approved_at: now, updated_at: now })
         .eq('id', id);
     } catch (err) {
       console.warn('Supabase approve error:', err);
@@ -319,7 +354,7 @@ export async function approveReview(id: string): Promise<boolean> {
 }
 
 /**
- * Admin action: Reject a review with optional reason
+ * Admin action: Reject a review with reason
  */
 export async function rejectReview(id: string, reason?: string): Promise<boolean> {
   const reviews = getCachedReviews();
@@ -351,7 +386,8 @@ export async function rejectReview(id: string, reason?: string): Promise<boolean
 }
 
 /**
- * Admin action: Permanently delete a review
+ * Admin action: Permanently delete a review from Supabase
+ * When deleted, the review disappears immediately from the public website.
  */
 export async function deleteReview(id: string): Promise<boolean> {
   const reviews = getCachedReviews();
@@ -360,12 +396,18 @@ export async function deleteReview(id: string): Promise<boolean> {
 
   if (isSupabaseConfigured()) {
     try {
-      await supabase
+      const { error } = await supabase
         .from('customer_reviews')
         .delete()
         .eq('id', id);
+
+      if (error) {
+        console.error('Supabase review delete error:', error.message);
+        return false;
+      }
     } catch (err) {
-      console.warn('Supabase delete error:', err);
+      console.error('Failed to delete review from Supabase:', err);
+      return false;
     }
   }
 
@@ -402,10 +444,10 @@ export async function markReviewAsSpam(id: string): Promise<boolean> {
 }
 
 /**
- * Calculates accurate statistics from approved reviews
+ * Calculates accurate statistics from published reviews
  */
 export function calculateReviewStats(reviews: PublicCustomerReview[] | CustomerReview[]): ReviewStats {
-  const approved = reviews.filter(r => ('status' in r ? r.status === 'approved' : true));
+  const approved = reviews.filter(r => ('status' in r ? (r.status === 'published' || r.status === 'approved') : true));
   const totalApproved = approved.length;
 
   if (totalApproved === 0) {

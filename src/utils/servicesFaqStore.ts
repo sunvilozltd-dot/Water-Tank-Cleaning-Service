@@ -140,8 +140,41 @@ export const INITIAL_SERVICES_FAQS: ServiceFaqItem[] = [
   }
 ];
 
+import { supabase, isSupabaseConfigured } from './supabaseClient';
+
 const STORAGE_KEY = 'sunviloz_services_faqs_v1';
 const EVENT_NAME = 'sunviloz_services_faq_changed';
+
+function mapRowToFaq(d: any): ServiceFaqItem {
+  return {
+    id: d.id,
+    category: d.category,
+    categoryTitleBn: d.category_title_bn,
+    categoryTitleEn: d.category_title_en,
+    questionBn: d.question_bn,
+    questionEn: d.question_en,
+    answerBn: d.answer_bn,
+    answerEn: d.answer_en,
+    order: Number(d.sort_order ?? 1),
+    isActive: d.is_active !== false
+  };
+}
+
+function mapFaqToRow(f: ServiceFaqItem): any {
+  return {
+    id: f.id,
+    category: f.category,
+    category_title_bn: f.categoryTitleBn,
+    category_title_en: f.categoryTitleEn,
+    question_bn: f.questionBn,
+    question_en: f.questionEn,
+    answer_bn: f.answerBn,
+    answer_en: f.answerEn,
+    sort_order: f.order,
+    is_active: f.isActive,
+    updated_at: new Date().toISOString()
+  };
+}
 
 export const getStoredServicesFaqs = (): ServiceFaqItem[] => {
   if (typeof window === 'undefined') return INITIAL_SERVICES_FAQS;
@@ -152,7 +185,7 @@ export const getStoredServicesFaqs = (): ServiceFaqItem[] => {
       return INITIAL_SERVICES_FAQS;
     }
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
+    if (Array.isArray(parsed) && parsed.length > 0) {
       return parsed;
     }
     return INITIAL_SERVICES_FAQS;
@@ -162,17 +195,58 @@ export const getStoredServicesFaqs = (): ServiceFaqItem[] => {
   }
 };
 
-export const saveAllServicesFaqs = (faqs: ServiceFaqItem[]) => {
-  if (typeof window === 'undefined') return;
-  try {
-    safeSetItem(STORAGE_KEY, JSON.stringify(faqs));
-    window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: faqs }));
-  } catch (err) {
-    console.error('Failed to save services FAQs:', err);
+export const fetchServicesFaqsFromSupabase = async (): Promise<ServiceFaqItem[]> => {
+  let list = getStoredServicesFaqs();
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from('services_faqs')
+        .select('*')
+        .order('sort_order', { ascending: true });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        list = data.map(mapRowToFaq);
+        if (typeof window !== 'undefined') {
+          safeSetItem(STORAGE_KEY, JSON.stringify(list));
+          window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: list }));
+        }
+      } else if (!error && Array.isArray(data) && data.length === 0) {
+        const rows = INITIAL_SERVICES_FAQS.map(mapFaqToRow);
+        await supabase.from('services_faqs').upsert(rows, { onConflict: 'id' });
+      }
+    } catch (err) {
+      console.warn('Could not query services_faqs from Supabase:', err);
+    }
   }
+
+  return list;
 };
 
-export const addServiceFaq = (faqData: Omit<ServiceFaqItem, 'id'>): ServiceFaqItem => {
+export const saveAllServicesFaqs = async (faqs: ServiceFaqItem[]): Promise<boolean> => {
+  if (typeof window !== 'undefined') {
+    safeSetItem(STORAGE_KEY, JSON.stringify(faqs));
+    window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: faqs }));
+  }
+
+  if (isSupabaseConfigured()) {
+    try {
+      const rows = faqs.map(mapFaqToRow);
+      const { error } = await supabase.from('services_faqs').upsert(rows, { onConflict: 'id' });
+      if (error) {
+        console.error('Supabase services_faqs save error:', error.message);
+        return false;
+      }
+    } catch (err) {
+      console.error('Failed to save services FAQs to Supabase:', err);
+      return false;
+    }
+  }
+
+  return true;
+};
+
+export const addServiceFaq = async (faqData: Omit<ServiceFaqItem, 'id'>): Promise<ServiceFaqItem> => {
   const current = getStoredServicesFaqs();
   const id = `faq-${faqData.category === 'pipeline-cleaning' ? 'pipe' : 'tank'}-${Date.now()}`;
   const newItem: ServiceFaqItem = {
@@ -182,11 +256,11 @@ export const addServiceFaq = (faqData: Omit<ServiceFaqItem, 'id'>): ServiceFaqIt
     isActive: faqData.isActive !== undefined ? faqData.isActive : true
   };
   const updated = [...current, newItem];
-  saveAllServicesFaqs(updated);
+  await saveAllServicesFaqs(updated);
   return newItem;
 };
 
-export const updateServiceFaq = (id: string, updates: Partial<ServiceFaqItem>): boolean => {
+export const updateServiceFaq = async (id: string, updates: Partial<ServiceFaqItem>): Promise<boolean> => {
   const current = getStoredServicesFaqs();
   const idx = current.findIndex(f => f.id === id);
   if (idx === -1) return false;
@@ -194,20 +268,27 @@ export const updateServiceFaq = (id: string, updates: Partial<ServiceFaqItem>): 
     ...current[idx],
     ...updates
   };
-  saveAllServicesFaqs(current);
-  return true;
+  return await saveAllServicesFaqs(current);
 };
 
-export const deleteServiceFaq = (id: string): boolean => {
+export const deleteServiceFaq = async (id: string): Promise<boolean> => {
   const current = getStoredServicesFaqs();
   const filtered = current.filter(f => f.id !== id);
   if (filtered.length === current.length) return false;
-  saveAllServicesFaqs(filtered);
+  await saveAllServicesFaqs(filtered);
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from('services_faqs').delete().eq('id', id);
+    } catch (err) {
+      console.warn('Failed to delete service FAQ from Supabase:', err);
+    }
+  }
   return true;
 };
 
-export const resetServicesFaqsToDefault = (): ServiceFaqItem[] => {
-  saveAllServicesFaqs(INITIAL_SERVICES_FAQS);
+export const resetServicesFaqsToDefault = async (): Promise<ServiceFaqItem[]> => {
+  await saveAllServicesFaqs(INITIAL_SERVICES_FAQS);
   return INITIAL_SERVICES_FAQS;
 };
 
@@ -215,11 +296,41 @@ export const useServicesFaqs = () => {
   const [faqs, setFaqs] = useState<ServiceFaqItem[]>(() => getStoredServicesFaqs());
 
   useEffect(() => {
+    fetchServicesFaqsFromSupabase().then(latest => {
+      if (latest && latest.length > 0) {
+        setFaqs(latest);
+      }
+    });
+
     const handleUpdate = (e: any) => {
       setFaqs(e.detail || getStoredServicesFaqs());
     };
     window.addEventListener(EVENT_NAME, handleUpdate);
-    return () => window.removeEventListener(EVENT_NAME, handleUpdate);
+
+    let channel: any = null;
+    if (isSupabaseConfigured()) {
+      try {
+        channel = supabase
+          .channel('realtime:services_faqs')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'services_faqs' },
+            () => {
+              fetchServicesFaqsFromSupabase();
+            }
+          )
+          .subscribe();
+      } catch (err) {
+        console.warn('Realtime services_faqs notice:', err);
+      }
+    }
+
+    return () => {
+      window.removeEventListener(EVENT_NAME, handleUpdate);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   return {

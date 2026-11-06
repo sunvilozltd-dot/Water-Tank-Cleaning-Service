@@ -15,8 +15,11 @@ import {
   addCustomSection, 
   deleteCustomSection, 
   resetSiteConfigToDefaults,
+  fetchSiteConfigFromSupabase,
+  sanitizeAndMergeConfig,
   SITE_CONFIG_EVENT 
 } from '../utils/siteConfigStore';
+import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
 import { FaqItem, ProcessStep, ReviewItem, AreaInfo } from '../types';
 
 interface SiteConfigContextType {
@@ -66,11 +69,47 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [config, setConfig] = useState<FullSiteConfig>(getStoredSiteConfig());
 
   useEffect(() => {
-    const handleConfigChange = () => {
-      setConfig(getStoredSiteConfig());
+    // 1. Authoritative initial fetch from Supabase Central Source of Truth
+    fetchSiteConfigFromSupabase().then((latest) => {
+      if (latest) {
+        setConfig(latest);
+      }
+    });
+
+    // 2. Local event listener for fast in-tab responses
+    const handleConfigChange = (e: any) => {
+      setConfig(e?.detail || getStoredSiteConfig());
     };
     window.addEventListener(SITE_CONFIG_EVENT, handleConfigChange);
-    return () => window.removeEventListener(SITE_CONFIG_EVENT, handleConfigChange);
+
+    // 3. Supabase Realtime subscription for cross-browser, cross-device instant sync
+    let channel: any = null;
+    if (isSupabaseConfigured()) {
+      try {
+        channel = supabase
+          .channel('realtime:site_settings')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'site_settings' },
+            (payload) => {
+              if (payload.new && (payload.new as any).config) {
+                const updated = sanitizeAndMergeConfig((payload.new as any).config);
+                setConfig(updated);
+              }
+            }
+          )
+          .subscribe();
+      } catch (err) {
+        console.warn('Realtime subscription notice for site_settings:', err);
+      }
+    }
+
+    return () => {
+      window.removeEventListener(SITE_CONFIG_EVENT, handleConfigChange);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   const toggleSection = (id: string, enabled?: boolean) => {
@@ -178,8 +217,9 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const resetToFactory = () => {
-    const def = resetSiteConfigToDefaults();
-    setConfig(def);
+    resetSiteConfigToDefaults().then(def => {
+      setConfig(def);
+    });
   };
 
   const exportConfigJson = () => {

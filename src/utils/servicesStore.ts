@@ -6,6 +6,7 @@ import {
   ExtensibleServiceItem 
 } from '../services/serviceRegistry';
 import { safeGetItem, safeSetItem } from './safeLocalStorage';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 const STORAGE_KEY = 'sunviloz_authoritative_services_v7';
 const EVENT_NAME = 'sunviloz_services_changed';
@@ -13,8 +14,104 @@ const EVENT_NAME = 'sunviloz_services_changed';
 export const INITIAL_SERVICES: ExtensibleServiceItem[] = AUTHORITATIVE_SERVICES;
 
 /**
+ * Maps a database row from public.services to an ExtensibleServiceItem.
+ */
+function mapRowToService(d: any): ExtensibleServiceItem {
+  return {
+    id: d.id,
+    slug: d.slug,
+    title: d.title,
+    titleBn: d.title_bn || d.title,
+    name: d.name || d.title,
+    shortDesc: d.short_desc || '',
+    shortDescBn: d.short_desc_bn || d.short_desc || '',
+    short_description: d.short_desc || '',
+    fullDesc: d.full_desc || '',
+    fullDescBn: d.full_desc_bn || d.full_desc || '',
+    full_description: d.full_desc || '',
+    category: d.category || 'General Water Hygiene',
+    iconName: d.icon_name || d.icon || 'Droplets',
+    icon: d.icon || d.icon_name || 'Droplets',
+    image: d.image || d.featured_image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
+    featured_image: d.featured_image || d.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
+    is_active: d.is_active !== false,
+    display_order: Number(d.display_order ?? 1),
+    show_on_homepage: d.show_on_homepage !== false,
+    show_in_navigation: d.show_in_navigation !== false,
+    show_in_quote_form: d.show_in_quote_form !== false,
+    startingPrice: Number(d.starting_price ?? 1500),
+    startingPriceBn: d.starting_price_bn || `৳ ${Number(d.starting_price ?? 1500).toLocaleString('bn-BD')}`,
+    popular: Boolean(d.popular),
+    isCustomAdded: Boolean(d.is_custom_added),
+    seo_title: d.seo_title || d.meta_title || `${d.title} in Dhaka | Sunviloz Clean Care`,
+    metaTitle: d.meta_title || d.seo_title || `${d.title} in Dhaka | Sunviloz Clean Care`,
+    meta_description: d.meta_description || d.meta_desc || d.short_desc || '',
+    metaDesc: d.meta_desc || d.meta_description || d.short_desc || '',
+    created_at: d.created_at || new Date().toISOString(),
+    updated_at: d.updated_at || new Date().toISOString(),
+    formConfig: d.form_config || {
+      requiresTankMaterial: false,
+      requiresTankCapacity: false,
+      requiresPropertyDetails: true,
+      requiresPipelineDetails: false
+    },
+    benefits: Array.isArray(d.benefits) ? d.benefits : ['মেকানাইজড ওয়াশ', '১০০% জীবাণুমুক্তকরণ'],
+    benefitsBn: Array.isArray(d.benefits_bn) ? d.benefits_bn : (Array.isArray(d.benefits) ? d.benefits : []),
+    process: Array.isArray(d.process) ? d.process : ['পরিদর্শন', 'মেকানাইজড পরিষ্কার', 'জীবাণুমুক্তকরণ', 'হ্যান্ডওভার'],
+    processBn: Array.isArray(d.process_bn) ? d.process_bn : (Array.isArray(d.process) ? d.process : []),
+    idealFor: Array.isArray(d.ideal_for) ? d.ideal_for : ['আবাসিক বাড়ি', 'অ্যাপার্টমেন্ট ভবন'],
+    idealForBn: Array.isArray(d.ideal_for_bn) ? d.ideal_for_bn : (Array.isArray(d.ideal_for) ? d.ideal_for : []),
+    faqs: Array.isArray(d.faqs) ? d.faqs : []
+  };
+}
+
+/**
+ * Maps an ExtensibleServiceItem to a database row for public.services.
+ */
+function mapServiceToRow(s: ExtensibleServiceItem): any {
+  return {
+    id: s.id,
+    slug: s.slug,
+    title: s.title,
+    title_bn: s.titleBn || s.title,
+    name: s.name || s.title,
+    short_desc: s.shortDesc || s.short_description || null,
+    short_desc_bn: s.shortDescBn || s.shortDesc || null,
+    full_desc: s.fullDesc || s.full_description || null,
+    full_desc_bn: s.fullDescBn || s.fullDesc || null,
+    category: s.category || null,
+    icon_name: s.iconName || s.icon || 'Droplets',
+    icon: s.icon || s.iconName || 'Droplets',
+    image: s.image || s.featured_image || null,
+    featured_image: s.featured_image || s.image || null,
+    is_active: s.is_active !== false,
+    display_order: s.display_order ?? 1,
+    show_on_homepage: s.show_on_homepage !== false,
+    show_in_navigation: s.show_in_navigation !== false,
+    show_in_quote_form: s.show_in_quote_form !== false,
+    starting_price: s.startingPrice ?? 1500,
+    starting_price_bn: s.startingPriceBn || null,
+    popular: Boolean(s.popular),
+    is_custom_added: Boolean(s.isCustomAdded),
+    seo_title: s.seo_title || s.metaTitle || null,
+    meta_title: s.metaTitle || s.seo_title || null,
+    meta_description: s.meta_description || s.metaDesc || null,
+    meta_desc: s.metaDesc || s.meta_description || null,
+    form_config: s.formConfig || {},
+    benefits: s.benefits || [],
+    benefits_bn: s.benefitsBn || s.benefits || [],
+    process: s.process || [],
+    process_bn: s.processBn || s.process || [],
+    ideal_for: s.idealFor || [],
+    ideal_for_bn: s.idealForBn || s.idealFor || [],
+    faqs: s.faqs || [],
+    updated_at: new Date().toISOString()
+  };
+}
+
+/**
  * Retrieve stored services with fallback to authoritative defaults.
- * Preserves all active and customized services and merges newly added authoritative services.
+ * Synchronous for instant render.
  */
 export const getStoredServices = (): ExtensibleServiceItem[] => {
   if (typeof window === 'undefined') return INITIAL_SERVICES;
@@ -25,7 +122,7 @@ export const getStoredServices = (): ExtensibleServiceItem[] => {
       return INITIAL_SERVICES;
     }
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
+    if (Array.isArray(parsed) && parsed.length > 0) {
       return parsed;
     }
     return INITIAL_SERVICES;
@@ -36,8 +133,40 @@ export const getStoredServices = (): ExtensibleServiceItem[] => {
 };
 
 /**
+ * Authoritative Supabase fetch for services.
+ * Populates local cache and returns latest database records.
+ */
+export const fetchServicesFromSupabase = async (): Promise<ExtensibleServiceItem[]> => {
+  let list = getStoredServices();
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        list = data.map(mapRowToService);
+        if (typeof window !== 'undefined') {
+          safeSetItem(STORAGE_KEY, JSON.stringify(list));
+          window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: list }));
+        }
+      } else if (!error && Array.isArray(data) && data.length === 0) {
+        // Table exists but empty, seed authoritative initial services to Supabase
+        const rows = INITIAL_SERVICES.map(mapServiceToRow);
+        await supabase.from('services').upsert(rows, { onConflict: 'id' });
+      }
+    } catch (err) {
+      console.warn('Could not query services from Supabase, using local cache:', err);
+    }
+  }
+
+  return list;
+};
+
+/**
  * Returns only active services sorted by display_order.
- * Excludes discontinued/archived services from public view.
  */
 export const getActiveServices = (): ExtensibleServiceItem[] => {
   const all = getStoredServices();
@@ -46,38 +175,42 @@ export const getActiveServices = (): ExtensibleServiceItem[] => {
     .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
 };
 
-/**
- * Returns active services marked to show on the homepage.
- */
 export const getHomepageServices = (): ExtensibleServiceItem[] => {
   return getActiveServices().filter(s => s.show_on_homepage !== false);
 };
 
-/**
- * Returns active services marked to show in navigation.
- */
 export const getNavigationServices = (): ExtensibleServiceItem[] => {
   return getActiveServices().filter(s => s.show_in_navigation !== false);
 };
 
-/**
- * Returns active services marked to show in the quotation form.
- */
 export const getQuoteFormServices = (): ExtensibleServiceItem[] => {
   return getActiveServices().filter(s => s.show_in_quote_form !== false);
 };
 
 /**
- * Save all services to storage and broadcast update event.
+ * Save all services to storage, broadcast update event, and persist to Supabase.
  */
-export const saveAllServices = (services: ExtensibleServiceItem[]) => {
-  if (typeof window === 'undefined') return;
-  try {
+export const saveAllServices = async (services: ExtensibleServiceItem[]): Promise<boolean> => {
+  if (typeof window !== 'undefined') {
     safeSetItem(STORAGE_KEY, JSON.stringify(services));
     window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: services }));
-  } catch (err) {
-    console.error('Failed to save services:', err);
   }
+
+  if (isSupabaseConfigured()) {
+    try {
+      const rows = services.map(mapServiceToRow);
+      const { error } = await supabase.from('services').upsert(rows, { onConflict: 'id' });
+      if (error) {
+        console.error('Failed to sync services to Supabase:', error.message);
+        return false;
+      }
+    } catch (err) {
+      console.error('Database connection error saving services:', err);
+      return false;
+    }
+  }
+
+  return true;
 };
 
 /**
@@ -87,27 +220,24 @@ export const findServiceBySlug = (slug: string, servicesList?: ExtensibleService
   const list = servicesList || getStoredServices();
   const cleanSlug = slug.replace(/^\/+/, '').replace(/\/+$/, '');
 
-  // 1. Direct match among all services
   const direct = list.find(s => s.slug === cleanSlug);
   if (direct) return direct;
 
-  // 2. Canonical alias resolution
   const targetSlug = CANONICAL_SERVICE_ALIASES[cleanSlug];
   if (targetSlug) {
     const matched = list.find(s => s.slug === targetSlug);
     if (matched) return matched;
   }
 
-  // 3. Partial contains fallback
   return list.find(s => s.slug.includes(cleanSlug) || cleanSlug.includes(s.slug));
 };
 
 /**
- * Add a new service dynamically.
+ * Add a new service dynamically and persist to Supabase.
  */
-export const addNewService = (serviceData: Partial<ExtensibleServiceItem>): ExtensibleServiceItem => {
+export const addNewService = async (serviceData: Partial<ExtensibleServiceItem>): Promise<ExtensibleServiceItem> => {
   const current = getStoredServices();
-  const id = serviceData.id || `custom-srv-${Date.now()}`;
+  const id = serviceData.id || `srv-${Date.now()}`;
   let slug = serviceData.slug?.trim() || (serviceData.title || serviceData.name || 'service')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -171,14 +301,23 @@ export const addNewService = (serviceData: Partial<ExtensibleServiceItem>): Exte
   };
 
   const updated = [...current, newService];
-  saveAllServices(updated);
+  await saveAllServices(updated);
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from('services').upsert(mapServiceToRow(newService), { onConflict: 'id' });
+    } catch (err) {
+      console.warn('Direct service insert notice:', err);
+    }
+  }
+
   return newService;
 };
 
 /**
- * Update existing service.
+ * Update existing service and persist to Supabase.
  */
-export const updateService = (id: string, updates: Partial<ExtensibleServiceItem>): boolean => {
+export const updateService = async (id: string, updates: Partial<ExtensibleServiceItem>): Promise<boolean> => {
   const current = getStoredServices();
   const index = current.findIndex(s => s.id === id);
   if (index === -1) return false;
@@ -189,71 +328,118 @@ export const updateService = (id: string, updates: Partial<ExtensibleServiceItem
     updated_at: new Date().toISOString()
   };
 
-  saveAllServices(current);
+  await saveAllServices(current);
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from('services').upsert(mapServiceToRow(current[index]), { onConflict: 'id' });
+    } catch (err) {
+      console.warn('Direct service update notice:', err);
+    }
+  }
+
   return true;
 };
 
 /**
  * Toggle active state.
  */
-export const toggleServiceActive = (id: string, isActive?: boolean): boolean => {
+export const toggleServiceActive = async (id: string, isActive?: boolean): Promise<boolean> => {
   const current = getStoredServices();
   const index = current.findIndex(s => s.id === id);
   if (index === -1) return false;
 
   const newStatus = isActive !== undefined ? isActive : !current[index].is_active;
-  current[index].is_active = newStatus;
-  current[index].updated_at = new Date().toISOString();
-
-  saveAllServices(current);
-  return true;
+  return await updateService(id, { is_active: newStatus });
 };
 
 /**
- * Delete a service.
+ * Delete a service from local cache and Supabase.
  */
-export const deleteService = (id: string): boolean => {
+export const deleteService = async (id: string): Promise<boolean> => {
   const current = getStoredServices();
   const filtered = current.filter(s => s.id !== id);
   if (filtered.length === current.length) return false;
-  saveAllServices(filtered);
+
+  await saveAllServices(filtered);
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { error } = await supabase.from('services').delete().eq('id', id);
+      if (error) {
+        console.error('Supabase delete service error:', error.message);
+      }
+    } catch (err) {
+      console.error('Failed to delete service from Supabase:', err);
+    }
+  }
+
   return true;
 };
 
 /**
  * Reorder services.
  */
-export const reorderServices = (orderedIds: string[]): boolean => {
+export const reorderServices = async (orderedIds: string[]): Promise<boolean> => {
   const current = getStoredServices();
   const updated = current.map(s => {
     const idx = orderedIds.indexOf(s.id);
     return idx !== -1 ? { ...s, display_order: idx + 1 } : s;
   });
   updated.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-  saveAllServices(updated);
-  return true;
+  return await saveAllServices(updated);
 };
 
-/**
- * Reset to default 3 active services.
- */
-export const resetServicesToDefault = (): ExtensibleServiceItem[] => {
-  saveAllServices(INITIAL_SERVICES);
+export const resetServicesToDefault = async (): Promise<ExtensibleServiceItem[]> => {
+  await saveAllServices(INITIAL_SERVICES);
   return INITIAL_SERVICES;
 };
 
 /**
- * React hook for services.
+ * React hook for services with live Supabase Realtime synchronization.
  */
 export const useServices = () => {
   const [allServices, setAllServices] = useState<ExtensibleServiceItem[]>(() => getStoredServices());
 
   useEffect(() => {
+    // 1. Initial authoritative fetch from Supabase
+    fetchServicesFromSupabase().then(latest => {
+      if (latest && latest.length > 0) {
+        setAllServices(latest);
+      }
+    });
+
+    // 2. In-tab event listener
     const handleUpdate = () => {
       setAllServices(getStoredServices());
     };
     window.addEventListener(EVENT_NAME, handleUpdate);
-    return () => window.removeEventListener(EVENT_NAME, handleUpdate);
+
+    // 3. Supabase Realtime subscription for cross-device updates
+    let channel: any = null;
+    if (isSupabaseConfigured()) {
+      try {
+        channel = supabase
+          .channel('realtime:services')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'services' },
+            () => {
+              fetchServicesFromSupabase();
+            }
+          )
+          .subscribe();
+      } catch (err) {
+        console.warn('Realtime services notice:', err);
+      }
+    }
+
+    return () => {
+      window.removeEventListener(EVENT_NAME, handleUpdate);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   const activeServices = allServices
@@ -265,7 +451,6 @@ export const useServices = () => {
   const quoteFormServices = activeServices.filter(s => s.show_in_quote_form !== false);
 
   return {
-    // For backwards compatibility, `services` refers to active services
     services: activeServices,
     activeServices,
     allServices,
@@ -284,13 +469,14 @@ export const useServices = () => {
 
 export const getServices = getActiveServices;
 export const getAllServicesForAdmin = getStoredServices;
-export const saveService = (service: ServiceItem): boolean => {
+
+export const saveService = async (service: ServiceItem): Promise<boolean> => {
   const all = getStoredServices();
   const index = all.findIndex(s => s.id === service.id);
   if (index >= 0) {
-    return updateService(service.id, service);
+    return await updateService(service.id, service);
   } else {
-    addNewService(service);
+    await addNewService(service);
     return true;
   }
 };

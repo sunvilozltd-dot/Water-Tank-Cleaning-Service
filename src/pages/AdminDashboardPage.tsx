@@ -25,10 +25,10 @@ import { QuoteLead, LeadStatus, ServiceItem, ProjectItem, VideoItem } from '../t
 import { BlogPost } from '../types/blog';
 import { getAllReviewsForAdmin, REVIEWS_CHANGED_EVENT } from '../services/reviewService';
 import { getLeads, updateLeadStatus, updateLeadDetails, deleteLead } from '../services/leadService';
-import { getServices, saveService, deleteService } from '../utils/servicesStore';
+import { getServices, saveService, deleteService, fetchServicesFromSupabase } from '../utils/servicesStore';
 import { getProjects, saveProject, deleteProject } from '../utils/portfolioStore';
-import { getVideos, saveVideo, deleteVideo } from '../utils/videosStore';
-import { getBlogPosts, saveBlogPost, deleteBlogPost } from '../utils/blogStore';
+import { getVideos, saveVideo, deleteVideo, fetchVideosFromSupabase } from '../utils/videosStore';
+import { getBlogPosts, saveBlogPost, deleteBlogPost, fetchBlogPostsFromSupabase } from '../utils/blogStore';
 import { SeoHead } from '../components/SeoHead';
 
 interface AdminDashboardPageProps {
@@ -54,10 +54,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
     try {
       const [leadsData, srvData, projData, vidData, postData, revData] = await Promise.all([
         getLeads(),
-        getServices(),
+        fetchServicesFromSupabase(),
         getProjects(),
-        getVideos(),
-        getBlogPosts(),
+        fetchVideosFromSupabase(),
+        fetchBlogPostsFromSupabase(),
         getAllReviewsForAdmin()
       ]);
       setLeads(leadsData);

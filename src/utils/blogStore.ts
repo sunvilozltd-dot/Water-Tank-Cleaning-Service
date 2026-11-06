@@ -107,6 +107,55 @@ Budget cleaners often reuse the same dirty buckets and contaminated hoses across
   }
 ];
 
+import { supabase, isSupabaseConfigured } from './supabaseClient';
+
+function mapRowToBlogPost(d: any): BlogPost {
+  return {
+    id: d.id,
+    slug: d.slug,
+    category: d.category || 'Cleaning Tips',
+    categoryBn: d.category_bn || d.category || 'ক্লিনিং টিপস',
+    title: d.title,
+    titleBn: d.title_bn || d.title,
+    excerpt: d.excerpt || '',
+    excerptBn: d.excerpt_bn || d.excerpt || '',
+    content: d.content || '',
+    contentBn: d.content_bn || d.content || '',
+    imageUrl: d.image_url || '',
+    author: d.author || 'Sunviloz Hygiene Experts',
+    publishedAt: d.published_at || new Date().toISOString().slice(0, 10),
+    readTime: d.read_time || '4 min read',
+    readTimeBn: d.read_time_bn || '৪ মিনিট পাঠ',
+    featured: Boolean(d.featured),
+    published: d.published !== false,
+    seo: d.seo || {}
+  };
+}
+
+function mapBlogPostToRow(p: BlogPost): any {
+  return {
+    id: p.id,
+    slug: p.slug,
+    category: p.category,
+    category_bn: p.categoryBn,
+    title: p.title,
+    title_bn: p.titleBn,
+    excerpt: p.excerpt,
+    excerpt_bn: p.excerptBn,
+    content: p.content,
+    content_bn: p.contentBn,
+    image_url: p.imageUrl,
+    author: p.author,
+    published_at: p.publishedAt,
+    read_time: p.readTime,
+    read_time_bn: p.readTimeBn,
+    featured: p.featured,
+    published: p.published,
+    seo: p.seo || {},
+    updated_at: new Date().toISOString()
+  };
+}
+
 export const getStoredBlogPosts = (): BlogPost[] => {
   if (typeof window === 'undefined') return INITIAL_BLOG_POSTS;
   try {
@@ -116,7 +165,7 @@ export const getStoredBlogPosts = (): BlogPost[] => {
       return INITIAL_BLOG_POSTS;
     }
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
+    if (Array.isArray(parsed) && parsed.length > 0) {
       return parsed;
     }
     return INITIAL_BLOG_POSTS;
@@ -126,17 +175,58 @@ export const getStoredBlogPosts = (): BlogPost[] => {
   }
 };
 
-export const saveAllBlogPosts = (posts: BlogPost[]) => {
-  if (typeof window === 'undefined') return;
-  try {
-    safeSetItem(BLOG_STORAGE_KEY, JSON.stringify(posts));
-    window.dispatchEvent(new CustomEvent(BLOG_CHANGED_EVENT, { detail: posts }));
-  } catch (err) {
-    console.error('Failed to save blog posts:', err);
+export const fetchBlogPostsFromSupabase = async (): Promise<BlogPost[]> => {
+  let list = getStoredBlogPosts();
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .order('published_at', { ascending: false });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        list = data.map(mapRowToBlogPost);
+        if (typeof window !== 'undefined') {
+          safeSetItem(BLOG_STORAGE_KEY, JSON.stringify(list));
+          window.dispatchEvent(new CustomEvent(BLOG_CHANGED_EVENT, { detail: list }));
+        }
+      } else if (!error && Array.isArray(data) && data.length === 0) {
+        const rows = INITIAL_BLOG_POSTS.map(mapBlogPostToRow);
+        await supabase.from('blog_posts').upsert(rows, { onConflict: 'id' });
+      }
+    } catch (err) {
+      console.warn('Could not query blog_posts from Supabase:', err);
+    }
   }
+
+  return list;
 };
 
-export const addBlogPost = (postData: Omit<BlogPost, 'id' | 'publishedAt'>): BlogPost => {
+export const saveAllBlogPosts = async (posts: BlogPost[]): Promise<boolean> => {
+  if (typeof window !== 'undefined') {
+    safeSetItem(BLOG_STORAGE_KEY, JSON.stringify(posts));
+    window.dispatchEvent(new CustomEvent(BLOG_CHANGED_EVENT, { detail: posts }));
+  }
+
+  if (isSupabaseConfigured()) {
+    try {
+      const rows = posts.map(mapBlogPostToRow);
+      const { error } = await supabase.from('blog_posts').upsert(rows, { onConflict: 'id' });
+      if (error) {
+        console.error('Supabase blog_posts save error:', error.message);
+        return false;
+      }
+    } catch (err) {
+      console.error('Failed to save blog posts to Supabase:', err);
+      return false;
+    }
+  }
+
+  return true;
+};
+
+export const addBlogPost = async (postData: Omit<BlogPost, 'id' | 'publishedAt'>): Promise<BlogPost> => {
   const current = getStoredBlogPosts();
   const id = `post-${Date.now()}`;
   const newPost: BlogPost = {
@@ -146,11 +236,11 @@ export const addBlogPost = (postData: Omit<BlogPost, 'id' | 'publishedAt'>): Blo
     published: postData.published ?? true
   };
   const updated = [newPost, ...current];
-  saveAllBlogPosts(updated);
+  await saveAllBlogPosts(updated);
   return newPost;
 };
 
-export const updateBlogPost = (id: string, updates: Partial<BlogPost>): BlogPost | null => {
+export const updateBlogPost = async (id: string, updates: Partial<BlogPost>): Promise<BlogPost | null> => {
   const current = getStoredBlogPosts();
   const index = current.findIndex(p => p.id === id);
   if (index === -1) return null;
@@ -159,15 +249,23 @@ export const updateBlogPost = (id: string, updates: Partial<BlogPost>): BlogPost
     ...updates
   };
   current[index] = updatedPost;
-  saveAllBlogPosts([...current]);
+  await saveAllBlogPosts([...current]);
   return updatedPost;
 };
 
-export const deleteBlogPost = (id: string): boolean => {
+export const deleteBlogPost = async (id: string): Promise<boolean> => {
   const current = getStoredBlogPosts();
   const filtered = current.filter(p => p.id !== id);
   if (filtered.length === current.length) return false;
-  saveAllBlogPosts(filtered);
+  await saveAllBlogPosts(filtered);
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from('blog_posts').delete().eq('id', id);
+    } catch (err) {
+      console.warn('Failed to delete blog post from Supabase:', err);
+    }
+  }
   return true;
 };
 
@@ -175,14 +273,42 @@ export const useBlogPosts = () => {
   const [posts, setPosts] = useState<BlogPost[]>(() => getStoredBlogPosts());
 
   useEffect(() => {
+    fetchBlogPostsFromSupabase().then(latest => {
+      if (latest && latest.length > 0) {
+        setPosts(latest);
+      }
+    });
+
     const handleUpdate = () => {
       setPosts(getStoredBlogPosts());
     };
     window.addEventListener(BLOG_CHANGED_EVENT, handleUpdate);
     window.addEventListener('storage', handleUpdate);
+
+    let channel: any = null;
+    if (isSupabaseConfigured()) {
+      try {
+        channel = supabase
+          .channel('realtime:blog_posts')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'blog_posts' },
+            () => {
+              fetchBlogPostsFromSupabase();
+            }
+          )
+          .subscribe();
+      } catch (err) {
+        console.warn('Realtime blog_posts notice:', err);
+      }
+    }
+
     return () => {
       window.removeEventListener(BLOG_CHANGED_EVENT, handleUpdate);
       window.removeEventListener('storage', handleUpdate);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 
@@ -198,14 +324,14 @@ export const useBlogPosts = () => {
 
 export const getBlogPosts = getStoredBlogPosts;
 
-export const saveBlogPost = (post: BlogPost): boolean => {
+export const saveBlogPost = async (post: BlogPost): Promise<boolean> => {
   const all = getStoredBlogPosts();
   const index = all.findIndex(p => p.id === post.id);
   if (index >= 0) {
-    updateBlogPost(post.id, post);
+    await updateBlogPost(post.id, post);
     return true;
   } else {
-    addBlogPost(post);
+    await addBlogPost(post);
     return true;
   }
 };

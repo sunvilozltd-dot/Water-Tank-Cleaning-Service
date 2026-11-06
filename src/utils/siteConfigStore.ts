@@ -8,6 +8,7 @@ import {
   REVIEWS_DATA 
 } from '../data/config';
 import { safeGetItem, safeSetItem } from './safeLocalStorage';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 const SITE_CONFIG_STORAGE_KEY = 'sunviloz_site_master_config_v3';
 export const SITE_CONFIG_EVENT = 'sunviloz_site_config_changed';
@@ -112,6 +113,59 @@ export const INITIAL_FULL_SITE_CONFIG: FullSiteConfig = {
   }
 };
 
+export const sanitizeAndMergeConfig = (parsed: Partial<FullSiteConfig>): FullSiteConfig => {
+  // Merge with defaults to ensure full backwards compatibility
+  const mergedSections = [...DEFAULT_HOMEPAGE_SECTIONS].map(defSec => {
+    const existing = parsed.sections?.find(s => s.id === defSec.id);
+    return existing ? { ...defSec, ...existing } : defSec;
+  });
+
+  // Add custom sections
+  if (parsed.sections) {
+    parsed.sections.forEach(s => {
+      if (s.isCustom && !mergedSections.some(m => m.id === s.id)) {
+        mergedSections.push(s);
+      }
+    });
+  }
+
+  mergedSections.sort((a, b) => a.order - b.order);
+
+  const sanitizedBusiness = {
+    ...INITIAL_FULL_SITE_CONFIG.business,
+    ...(parsed.business || {}),
+    canonicalBaseUrl: (!parsed.business?.canonicalBaseUrl || parsed.business.canonicalBaseUrl.includes('water-tank-cleaning-service.vercel.app'))
+      ? 'https://sunvilozcleancare.com'
+      : parsed.business.canonicalBaseUrl,
+    pricing: {
+      ...INITIAL_FULL_SITE_CONFIG.business.pricing,
+      ...(parsed.business?.pricing || {})
+    }
+  };
+
+  const sanitizedSeo = {
+    ...INITIAL_FULL_SITE_CONFIG.seo,
+    ...(parsed.seo || {}),
+    canonicalBaseUrl: (!parsed.seo?.canonicalBaseUrl || parsed.seo.canonicalBaseUrl.includes('water-tank-cleaning-service.vercel.app'))
+      ? 'https://sunvilozcleancare.com'
+      : parsed.seo.canonicalBaseUrl
+  };
+
+  return {
+    business: sanitizedBusiness,
+    announcement: { ...INITIAL_FULL_SITE_CONFIG.announcement, ...(parsed.announcement || {}) },
+    hero: { ...INITIAL_FULL_SITE_CONFIG.hero, ...(parsed.hero || {}) },
+    sections: mergedSections,
+    whyChooseUs: parsed.whyChooseUs || INITIAL_FULL_SITE_CONFIG.whyChooseUs,
+    cleaningSteps: parsed.cleaningSteps || INITIAL_FULL_SITE_CONFIG.cleaningSteps,
+    faqs: parsed.faqs || INITIAL_FULL_SITE_CONFIG.faqs,
+    reviews: parsed.reviews || INITIAL_FULL_SITE_CONFIG.reviews,
+    areas: parsed.areas || INITIAL_FULL_SITE_CONFIG.areas,
+    seo: sanitizedSeo,
+    images: { ...INITIAL_FULL_SITE_CONFIG.images, ...(parsed.images || {}) }
+  };
+};
+
 export const getStoredSiteConfig = (): FullSiteConfig => {
   if (typeof window === 'undefined') return INITIAL_FULL_SITE_CONFIG;
   try {
@@ -121,75 +175,77 @@ export const getStoredSiteConfig = (): FullSiteConfig => {
       return INITIAL_FULL_SITE_CONFIG;
     }
     const parsed = JSON.parse(raw) as Partial<FullSiteConfig>;
-    
-    // Merge with defaults to ensure full backwards compatibility
-    const mergedSections = [...DEFAULT_HOMEPAGE_SECTIONS].map(defSec => {
-      const existing = parsed.sections?.find(s => s.id === defSec.id);
-      return existing ? { ...defSec, ...existing } : defSec;
-    });
-
-    // Add custom sections
-    if (parsed.sections) {
-      parsed.sections.forEach(s => {
-        if (s.isCustom && !mergedSections.some(m => m.id === s.id)) {
-          mergedSections.push(s);
-        }
-      });
-    }
-
-    mergedSections.sort((a, b) => a.order - b.order);
-
-    const sanitizedBusiness = {
-      ...INITIAL_FULL_SITE_CONFIG.business,
-      ...(parsed.business || {}),
-      canonicalBaseUrl: (!parsed.business?.canonicalBaseUrl || parsed.business.canonicalBaseUrl.includes('water-tank-cleaning-service.vercel.app'))
-        ? 'https://sunvilozcleancare.com'
-        : parsed.business.canonicalBaseUrl,
-      pricing: {
-        ...INITIAL_FULL_SITE_CONFIG.business.pricing,
-        ...(parsed.business?.pricing || {})
-      }
-    };
-
-    const sanitizedSeo = {
-      ...INITIAL_FULL_SITE_CONFIG.seo,
-      ...(parsed.seo || {}),
-      canonicalBaseUrl: (!parsed.seo?.canonicalBaseUrl || parsed.seo.canonicalBaseUrl.includes('water-tank-cleaning-service.vercel.app'))
-        ? 'https://sunvilozcleancare.com'
-        : parsed.seo.canonicalBaseUrl
-    };
-
-    return {
-      business: sanitizedBusiness,
-      announcement: { ...INITIAL_FULL_SITE_CONFIG.announcement, ...(parsed.announcement || {}) },
-      hero: { ...INITIAL_FULL_SITE_CONFIG.hero, ...(parsed.hero || {}) },
-      sections: mergedSections,
-      whyChooseUs: parsed.whyChooseUs || INITIAL_FULL_SITE_CONFIG.whyChooseUs,
-      cleaningSteps: parsed.cleaningSteps || INITIAL_FULL_SITE_CONFIG.cleaningSteps,
-      faqs: parsed.faqs || INITIAL_FULL_SITE_CONFIG.faqs,
-      reviews: parsed.reviews || INITIAL_FULL_SITE_CONFIG.reviews,
-      areas: parsed.areas || INITIAL_FULL_SITE_CONFIG.areas,
-      seo: sanitizedSeo,
-      images: { ...INITIAL_FULL_SITE_CONFIG.images, ...(parsed.images || {}) }
-    };
+    return sanitizeAndMergeConfig(parsed);
   } catch (err) {
     console.error('Failed to parse stored site config:', err);
     return INITIAL_FULL_SITE_CONFIG;
   }
 };
 
-export const saveSiteConfig = (config: FullSiteConfig): void => {
-  if (typeof window === 'undefined') return;
-  try {
-    safeSetItem(SITE_CONFIG_STORAGE_KEY, JSON.stringify(config));
-    window.dispatchEvent(new CustomEvent(SITE_CONFIG_EVENT, { detail: config }));
-  } catch (err) {
-    console.error('Failed to save site config:', err);
+/**
+ * Authoritative Supabase Fetch for Central Source of Truth.
+ * Used on app launch and background refresh to ensure all devices see the latest admin changes.
+ */
+export const fetchSiteConfigFromSupabase = async (): Promise<FullSiteConfig> => {
+  if (!isSupabaseConfigured()) {
+    return getStoredSiteConfig();
   }
+  try {
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('config')
+      .eq('id', 'primary')
+      .maybeSingle();
+
+    if (!error && data && data.config) {
+      const merged = sanitizeAndMergeConfig(data.config);
+      safeSetItem(SITE_CONFIG_STORAGE_KEY, JSON.stringify(merged));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(SITE_CONFIG_EVENT, { detail: merged }));
+      }
+      return merged;
+    }
+  } catch (err) {
+    console.warn('Supabase site_settings fetch notice:', err);
+  }
+  return getStoredSiteConfig();
 };
 
-export const resetSiteConfigToDefaults = (): FullSiteConfig => {
-  saveSiteConfig(INITIAL_FULL_SITE_CONFIG);
+/**
+ * Saves Site Config to Local Cache AND persists directly to Supabase Database.
+ * Guarantees cross-browser, incognito, and multi-device persistence.
+ */
+export const saveSiteConfig = async (config: FullSiteConfig): Promise<{ success: boolean; error?: string }> => {
+  if (typeof window !== 'undefined') {
+    safeSetItem(SITE_CONFIG_STORAGE_KEY, JSON.stringify(config));
+    window.dispatchEvent(new CustomEvent(SITE_CONFIG_EVENT, { detail: config }));
+  }
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { error } = await supabase
+        .from('site_settings')
+        .upsert({
+          id: 'primary',
+          config: config,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
+
+      if (error) {
+        console.error('Failed to sync site config to Supabase:', error.message);
+        return { success: false, error: error.message };
+      }
+    } catch (err: any) {
+      console.error('Supabase site config save error:', err);
+      return { success: false, error: err?.message || 'Database connection error' };
+    }
+  }
+
+  return { success: true };
+};
+
+export const resetSiteConfigToDefaults = async (): Promise<FullSiteConfig> => {
+  await saveSiteConfig(INITIAL_FULL_SITE_CONFIG);
   return INITIAL_FULL_SITE_CONFIG;
 };
 

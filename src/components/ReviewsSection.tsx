@@ -23,6 +23,7 @@ import {
 import { CustomerReviewModal } from './CustomerReviewModal';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
 
 export const ReviewsSection: React.FC = () => {
   const { lang, t } = useLanguage();
@@ -66,8 +67,30 @@ export const ReviewsSection: React.FC = () => {
     };
 
     window.addEventListener(REVIEWS_CHANGED_EVENT, handleReviewsChanged);
+
+    let channel: any = null;
+    if (isSupabaseConfigured()) {
+      try {
+        channel = supabase
+          .channel('public:customer_reviews_feed')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'customer_reviews' },
+            () => {
+              loadReviews();
+            }
+          )
+          .subscribe();
+      } catch (err) {
+        console.warn('Realtime public reviews notice:', err);
+      }
+    }
+
     return () => {
       window.removeEventListener(REVIEWS_CHANGED_EVENT, handleReviewsChanged);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 

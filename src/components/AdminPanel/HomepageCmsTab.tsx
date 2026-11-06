@@ -34,6 +34,7 @@ import { useAdminAuth } from '../../context/AdminAuthContext';
 import { WebsiteImagesTab } from './WebsiteImagesTab';
 import { 
   getSpecialOffers, 
+  fetchSpecialOffersFromSupabase,
   saveSpecialOffers, 
   SpecialOfferItem, 
   DEFAULT_SPECIAL_OFFERS 
@@ -47,6 +48,15 @@ export const HomepageCmsTab: React.FC = () => {
   // Active subpath: Hero Video, Running Special Offers, Website Images, Preview
   const [activeSubSection, setActiveSubSection] = useState<'hero' | 'offers' | 'images' | 'preview'>('hero');
   const [offersList, setOffersList] = useState<SpecialOfferItem[]>(() => getSpecialOffers());
+
+  useEffect(() => {
+    fetchSpecialOffersFromSupabase().then(latest => {
+      if (latest && latest.length > 0) {
+        setOffersList(latest);
+      }
+    });
+  }, [activeSubSection]);
+
   const [newOfferBn, setNewOfferBn] = useState('');
   const [newOfferEn, setNewOfferEn] = useState('');
   const [newOfferBadgeBn, setNewOfferBadgeBn] = useState('');

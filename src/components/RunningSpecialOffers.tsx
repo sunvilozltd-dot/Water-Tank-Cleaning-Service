@@ -3,6 +3,7 @@ import { Tag, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { 
   getSpecialOffers, 
+  fetchSpecialOffersFromSupabase,
   SpecialOfferItem, 
   SPECIAL_OFFERS_CHANGE_EVENT, 
   DEFAULT_SPECIAL_OFFERS 
@@ -25,6 +26,7 @@ export const RunningSpecialOffers: React.FC<RunningSpecialOffersProps> = ({ onNa
     };
 
     loadOffers();
+    fetchSpecialOffersFromSupabase().then(() => loadOffers());
 
     window.addEventListener(SPECIAL_OFFERS_CHANGE_EVENT, loadOffers);
     return () => window.removeEventListener(SPECIAL_OFFERS_CHANGE_EVENT, loadOffers);

@@ -3,13 +3,14 @@ import { useSiteConfig } from '../../context/SiteConfigContext';
 import { useHeaderNav } from '../../context/HeaderNavContext';
 import { Settings, Save, Check, Video, Phone, Mail, MapPin, Upload, Droplets, RefreshCw } from 'lucide-react';
 import { compressImageFile } from '../../utils/imageCompressor';
+import { saveSiteConfig } from '../../utils/siteConfigStore';
 
 interface SettingsTabProps {
   onGoToHeroVideo?: () => void;
 }
 
 export const SettingsTab: React.FC<SettingsTabProps> = ({ onGoToHeroVideo }) => {
-  const { business, hero, images, updateBusinessConfig, updateHeroConfig, updateSiteImages } = useSiteConfig();
+  const { config, business, hero, images, updateBusinessConfig, updateHeroConfig, updateSiteImages } = useSiteConfig();
   const { headerConfig, saveHeader } = useHeaderNav();
   const [phone, setPhone] = useState(business.phone);
   const [email, setEmail] = useState(business.email);
@@ -19,24 +20,46 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ onGoToHeroVideo }) => 
   const [googleMapsDirectionsUrl, setGoogleMapsDirectionsUrl] = useState(business.googleMapsDirectionsUrl || '');
   const [headlineBn, setHeadlineBn] = useState(hero.headingBn || 'ঢাকায় প্রফেশনাল ওয়াটার ট্যাংক ক্লিনিং সার্ভিস');
   const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoMessage, setLogoMessage] = useState('');
   const logoFileRef = useRef<HTMLInputElement>(null);
 
   const activeLogo = headerConfig.logoUrl || images?.logo || '';
 
-  const handleSave = () => {
-    updateBusinessConfig({ 
-      phone, 
-      email, 
-      address,
-      googleBusinessProfileUrl,
-      googleReviewsUrl,
-      googleMapsDirectionsUrl
-    });
-    updateHeroConfig({ headingBn: headlineBn });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveError('');
+    try {
+      const updatedConfig = {
+        ...config,
+        business: {
+          ...config.business,
+          phone,
+          email,
+          address,
+          googleBusinessProfileUrl,
+          googleReviewsUrl,
+          googleMapsDirectionsUrl
+        },
+        hero: {
+          ...config.hero,
+          headingBn: headlineBn
+        }
+      };
+      const res = await saveSiteConfig(updatedConfig);
+      if (!res.success) {
+        setSaveError(res.error || 'ডাটাবেজে সেভ করতে সমস্যা হয়েছে।');
+      } else {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }
+    } catch (err: any) {
+      setSaveError(err?.message || 'ডাটাবেজ সংযোগে ত্রুটি দেখা দিয়েছে।');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,13 +118,27 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ onGoToHeroVideo }) => 
           </h2>
           <p className="text-xs text-slate-400">Manage business contacts, branding logo, hotline numbers, and basic defaults.</p>
         </div>
-        <button
-          onClick={handleSave}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow transition-colors cursor-pointer"
-        >
-          {saved ? <Check className="w-4 h-4 text-emerald-300" /> : <Save className="w-4 h-4" />}
-          <span>{saved ? 'Saved!' : 'Save Settings'}</span>
-        </button>
+        <div className="flex flex-col items-end gap-1">
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow transition-colors cursor-pointer"
+          >
+            {isSaving ? (
+              <RefreshCw className="w-4 h-4 animate-spin text-white" />
+            ) : saved ? (
+              <Check className="w-4 h-4 text-emerald-300" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            <span>{isSaving ? 'Saving to Database...' : saved ? 'Saved to Database!' : 'Save Settings'}</span>
+          </button>
+          {saveError && (
+            <span className="text-[11px] text-red-400 bg-red-950/80 px-2 py-0.5 rounded border border-red-800">
+              {saveError}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Brand Logo Upload Box */}

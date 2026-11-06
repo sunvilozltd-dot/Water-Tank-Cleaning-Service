@@ -10,6 +10,7 @@ export interface SpecialOfferItem {
 }
 
 import { safeGetItem, safeSetItem } from './safeLocalStorage';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 const STORAGE_KEY = 'sunviloz_special_offers_v2';
 export const SPECIAL_OFFERS_CHANGE_EVENT = 'sunviloz_special_offers_changed';
@@ -57,6 +58,33 @@ export const DEFAULT_SPECIAL_OFFERS: SpecialOfferItem[] = [
   }
 ];
 
+function mapRowToOffer(d: any): SpecialOfferItem {
+  return {
+    id: d.id,
+    titleBn: d.title_bn,
+    titleEn: d.title_en,
+    badgeBn: d.badge_bn,
+    badgeEn: d.badge_en,
+    linkUrl: d.link_url,
+    isActive: d.is_active !== false,
+    sortOrder: Number(d.sort_order ?? 1)
+  };
+}
+
+function mapOfferToRow(o: SpecialOfferItem): any {
+  return {
+    id: o.id,
+    title_bn: o.titleBn,
+    title_en: o.titleEn,
+    badge_bn: o.badgeBn || null,
+    badge_en: o.badgeEn || null,
+    link_url: o.linkUrl,
+    is_active: o.isActive,
+    sort_order: o.sortOrder,
+    updated_at: new Date().toISOString()
+  };
+}
+
 export const getSpecialOffers = (): SpecialOfferItem[] => {
   if (typeof window === 'undefined') return DEFAULT_SPECIAL_OFFERS;
   try {
@@ -76,37 +104,85 @@ export const getSpecialOffers = (): SpecialOfferItem[] => {
   }
 };
 
-export const saveSpecialOffers = (offers: SpecialOfferItem[]): boolean => {
-  if (typeof window === 'undefined') return false;
-  try {
-    safeSetItem(STORAGE_KEY, JSON.stringify(offers));
-    window.dispatchEvent(new Event(SPECIAL_OFFERS_CHANGE_EVENT));
-    return true;
-  } catch (e) {
-    console.error('Failed to save special offers:', e);
-    return false;
+export const fetchSpecialOffersFromSupabase = async (): Promise<SpecialOfferItem[]> => {
+  let list = getSpecialOffers();
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from('special_offers')
+        .select('*')
+        .order('sort_order', { ascending: true });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        list = data.map(mapRowToOffer);
+        if (typeof window !== 'undefined') {
+          safeSetItem(STORAGE_KEY, JSON.stringify(list));
+          window.dispatchEvent(new Event(SPECIAL_OFFERS_CHANGE_EVENT));
+        }
+      } else if (!error && Array.isArray(data) && data.length === 0) {
+        const rows = DEFAULT_SPECIAL_OFFERS.map(mapOfferToRow);
+        await supabase.from('special_offers').upsert(rows, { onConflict: 'id' });
+      }
+    } catch (err) {
+      console.warn('Could not query special_offers from Supabase:', err);
+    }
   }
+
+  return list;
 };
 
-export const addSpecialOffer = (offer: Omit<SpecialOfferItem, 'id' | 'sortOrder'>): SpecialOfferItem => {
+export const saveSpecialOffers = async (offers: SpecialOfferItem[]): Promise<boolean> => {
+  if (typeof window !== 'undefined') {
+    safeSetItem(STORAGE_KEY, JSON.stringify(offers));
+    window.dispatchEvent(new Event(SPECIAL_OFFERS_CHANGE_EVENT));
+  }
+
+  if (isSupabaseConfigured()) {
+    try {
+      const rows = offers.map(mapOfferToRow);
+      const { error } = await supabase.from('special_offers').upsert(rows, { onConflict: 'id' });
+      if (error) {
+        console.error('Supabase special_offers save error:', error.message);
+        return false;
+      }
+    } catch (e) {
+      console.error('Failed to save special offers to Supabase:', e);
+      return false;
+    }
+  }
+
+  return true;
+};
+
+export const addSpecialOffer = async (offer: Omit<SpecialOfferItem, 'id' | 'sortOrder'>): Promise<SpecialOfferItem> => {
   const current = getSpecialOffers();
   const newOffer: SpecialOfferItem = {
     ...offer,
     id: `offer-${Date.now()}`,
     sortOrder: current.length + 1
   };
-  saveSpecialOffers([...current, newOffer]);
+  await saveSpecialOffers([...current, newOffer]);
   return newOffer;
 };
 
-export const updateSpecialOffer = (updated: SpecialOfferItem): boolean => {
+export const updateSpecialOffer = async (updated: SpecialOfferItem): Promise<boolean> => {
   const current = getSpecialOffers();
   const next = current.map(item => item.id === updated.id ? updated : item);
-  return saveSpecialOffers(next);
+  return await saveSpecialOffers(next);
 };
 
-export const deleteSpecialOffer = (id: string): boolean => {
+export const deleteSpecialOffer = async (id: string): Promise<boolean> => {
   const current = getSpecialOffers();
   const next = current.filter(item => item.id !== id);
-  return saveSpecialOffers(next);
+  await saveSpecialOffers(next);
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from('special_offers').delete().eq('id', id);
+    } catch (err) {
+      console.warn('Failed to delete special offer from Supabase:', err);
+    }
+  }
+  return true;
 };
