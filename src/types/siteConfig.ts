@@ -136,6 +136,7 @@ export interface SiteImagesConfig {
   heroBg?: string;
   aboutStoryImage?: string;
   popularTankImage?: string;
+  popularUndergroundImage?: string;
   popularPipelineImage?: string;
   beforeAfterCase1Before?: string;
   beforeAfterCase1After?: string;

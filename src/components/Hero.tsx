@@ -14,16 +14,33 @@ export const Hero: React.FC<HeroProps> = () => {
 
   const cmsHeroSection = sections.find(s => s.sectionKey === 'hero');
 
+  // Helper to ensure legacy test YouTube placeholder ID never renders in any browser
+  const sanitizeHeroVideo = (url: string | undefined, fallback: string): string => {
+    if (!url || typeof url !== 'string' || url.includes('jrfRHWs3WSw') || url.includes('placeholder')) {
+      return fallback;
+    }
+    return url;
+  };
+
   // Video 1 source & poster (Rooftop Tank Cleaning)
-  const video1Url = cmsHeroSection?.videoUrl || hero.videoUrl || '/videos/tank-cleaning-desktop.mp4';
+  const video1Url = sanitizeHeroVideo(
+    cmsHeroSection?.videoUrl || hero.videoUrl,
+    '/videos/tank-cleaning-desktop.mp4'
+  );
   const video1Poster = cmsHeroSection?.posterImageUrl || hero.posterImageUrl || '/assets/aistudio/hero-rooftop-poster.jpg';
 
   // Video 2 source & poster (Underground Reservoir & Sludge Extraction)
-  const video2Url = cmsHeroSection?.video2Url || cmsHeroSection?.mobileVideoUrl || hero.video2Url || hero.mobileVideoUrl || '/videos/tank-cleaning-mobile.mp4';
+  const video2Url = sanitizeHeroVideo(
+    cmsHeroSection?.video2Url || cmsHeroSection?.mobileVideoUrl || hero.video2Url || hero.mobileVideoUrl,
+    '/videos/tank-cleaning-mobile.mp4'
+  );
   const video2Poster = cmsHeroSection?.posterImage2Url || hero.posterImage2Url || '/assets/aistudio/hero-underground-poster.jpg';
 
   // Video 3 source & poster (Water Supply Pipeline Descaling & Hydro-Pulse Wash)
-  const video3Url = cmsHeroSection?.video3Url || hero.video3Url || 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4';
+  const video3Url = sanitizeHeroVideo(
+    cmsHeroSection?.video3Url || hero.video3Url,
+    'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4'
+  );
   const video3Poster = cmsHeroSection?.posterImage3Url || hero.posterImage3Url || 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75';
 
   // Video 1 Refs & State

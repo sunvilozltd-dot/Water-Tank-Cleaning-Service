@@ -8,16 +8,44 @@ import {
 import { safeGetItem, safeSetItem } from './safeLocalStorage';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 
-const STORAGE_KEY = 'sunviloz_authoritative_services_v7';
+const STORAGE_KEY = 'sunviloz_authoritative_services_v8';
 const EVENT_NAME = 'sunviloz_services_changed';
 
 export const INITIAL_SERVICES: ExtensibleServiceItem[] = AUTHORITATIVE_SERVICES;
 
 /**
+ * Ensures canonical image assets for the core 3 services
+ */
+const sanitizeStoredService = (s: ExtensibleServiceItem): ExtensibleServiceItem => {
+  if (s.id === 'srv-overhead-water-tank' || s.slug === 'overhead-water-tank-cleaning') {
+    return {
+      ...s,
+      image: s.image || 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
+      featured_image: s.featured_image || s.image || 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75'
+    };
+  }
+  if (s.id === 'srv-underground-water-tank' || s.slug === 'underground-water-tank-cleaning') {
+    return {
+      ...s,
+      image: s.image || 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=75',
+      featured_image: s.featured_image || s.image || 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=75'
+    };
+  }
+  if (s.id === 'srv-water-pipeline' || s.slug === 'water-pipeline-cleaning') {
+    return {
+      ...s,
+      image: s.image || 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75',
+      featured_image: s.featured_image || s.image || 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75'
+    };
+  }
+  return s;
+};
+
+/**
  * Maps a database row from public.services to an ExtensibleServiceItem.
  */
 function mapRowToService(d: any): ExtensibleServiceItem {
-  return {
+  return sanitizeStoredService({
     id: d.id,
     slug: d.slug,
     title: d.title,
@@ -32,8 +60,8 @@ function mapRowToService(d: any): ExtensibleServiceItem {
     category: d.category || 'General Water Hygiene',
     iconName: d.icon_name || d.icon || 'Droplets',
     icon: d.icon || d.icon_name || 'Droplets',
-    image: d.image || d.featured_image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-    featured_image: d.featured_image || d.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
+    image: d.image || d.featured_image || 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
+    featured_image: d.featured_image || d.image || 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
     is_active: d.is_active !== false,
     display_order: Number(d.display_order ?? 1),
     show_on_homepage: d.show_on_homepage !== false,
@@ -62,7 +90,7 @@ function mapRowToService(d: any): ExtensibleServiceItem {
     idealFor: Array.isArray(d.ideal_for) ? d.ideal_for : ['আবাসিক বাড়ি', 'অ্যাপার্টমেন্ট ভবন'],
     idealForBn: Array.isArray(d.ideal_for_bn) ? d.ideal_for_bn : (Array.isArray(d.ideal_for) ? d.ideal_for : []),
     faqs: Array.isArray(d.faqs) ? d.faqs : []
-  };
+  });
 }
 
 /**
@@ -123,7 +151,7 @@ export const getStoredServices = (): ExtensibleServiceItem[] => {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+      return parsed.map(sanitizeStoredService);
     }
     return INITIAL_SERVICES;
   } catch (err) {

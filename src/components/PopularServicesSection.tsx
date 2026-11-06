@@ -101,11 +101,12 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({
             const titleEn = service.title;
 
             const cardImage = 
-              (service.slug.includes('overhead') && images?.popularTankImage) ||
-              (service.slug.includes('underground') && images?.beforeAfterCase1After) ||
-              (service.slug.includes('pipeline') && images?.popularPipelineImage) ||
               service.image || 
-              'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75';
+              service.featured_image || 
+              (service.slug.includes('overhead') ? (images?.popularTankImage || 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75') :
+               service.slug.includes('underground') ? (images?.popularUndergroundImage || 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=75') :
+               service.slug.includes('pipeline') ? (images?.popularPipelineImage || 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75') :
+               'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75');
 
             return (
               <article 

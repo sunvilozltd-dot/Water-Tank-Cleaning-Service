@@ -2,7 +2,7 @@ import { HomepageSection, HomepageSectionItem, BuiltinSectionType, CustomSection
 import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
 import { safeGetItem, safeSetItem } from '../utils/safeLocalStorage';
 
-const HOMEPAGE_CACHE_KEY = 'sunviloz_homepage_sections_v2';
+const HOMEPAGE_CACHE_KEY = 'sunviloz_homepage_sections_v3';
 export const HOMEPAGE_CMS_EVENT = 'sunviloz_homepage_sections_changed';
 
 // Default built-in homepage sections matching existing professional branding
@@ -360,42 +360,86 @@ export async function getHomepageSections(): Promise<HomepageSection[]> {
         .order('sort_order', { ascending: true });
 
       if (!error && data && data.length > 0) {
-        sections = data.map((d: any) => ({
-          id: d.id,
-          sectionKey: d.section_key,
-          sectionType: d.section_type as BuiltinSectionType,
-          title: d.title,
-          titleBn: d.title_bn,
-          subtitle: d.subtitle,
-          subtitleBn: d.subtitle_bn,
-          description: d.description,
-          descriptionBn: d.description_bn,
-          badge: d.badge,
-          badgeBn: d.badge_bn,
-          mediaType: d.media_type || 'image',
-          imageUrl: d.image_url,
-          videoUrl: d.video_url,
-          mobileVideoUrl: d.mobile_video_url,
-          posterImageUrl: d.poster_image_url,
-          youtubeUrl: d.youtube_url,
-          youtubeVideoId: d.youtube_video_id,
-          buttonText: d.button_text,
-          buttonTextBn: d.button_text_bn,
-          buttonUrl: d.button_url,
-          buttonIcon: d.button_icon,
-          buttonEvent: d.button_event,
-          secondaryButtonText: d.secondary_button_text,
-          secondaryButtonTextBn: d.secondary_button_text_bn,
-          secondaryButtonUrl: d.secondary_button_url,
-          secondaryButtonEvent: d.secondary_button_event,
-          content: d.content || {},
-          settings: d.settings || {},
-          isEnabled: Boolean(d.is_enabled),
-          sortOrder: Number(d.sort_order),
-          status: d.status || 'published',
-          createdAt: d.created_at,
-          updatedAt: d.updated_at
-        }));
+        sections = data.map((d: any) => {
+          const isHero = d.section_key === 'hero';
+          const isLegacyYt = (url?: string | null) => 
+            !url || url.includes('jrfRHWs3WSw') || url.includes('youtube.com/watch?v=placeholder');
+
+          let videoUrl = d.video_url;
+          let mobileVideoUrl = d.mobile_video_url;
+          let video2Url = d.settings?.video2Url || d.content?.video2Url;
+          let video3Url = d.settings?.video3Url || d.content?.video3Url;
+          let posterImageUrl = d.poster_image_url || d.settings?.posterImage1Url;
+          let posterImage2Url = d.settings?.posterImage2Url || d.content?.posterImage2Url;
+          let posterImage3Url = d.settings?.posterImage3Url || d.content?.posterImage3Url;
+          let mediaType = (d.media_type as BuiltinSectionType) ? (d.media_type as any) : 'video';
+
+          if (isHero) {
+            if (isLegacyYt(videoUrl)) {
+              videoUrl = '/videos/tank-cleaning-desktop.mp4';
+              mediaType = 'video';
+            }
+            if (!video2Url || isLegacyYt(video2Url)) {
+              video2Url = (mobileVideoUrl && !isLegacyYt(mobileVideoUrl)) ? mobileVideoUrl : '/videos/tank-cleaning-mobile.mp4';
+            }
+            if (isLegacyYt(mobileVideoUrl)) {
+              mobileVideoUrl = '/videos/tank-cleaning-mobile.mp4';
+            }
+            if (!video3Url) {
+              video3Url = 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4';
+            }
+            if (!posterImageUrl) {
+              posterImageUrl = '/assets/aistudio/hero-rooftop-poster.jpg';
+            }
+            if (!posterImage2Url) {
+              posterImage2Url = '/assets/aistudio/hero-underground-poster.jpg';
+            }
+            if (!posterImage3Url) {
+              posterImage3Url = 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75';
+            }
+          }
+
+          return {
+            id: d.id,
+            sectionKey: d.section_key,
+            sectionType: d.section_type as BuiltinSectionType,
+            title: d.title,
+            titleBn: d.title_bn,
+            subtitle: d.subtitle,
+            subtitleBn: d.subtitle_bn,
+            description: d.description,
+            descriptionBn: d.description_bn,
+            badge: d.badge,
+            badgeBn: d.badge_bn,
+            mediaType,
+            imageUrl: d.image_url,
+            videoUrl,
+            mobileVideoUrl,
+            video2Url,
+            video3Url,
+            posterImageUrl,
+            posterImage2Url,
+            posterImage3Url,
+            youtubeUrl: isHero && isLegacyYt(d.youtube_url) ? null : d.youtube_url,
+            youtubeVideoId: isHero && d.youtube_video_id === 'jrfRHWs3WSw' ? null : d.youtube_video_id,
+            buttonText: d.button_text,
+            buttonTextBn: d.button_text_bn,
+            buttonUrl: d.button_url,
+            buttonIcon: d.button_icon,
+            buttonEvent: d.button_event,
+            secondaryButtonText: d.secondary_button_text,
+            secondaryButtonTextBn: d.secondary_button_text_bn,
+            secondaryButtonUrl: d.secondary_button_url,
+            secondaryButtonEvent: d.secondary_button_event,
+            content: d.content || {},
+            settings: d.settings || {},
+            isEnabled: Boolean(d.is_enabled),
+            sortOrder: Number(d.sort_order),
+            status: d.status || 'published',
+            createdAt: d.created_at,
+            updatedAt: d.updated_at
+          };
+        });
 
         if (typeof window !== 'undefined') {
           safeSetItem(HOMEPAGE_CACHE_KEY, JSON.stringify(sections));
@@ -431,6 +475,26 @@ export async function saveHomepageSection(section: HomepageSection): Promise<boo
 
   if (isSupabaseConfigured()) {
     try {
+      const sectionSettings = {
+        ...(updatedSection.settings || {}),
+        video1Url: updatedSection.videoUrl,
+        video2Url: updatedSection.video2Url,
+        video3Url: updatedSection.video3Url,
+        posterImage1Url: updatedSection.posterImageUrl,
+        posterImage2Url: updatedSection.posterImage2Url,
+        posterImage3Url: updatedSection.posterImage3Url,
+      };
+
+      const sectionContent = {
+        ...(updatedSection.content || {}),
+        video1Url: updatedSection.videoUrl,
+        video2Url: updatedSection.video2Url,
+        video3Url: updatedSection.video3Url,
+        posterImage1Url: updatedSection.posterImageUrl,
+        posterImage2Url: updatedSection.posterImage2Url,
+        posterImage3Url: updatedSection.posterImage3Url,
+      };
+
       const payload = {
         id: updatedSection.id,
         section_key: updatedSection.sectionKey,
@@ -459,8 +523,8 @@ export async function saveHomepageSection(section: HomepageSection): Promise<boo
         secondary_button_text_bn: updatedSection.secondaryButtonTextBn || null,
         secondary_button_url: updatedSection.secondaryButtonUrl || null,
         secondary_button_event: updatedSection.secondaryButtonEvent || null,
-        content: updatedSection.content || {},
-        settings: updatedSection.settings || {},
+        content: sectionContent,
+        settings: sectionSettings,
         is_enabled: updatedSection.isEnabled,
         sort_order: updatedSection.sortOrder,
         status: updatedSection.status || 'published',

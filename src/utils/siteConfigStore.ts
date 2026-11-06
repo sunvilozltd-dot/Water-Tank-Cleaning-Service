@@ -10,7 +10,7 @@ import {
 import { safeGetItem, safeSetItem } from './safeLocalStorage';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 
-const SITE_CONFIG_STORAGE_KEY = 'sunviloz_site_master_config_v3';
+const SITE_CONFIG_STORAGE_KEY = 'sunviloz_site_master_config_v4';
 export const SITE_CONFIG_EVENT = 'sunviloz_site_config_changed';
 
 export const DEFAULT_HOMEPAGE_SECTIONS: SectionConfig[] = [
@@ -105,10 +105,11 @@ export const INITIAL_FULL_SITE_CONFIG: FullSiteConfig = {
     socialOgImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75'
   },
   images: {
-    heroPoster: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
+    heroPoster: '/assets/aistudio/hero-rooftop-poster.jpg',
     heroBg: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
     aboutStoryImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-    popularTankImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
+    popularTankImage: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
+    popularUndergroundImage: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=75',
     popularPipelineImage: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75'
   }
 };
@@ -151,10 +152,24 @@ export const sanitizeAndMergeConfig = (parsed: Partial<FullSiteConfig>): FullSit
       : parsed.seo.canonicalBaseUrl
   };
 
+  const isLegacyYt = (url?: string) => !url || url.includes('jrfRHWs3WSw') || url.includes('placeholder');
+  const rawHero: Partial<HeroConfig> = parsed.hero || {};
+  const sanitizedHero: HeroConfig = {
+    ...INITIAL_FULL_SITE_CONFIG.hero,
+    ...rawHero,
+    videoUrl: isLegacyYt(rawHero.videoUrl) ? INITIAL_FULL_SITE_CONFIG.hero.videoUrl : rawHero.videoUrl,
+    video2Url: isLegacyYt(rawHero.video2Url) ? INITIAL_FULL_SITE_CONFIG.hero.video2Url : rawHero.video2Url,
+    video3Url: isLegacyYt(rawHero.video3Url) ? INITIAL_FULL_SITE_CONFIG.hero.video3Url : rawHero.video3Url,
+    mobileVideoUrl: isLegacyYt(rawHero.mobileVideoUrl) ? INITIAL_FULL_SITE_CONFIG.hero.mobileVideoUrl : rawHero.mobileVideoUrl,
+    posterImageUrl: rawHero.posterImageUrl || INITIAL_FULL_SITE_CONFIG.hero.posterImageUrl,
+    posterImage2Url: rawHero.posterImage2Url || INITIAL_FULL_SITE_CONFIG.hero.posterImage2Url,
+    posterImage3Url: rawHero.posterImage3Url || INITIAL_FULL_SITE_CONFIG.hero.posterImage3Url,
+  };
+
   return {
     business: sanitizedBusiness,
     announcement: { ...INITIAL_FULL_SITE_CONFIG.announcement, ...(parsed.announcement || {}) },
-    hero: { ...INITIAL_FULL_SITE_CONFIG.hero, ...(parsed.hero || {}) },
+    hero: sanitizedHero,
     sections: mergedSections,
     whyChooseUs: parsed.whyChooseUs || INITIAL_FULL_SITE_CONFIG.whyChooseUs,
     cleaningSteps: parsed.cleaningSteps || INITIAL_FULL_SITE_CONFIG.cleaningSteps,
