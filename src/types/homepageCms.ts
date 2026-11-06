@@ -67,10 +67,12 @@ export interface HomepageSection {
   mediaType: 'image' | 'video' | 'youtube' | 'none';
   imageUrl?: string;
   videoUrl?: string;
+  video2Url?: string;
   mobileVideoUrl?: string;
   video3Url?: string;
   mobileVideo3Url?: string;
   posterImageUrl?: string;
+  posterImage2Url?: string;
   posterImage3Url?: string;
   youtubeUrl?: string;
   youtubeVideoId?: string;

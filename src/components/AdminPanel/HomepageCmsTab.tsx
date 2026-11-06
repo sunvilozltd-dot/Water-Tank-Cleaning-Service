@@ -84,19 +84,35 @@ export const HomepageCmsTab: React.FC = () => {
     }
   } as HomepageSection;
 
-  // Local state for Hero Video Form
+  // Local state for All 3 Cover Videos
   const [videoEnabled, setVideoEnabled] = useState<boolean>(
     heroSection.settings?.videoEnabled ?? hero.videoEnabled ?? true
   );
-  const [desktopVideoUrl, setDesktopVideoUrl] = useState<string>(
+
+  // Video 1 (ছাদের পানির ট্যাংক ক্লিনিং - Rooftop Tank Cleaning)
+  const [video1Url, setVideo1Url] = useState<string>(
     heroSection.videoUrl || hero.videoUrl || '/videos/tank-cleaning-desktop.mp4'
   );
-  const [mobileVideoUrl, setMobileVideoUrl] = useState<string>(
-    heroSection.mobileVideoUrl || hero.mobileVideoUrl || '/videos/tank-cleaning-mobile.mp4'
+  const [poster1Url, setPoster1Url] = useState<string>(
+    heroSection.posterImageUrl || hero.posterImageUrl || '/assets/aistudio/hero-rooftop-poster.jpg'
   );
-  const [posterImageUrl, setPosterImageUrl] = useState<string>(
-    heroSection.posterImageUrl || hero.posterImageUrl || hero.bgImageUrl || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75'
+
+  // Video 2 (আন্ডারগ্রাউন্ড রিজার্ভার ক্লিনিং - Underground Reservoir & Sludge Extraction)
+  const [video2Url, setVideo2Url] = useState<string>(
+    heroSection.video2Url || heroSection.mobileVideoUrl || hero.video2Url || hero.mobileVideoUrl || '/videos/tank-cleaning-mobile.mp4'
   );
+  const [poster2Url, setPoster2Url] = useState<string>(
+    heroSection.posterImage2Url || hero.posterImage2Url || '/assets/aistudio/hero-underground-poster.jpg'
+  );
+
+  // Video 3 (পানির পাইপলাইন ক্লিনিং - Water Pipeline Descaling & Hydro-Pulse Wash)
+  const [video3Url, setVideo3Url] = useState<string>(
+    heroSection.video3Url || hero.video3Url || 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4'
+  );
+  const [poster3Url, setPoster3Url] = useState<string>(
+    heroSection.posterImage3Url || hero.posterImage3Url || 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75'
+  );
+
   const [overlayOpacity, setOverlayOpacity] = useState<number>(
     heroSection.settings?.overlayOpacity ?? hero.overlayOpacity ?? 0.72
   );
@@ -107,9 +123,12 @@ export const HomepageCmsTab: React.FC = () => {
   // Status and feedback
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
-  const [uploadingDesktop, setUploadingDesktop] = useState(false);
-  const [uploadingMobile, setUploadingMobile] = useState(false);
-  const [uploadingPoster, setUploadingPoster] = useState(false);
+  const [uploadingVideo1, setUploadingVideo1] = useState(false);
+  const [uploadingPoster1, setUploadingPoster1] = useState(false);
+  const [uploadingVideo2, setUploadingVideo2] = useState(false);
+  const [uploadingPoster2, setUploadingPoster2] = useState(false);
+  const [uploadingVideo3, setUploadingVideo3] = useState(false);
+  const [uploadingPoster3, setUploadingPoster3] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [uploadFeedback, setUploadFeedback] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
 
@@ -117,103 +136,155 @@ export const HomepageCmsTab: React.FC = () => {
   useEffect(() => {
     if (heroSection) {
       setVideoEnabled(heroSection.settings?.videoEnabled ?? hero.videoEnabled ?? true);
-      setDesktopVideoUrl(heroSection.videoUrl || hero.videoUrl || '/videos/tank-cleaning-desktop.mp4');
-      setMobileVideoUrl(heroSection.mobileVideoUrl || hero.mobileVideoUrl || '/videos/tank-cleaning-mobile.mp4');
-      setPosterImageUrl(heroSection.posterImageUrl || hero.posterImageUrl || hero.bgImageUrl || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75');
+      setVideo1Url(heroSection.videoUrl || hero.videoUrl || '/videos/tank-cleaning-desktop.mp4');
+      setPoster1Url(heroSection.posterImageUrl || hero.posterImageUrl || '/assets/aistudio/hero-rooftop-poster.jpg');
+      setVideo2Url(heroSection.video2Url || heroSection.mobileVideoUrl || hero.video2Url || hero.mobileVideoUrl || '/videos/tank-cleaning-mobile.mp4');
+      setPoster2Url(heroSection.posterImage2Url || hero.posterImage2Url || '/assets/aistudio/hero-underground-poster.jpg');
+      setVideo3Url(heroSection.video3Url || hero.video3Url || 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4');
+      setPoster3Url(heroSection.posterImage3Url || hero.posterImage3Url || 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75');
       setOverlayOpacity(heroSection.settings?.overlayOpacity ?? hero.overlayOpacity ?? 0.72);
       setOverlayColor((heroSection.settings?.overlayColor as any) ?? hero.overlayColor ?? 'navy');
     }
-  }, [heroSection.id, hero.videoUrl]);
+  }, [heroSection.id, hero.videoUrl, hero.video2Url, hero.video3Url]);
 
-  // Handle Desktop Video File Upload
-  const handleDesktopFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Video 1 Upload Handler
+  const handleVideo1Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     try {
-      setUploadingDesktop(true);
+      setUploadingVideo1(true);
       setUploadFeedback(null);
       const media = await uploadMediaItem(file, 'video');
-      setDesktopVideoUrl(media.publicUrl || media.storagePath || '');
-      // Auto enable video when new one uploaded
+      setVideo1Url(media.publicUrl || media.storagePath || '');
       setVideoEnabled(true);
-      setUploadFeedback({ type: 'success', message: 'Desktop video successfully updated and saved!' });
+      setUploadFeedback({ type: 'success', message: 'Video 1 (ছাদের পানির ট্যাংক) সফলভাবে আপলোড করা হয়েছে!' });
       setTimeout(() => setUploadFeedback(null), 5000);
     } catch (err: any) {
-      setUploadFeedback({
-        type: 'error',
-        message: err?.message || 'Failed to upload desktop video file. Please check file format (MP4, WebM recommended).'
-      });
+      setUploadFeedback({ type: 'error', message: err?.message || 'Video 1 আপলোড করতে সমস্যা হয়েছে।' });
     } finally {
-      setUploadingDesktop(false);
+      setUploadingVideo1(false);
       e.target.value = '';
     }
   };
 
-  // Handle Mobile Video File Upload
-  const handleMobileFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Poster 1 Upload Handler
+  const handlePoster1Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     try {
-      setUploadingMobile(true);
-      setUploadFeedback(null);
-      const media = await uploadMediaItem(file, 'video');
-      setMobileVideoUrl(media.publicUrl || media.storagePath || '');
-      setVideoEnabled(true);
-      setUploadFeedback({ type: 'success', message: 'Mobile video successfully updated!' });
-      setTimeout(() => setUploadFeedback(null), 5000);
-    } catch (err: any) {
-      setUploadFeedback({
-        type: 'error',
-        message: err?.message || 'Failed to upload mobile video file.'
-      });
-    } finally {
-      setUploadingMobile(false);
-      e.target.value = '';
-    }
-  };
-
-  // Handle Poster Image Upload
-  const handlePosterFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setUploadingPoster(true);
+      setUploadingPoster1(true);
       setUploadFeedback(null);
       const media = await uploadMediaItem(file, 'image');
-      setPosterImageUrl(media.publicUrl || media.storagePath || '');
-      setUploadFeedback({ type: 'success', message: 'Poster image uploaded successfully!' });
+      setPoster1Url(media.publicUrl || media.storagePath || '');
+      setUploadFeedback({ type: 'success', message: 'Poster 1 ছবি সফলভাবে আপলোড হয়েছে!' });
       setTimeout(() => setUploadFeedback(null), 5000);
     } catch (err: any) {
-      setUploadFeedback({
-        type: 'error',
-        message: err?.message || 'Failed to upload poster image.'
-      });
+      setUploadFeedback({ type: 'error', message: err?.message || 'Poster 1 আপলোড করতে সমস্যা হয়েছে।' });
     } finally {
-      setUploadingPoster(false);
+      setUploadingPoster1(false);
       e.target.value = '';
     }
   };
 
-  // Save Video Settings to Database/Storage
+  // Video 2 Upload Handler
+  const handleVideo2Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingVideo2(true);
+      setUploadFeedback(null);
+      const media = await uploadMediaItem(file, 'video');
+      setVideo2Url(media.publicUrl || media.storagePath || '');
+      setVideoEnabled(true);
+      setUploadFeedback({ type: 'success', message: 'Video 2 (আন্ডারগ্রাউন্ড রিজার্ভার) সফলভাবে আপলোড করা হয়েছে!' });
+      setTimeout(() => setUploadFeedback(null), 5000);
+    } catch (err: any) {
+      setUploadFeedback({ type: 'error', message: err?.message || 'Video 2 আপলোড করতে সমস্যা হয়েছে।' });
+    } finally {
+      setUploadingVideo2(false);
+      e.target.value = '';
+    }
+  };
+
+  // Poster 2 Upload Handler
+  const handlePoster2Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingPoster2(true);
+      setUploadFeedback(null);
+      const media = await uploadMediaItem(file, 'image');
+      setPoster2Url(media.publicUrl || media.storagePath || '');
+      setUploadFeedback({ type: 'success', message: 'Poster 2 ছবি সফলভাবে আপলোড হয়েছে!' });
+      setTimeout(() => setUploadFeedback(null), 5000);
+    } catch (err: any) {
+      setUploadFeedback({ type: 'error', message: err?.message || 'Poster 2 আপলোড করতে সমস্যা হয়েছে।' });
+    } finally {
+      setUploadingPoster2(false);
+      e.target.value = '';
+    }
+  };
+
+  // Video 3 Upload Handler
+  const handleVideo3Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingVideo3(true);
+      setUploadFeedback(null);
+      const media = await uploadMediaItem(file, 'video');
+      setVideo3Url(media.publicUrl || media.storagePath || '');
+      setVideoEnabled(true);
+      setUploadFeedback({ type: 'success', message: 'Video 3 (পানির পাইপলাইন) সফলভাবে আপলোড করা হয়েছে!' });
+      setTimeout(() => setUploadFeedback(null), 5000);
+    } catch (err: any) {
+      setUploadFeedback({ type: 'error', message: err?.message || 'Video 3 আপলোড করতে সমস্যা হয়েছে।' });
+    } finally {
+      setUploadingVideo3(false);
+      e.target.value = '';
+    }
+  };
+
+  // Poster 3 Upload Handler
+  const handlePoster3Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingPoster3(true);
+      setUploadFeedback(null);
+      const media = await uploadMediaItem(file, 'image');
+      setPoster3Url(media.publicUrl || media.storagePath || '');
+      setUploadFeedback({ type: 'success', message: 'Poster 3 ছবি সফলভাবে আপলোড হয়েছে!' });
+      setTimeout(() => setUploadFeedback(null), 5000);
+    } catch (err: any) {
+      setUploadFeedback({ type: 'error', message: err?.message || 'Poster 3 আপলোড করতে সমস্যা হয়েছে।' });
+    } finally {
+      setUploadingPoster3(false);
+      e.target.value = '';
+    }
+  };
+
+  // Save All 3 Video Settings to Supabase Database & Central Store
   const handleSaveHeroVideo = async () => {
     try {
       setSaving(true);
       setSavedSuccess(false);
       setUploadFeedback(null);
 
-      // 1. Update Homepage CMS Section
-      const desktopYtId = extractYouTubeId(desktopVideoUrl);
+      // 1. Update Homepage CMS Section in Supabase
+      const ytId1 = extractYouTubeId(video1Url);
       const updatedHeroSection: HomepageSection = {
         ...heroSection,
-        videoUrl: desktopVideoUrl,
-        mobileVideoUrl: mobileVideoUrl,
-        posterImageUrl: posterImageUrl,
-        mediaType: desktopYtId ? 'youtube' : 'video',
-        youtubeUrl: desktopYtId ? desktopVideoUrl : heroSection.youtubeUrl,
-        youtubeVideoId: desktopYtId || heroSection.youtubeVideoId,
+        videoUrl: video1Url,
+        video2Url: video2Url,
+        mobileVideoUrl: video2Url,
+        video3Url: video3Url,
+        posterImageUrl: poster1Url,
+        posterImage2Url: poster2Url,
+        posterImage3Url: poster3Url,
+        mediaType: ytId1 ? 'youtube' : 'video',
+        youtubeUrl: ytId1 ? video1Url : heroSection.youtubeUrl,
+        youtubeVideoId: ytId1 || heroSection.youtubeVideoId,
         settings: {
           ...(heroSection.settings || {}),
           videoEnabled,
@@ -223,12 +294,16 @@ export const HomepageCmsTab: React.FC = () => {
       };
       await updateSection(updatedHeroSection);
 
-      // 2. Also persist to siteConfigStore for high compatibility
-      updateHeroVideoConfig({
+      // 2. Persist to siteConfigStore (public.site_settings) for cross-browser synchronization
+      await updateHeroVideoConfig({
         videoEnabled,
-        videoUrl: desktopVideoUrl,
-        mobileVideoUrl: mobileVideoUrl,
-        posterImageUrl: posterImageUrl,
+        videoUrl: video1Url,
+        video2Url: video2Url,
+        mobileVideoUrl: video2Url,
+        video3Url: video3Url,
+        posterImageUrl: poster1Url,
+        posterImage2Url: poster2Url,
+        posterImage3Url: poster3Url,
         overlayOpacity: Number(overlayOpacity),
         overlayColor
       });
@@ -236,25 +311,24 @@ export const HomepageCmsTab: React.FC = () => {
       // 3. Log audit event
       await recordAuditLog(
         adminUser?.email || 'admin@sunviloz.com',
-        'Updated Hero Background Video Settings',
+        'Updated Cover Tri-Videos',
         'HeroSection',
         'hero',
-        `Video enabled: ${videoEnabled}, Opacity: ${overlayOpacity}, Desktop URL: ${desktopVideoUrl}`
+        `Cover Videos Saved: V1=${video1Url.slice(0, 35)}, V2=${video2Url.slice(0, 35)}, V3=${video3Url.slice(0, 35)}`
       );
 
       // 4. Refresh global config context
       refreshConfig();
 
       setSavedSuccess(true);
-      setUploadFeedback({ type: 'success', message: 'Hero video settings saved successfully!' });
+      setUploadFeedback({ type: 'success', message: 'কভারের ৩টি ভিডিও সফলভাবে ডেটাবেজে সংরক্ষিত ও আপডেট করা হয়েছে!' });
       setTimeout(() => {
         setSavedSuccess(false);
-        setUploadFeedback(null);
-      }, 4000);
+      }, 5000);
     } catch (error: any) {
       setUploadFeedback({
         type: 'error',
-        message: error?.message || 'Error saving hero video settings. Please try again.'
+        message: error?.message || 'ভিডিও সংরক্ষণের সময় সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।'
       });
     } finally {
       setSaving(false);
@@ -435,469 +509,553 @@ export const HomepageCmsTab: React.FC = () => {
               )}
             </div>
 
-            {/* 2. Desktop Hero Video Settings */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            {/* ========================================================= */}
+            {/* 2. COVER VIDEO 1: ছাদের পানির ট্যাংক ক্লিনিং */}
+            {/* ========================================================= */}
+            <div className="bg-slate-900 border border-cyan-800/60 rounded-xl p-5 shadow-sm space-y-4">
+              <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-3 gap-2">
                 <div className="flex items-center space-x-2">
-                  <Monitor className="w-5 h-5 text-blue-400" />
-                  <h3 className="text-base font-semibold text-white">Desktop Hero Video</h3>
+                  <span className="w-6 h-6 rounded-full bg-cyan-950 border border-cyan-500/60 text-cyan-300 text-xs font-bold flex items-center justify-center">
+                    ১
+                  </span>
+                  <div>
+                    <h3 className="text-base font-semibold text-white">ভিডিও ১: ছাদের পানির ট্যাংক ক্লিনিং</h3>
+                    <p className="text-[11px] text-cyan-300/80">Video 1: Rooftop Tank Cleaning (150-Bar Rotary Jet)</p>
+                  </div>
                 </div>
-                <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md">
-                  Full-width desktop &amp; tablet (up to 1GB)
+                <span className="text-xs bg-cyan-950 text-cyan-300 border border-cyan-800/80 px-2.5 py-1 rounded-md font-medium">
+                  কভার কলাম ১ (বামপাশে)
                 </span>
               </div>
 
-              {/* Video URL Input */}
+              {/* Video 1 URL */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-medium text-slate-300">
-                    Video URL (YouTube URL / ID, or direct MP4 / WebM link)
+                    Video 1 URL (YouTube লিঙ্ক অথবা সরাসরি MP4 / WebM লিঙ্ক)
                   </label>
-                  {extractYouTubeId(desktopVideoUrl) && (
+                  {extractYouTubeId(video1Url) && (
                     <span className="text-[11px] text-red-400 font-semibold flex items-center gap-1 bg-red-950/80 px-2 py-0.5 rounded border border-red-800/60">
-                      🔴 YouTube Detected ({extractYouTubeId(desktopVideoUrl)})
+                      🔴 YouTube Detected ({extractYouTubeId(video1Url)})
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    value={desktopVideoUrl}
-                    onChange={(e) => setDesktopVideoUrl(e.target.value)}
-                    placeholder="e.g. https://www.youtube.com/watch?v=... or /videos/tank-cleaning-desktop.mp4"
-                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
+                    value={video1Url}
+                    onChange={(e) => setVideo1Url(e.target.value)}
+                    placeholder="e.g. /videos/tank-cleaning-desktop.mp4 or https://www.youtube.com/watch?v=..."
+                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
                   />
-                  {desktopVideoUrl && (
+                  {video1Url && (
                     <button
                       type="button"
-                      onClick={() => setDesktopVideoUrl('')}
+                      onClick={() => setVideo1Url('')}
                       className="p-2 text-red-400 hover:text-red-300 hover:bg-slate-800 rounded-lg border border-slate-700 transition-colors"
-                      title="Delete Video URL"
+                      title="Clear Video 1"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Supports <strong className="text-cyan-300">YouTube videos</strong> (e.g. <code className="text-cyan-400 font-mono">https://www.youtube.com/watch?v=...</code>), direct MP4/WebM videos, or local uploads.
-                </p>
 
                 {/* Instant YouTube Preview Thumbnail */}
-                {extractYouTubeId(desktopVideoUrl) && (
-                  <div className="mt-2.5 p-3 rounded-lg bg-slate-950/90 border border-red-900/60 flex items-center gap-3">
+                {extractYouTubeId(video1Url) && (
+                  <div className="mt-2 p-2.5 rounded-lg bg-slate-950/90 border border-red-900/60 flex items-center gap-3">
                     <img 
-                      src={`https://img.youtube.com/vi/${extractYouTubeId(desktopVideoUrl)}/hqdefault.jpg`} 
-                      alt="YouTube preview"
-                      className="w-20 h-12 object-cover rounded border border-slate-800 shrink-0"
+                      src={`https://img.youtube.com/vi/${extractYouTubeId(video1Url)}/hqdefault.jpg`} 
+                      alt="YouTube preview 1"
+                      className="w-16 h-10 object-cover rounded border border-slate-800 shrink-0"
                     />
                     <div className="flex-1 min-w-0 text-xs">
-                      <div className="font-semibold text-white flex items-center gap-1.5 truncate">
-                        <span className="text-red-500">▶</span> YouTube Video Connected
-                      </div>
-                      <div className="text-[11px] text-slate-400 font-mono truncate">{desktopVideoUrl}</div>
-                      <div className="text-[11px] text-emerald-400 font-medium">✓ Ready for Hero Background Autoplay</div>
+                      <div className="font-semibold text-white truncate">▶ YouTube Video 1 Connected</div>
+                      <div className="text-[11px] text-emerald-400">✓ Ready for Autoplay in Hero Column 1</div>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Video File Upload & Replace */}
+              {/* Video 1 File Upload & Reset */}
               <div className="flex flex-wrap items-center gap-3 pt-1">
-                <label className="cursor-pointer px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg flex items-center gap-2 shadow-sm transition-colors">
+                <label className="cursor-pointer px-3.5 py-2 bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-semibold rounded-lg flex items-center gap-2 shadow-sm transition-colors">
                   <Upload className="w-3.5 h-3.5" />
-                  <span>{uploadingDesktop ? 'Uploading...' : 'Upload New Desktop Video'}</span>
+                  <span>{uploadingVideo1 ? 'ভিডিও আপলোড হচ্ছে...' : 'নতুন ভিডিও ১ আপলোড করুন'}</span>
                   <input
                     type="file"
                     accept="video/mp4,video/webm,video/ogg,video/quicktime,video/*"
-                    onChange={handleDesktopFileUpload}
-                    disabled={uploadingDesktop}
+                    onChange={handleVideo1Upload}
+                    disabled={uploadingVideo1}
                     className="hidden"
                   />
                 </label>
 
-                {desktopVideoUrl && (
-                  <button
-                    type="button"
-                    onClick={() => setDesktopVideoUrl('/videos/tank-cleaning-desktop.mp4')}
-                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg flex items-center gap-1.5 border border-slate-700 transition-colors"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Reset to Tank Cleaning Default</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setVideo1Url('/videos/tank-cleaning-desktop.mp4')}
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg flex items-center gap-1.5 border border-slate-700 transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>ডিফল্ট ভিডিও ১ সেট করুন</span>
+                </button>
               </div>
 
-              {/* Ready-made Realistic Cleaning Video Presets */}
-              <div className="mt-3 p-3 bg-slate-950/70 border border-slate-800 rounded-lg">
-                <div className="text-[11px] font-semibold text-slate-300 mb-2 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Select from Realistic Cleaning Footage Presets:</span>
-                </div>
-                <div className="space-y-1.5">
-                  {cleaningVideoPresets.map((preset, idx) => (
-                    <div 
-                      key={idx}
-                      className="flex items-center justify-between p-2 rounded bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs"
-                    >
-                      <span className="text-slate-300 font-medium">{preset.title}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDesktopVideoUrl(preset.url);
-                          setMobileVideoUrl(preset.mobileUrl);
-                          setVideoEnabled(true);
-                        }}
-                        className="px-2.5 py-1 bg-blue-900/60 hover:bg-blue-800 text-blue-300 rounded text-[11px] font-medium transition-colors"
-                      >
-                        Apply Preset
-                      </button>
-                    </div>
-                  ))}
+              {/* Video 1 Poster / Fallback Image */}
+              <div className="pt-2 border-t border-slate-800/80">
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  ভিডিও ১ পোস্টার ছবি (Fallback Poster Image)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={poster1Url}
+                    onChange={(e) => setPoster1Url(e.target.value)}
+                    placeholder="https://... or /assets/aistudio/hero-rooftop-poster.jpg"
+                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
+                  />
+                  <label className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg flex items-center gap-1.5 border border-slate-700 shrink-0">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{uploadingPoster1 ? 'আপলোড...' : 'পোস্টার ১ আপলোড'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePoster1Upload}
+                      disabled={uploadingPoster1}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
               </div>
             </div>
 
-            {/* 3. Mobile Hero Video Settings */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            {/* ========================================================= */}
+            {/* 3. COVER VIDEO 2: আন্ডারগ্রাউন্ড রিজার্ভার ও স্লাজ উত্তোলন */}
+            {/* ========================================================= */}
+            <div className="bg-slate-900 border border-blue-800/60 rounded-xl p-5 shadow-sm space-y-4">
+              <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-3 gap-2">
                 <div className="flex items-center space-x-2">
-                  <Smartphone className="w-5 h-5 text-blue-400" />
-                  <h3 className="text-base font-semibold text-white">Mobile Hero Video</h3>
+                  <span className="w-6 h-6 rounded-full bg-blue-950 border border-blue-500/60 text-blue-300 text-xs font-bold flex items-center justify-center">
+                    ২
+                  </span>
+                  <div>
+                    <h3 className="text-base font-semibold text-white">ভিডিও ২: আন্ডারগ্রাউন্ড রিজার্ভার ও স্লাজ উত্তোলন</h3>
+                    <p className="text-[11px] text-blue-300/80">Video 2: Underground Reservoir &amp; Sludge Extraction</p>
+                  </div>
                 </div>
-                <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md">
-                  Lightweight version for phones
+                <span className="text-xs bg-blue-950 text-blue-300 border border-blue-800/80 px-2.5 py-1 rounded-md font-medium">
+                  কভার কলাম ২ (মাঝখানে)
                 </span>
               </div>
 
+              {/* Video 2 URL */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-medium text-slate-300">
-                    Mobile Video URL (Optional — defaults to desktop video if left blank)
+                    Video 2 URL (YouTube লিঙ্ক অথবা সরাসরি MP4 / WebM লিঙ্ক)
                   </label>
-                  {extractYouTubeId(mobileVideoUrl) && (
+                  {extractYouTubeId(video2Url) && (
                     <span className="text-[11px] text-red-400 font-semibold flex items-center gap-1 bg-red-950/80 px-2 py-0.5 rounded border border-red-800/60">
-                      🔴 YouTube ({extractYouTubeId(mobileVideoUrl)})
+                      🔴 YouTube Detected ({extractYouTubeId(video2Url)})
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    value={mobileVideoUrl}
-                    onChange={(e) => setMobileVideoUrl(e.target.value)}
-                    placeholder="e.g. https://www.youtube.com/watch?v=... or /videos/tank-cleaning-mobile.mp4"
+                    value={video2Url}
+                    onChange={(e) => setVideo2Url(e.target.value)}
+                    placeholder="e.g. /videos/tank-cleaning-mobile.mp4 or https://www.youtube.com/watch?v=..."
                     className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
                   />
-                  {mobileVideoUrl && (
+                  {video2Url && (
                     <button
                       type="button"
-                      onClick={() => setMobileVideoUrl('')}
+                      onClick={() => setVideo2Url('')}
                       className="p-2 text-red-400 hover:text-red-300 hover:bg-slate-800 rounded-lg border border-slate-700 transition-colors"
-                      title="Clear Mobile Video"
+                      title="Clear Video 2"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </div>
-                {extractYouTubeId(mobileVideoUrl) && (
-                  <div className="mt-2 p-2.5 rounded-lg bg-slate-950/90 border border-red-900/60 flex items-center gap-2 text-xs">
+
+                {/* Instant YouTube Preview Thumbnail */}
+                {extractYouTubeId(video2Url) && (
+                  <div className="mt-2 p-2.5 rounded-lg bg-slate-950/90 border border-red-900/60 flex items-center gap-3">
                     <img 
-                      src={`https://img.youtube.com/vi/${extractYouTubeId(mobileVideoUrl)}/hqdefault.jpg`} 
-                      alt="YouTube mobile preview"
-                      className="w-14 h-9 object-cover rounded border border-slate-800 shrink-0"
+                      src={`https://img.youtube.com/vi/${extractYouTubeId(video2Url)}/hqdefault.jpg`} 
+                      alt="YouTube preview 2"
+                      className="w-16 h-10 object-cover rounded border border-slate-800 shrink-0"
                     />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white font-medium truncate">Mobile YouTube Video Connected</div>
-                      <div className="text-[10px] text-emerald-400">✓ Ready for mobile background autoplay</div>
+                    <div className="flex-1 min-w-0 text-xs">
+                      <div className="font-semibold text-white truncate">▶ YouTube Video 2 Connected</div>
+                      <div className="text-[11px] text-emerald-400">✓ Ready for Autoplay in Hero Column 2</div>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="cursor-pointer px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg flex items-center gap-2 border border-slate-700 transition-colors">
+              {/* Video 2 File Upload & Reset */}
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <label className="cursor-pointer px-3.5 py-2 bg-blue-700 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg flex items-center gap-2 shadow-sm transition-colors">
                   <Upload className="w-3.5 h-3.5" />
-                  <span>{uploadingMobile ? 'Uploading...' : 'Upload Mobile Video'}</span>
+                  <span>{uploadingVideo2 ? 'ভিডিও আপলোড হচ্ছে...' : 'নতুন ভিডিও ২ আপলোড করুন'}</span>
                   <input
                     type="file"
                     accept="video/mp4,video/webm,video/ogg,video/quicktime,video/*"
-                    onChange={handleMobileFileUpload}
-                    disabled={uploadingMobile}
+                    onChange={handleVideo2Upload}
+                    disabled={uploadingVideo2}
                     className="hidden"
                   />
                 </label>
-              </div>
-            </div>
 
-            {/* 4. Poster / Fallback Image Settings */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div className="flex items-center space-x-2">
-                  <ImageIcon className="w-5 h-5 text-blue-400" />
-                  <h3 className="text-base font-semibold text-white">Poster / Fallback Image</h3>
-                </div>
-                <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md">
-                  Fallback when video is loading or disabled
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setVideo2Url('/videos/tank-cleaning-mobile.mp4')}
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg flex items-center gap-1.5 border border-slate-700 transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>ডিফল্ট ভিডিও ২ সেট করুন</span>
+                </button>
               </div>
 
-              <div>
+              {/* Video 2 Poster / Fallback Image */}
+              <div className="pt-2 border-t border-slate-800/80">
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Poster Image URL
+                  ভিডিও ২ পোস্টার ছবি (Fallback Poster Image)
                 </label>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    value={posterImageUrl}
-                    onChange={(e) => setPosterImageUrl(e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
-                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                    value={poster2Url}
+                    onChange={(e) => setPoster2Url(e.target.value)}
+                    placeholder="https://... or /assets/aistudio/hero-underground-poster.jpg"
+                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
                   />
-                  {posterImageUrl && (
+                  <label className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg flex items-center gap-1.5 border border-slate-700 shrink-0">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{uploadingPoster2 ? 'আপলোড...' : 'পোস্টার ২ আপলোড'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePoster2Upload}
+                      disabled={uploadingPoster2}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* ========================================================= */}
+            {/* 4. COVER VIDEO 3: পানির পাইপলাইন ফ্লাশিং ও ওয়াশ */}
+            {/* ========================================================= */}
+            <div className="bg-slate-900 border border-emerald-800/60 rounded-xl p-5 shadow-sm space-y-4">
+              <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-3 gap-2">
+                <div className="flex items-center space-x-2">
+                  <span className="w-6 h-6 rounded-full bg-emerald-950 border border-emerald-500/60 text-emerald-300 text-xs font-bold flex items-center justify-center">
+                    ৩
+                  </span>
+                  <div>
+                    <h3 className="text-base font-semibold text-white">ভিডিও ৩: পানির পাইপলাইন ফ্লাশিং ও ওয়াশ</h3>
+                    <p className="text-[11px] text-emerald-300/80">Video 3: Pipeline Descaling &amp; Hydro-Pulse Wash</p>
+                  </div>
+                </div>
+                <span className="text-xs bg-emerald-950 text-emerald-300 border border-emerald-800/80 px-2.5 py-1 rounded-md font-medium">
+                  কভার কলাম ৩ (ডানপাশে)
+                </span>
+              </div>
+
+              {/* Video 3 URL */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-slate-300">
+                    Video 3 URL (YouTube লিঙ্ক অথবা সরাসরি MP4 / WebM লিঙ্ক)
+                  </label>
+                  {extractYouTubeId(video3Url) && (
+                    <span className="text-[11px] text-red-400 font-semibold flex items-center gap-1 bg-red-950/80 px-2 py-0.5 rounded border border-red-800/60">
+                      🔴 YouTube Detected ({extractYouTubeId(video3Url)})
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={video3Url}
+                    onChange={(e) => setVideo3Url(e.target.value)}
+                    placeholder="e.g. https://spwatertankcleaner.com/... or https://www.youtube.com/watch?v=..."
+                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
+                  />
+                  {video3Url && (
                     <button
                       type="button"
-                      onClick={() => setPosterImageUrl('')}
+                      onClick={() => setVideo3Url('')}
                       className="p-2 text-red-400 hover:text-red-300 hover:bg-slate-800 rounded-lg border border-slate-700 transition-colors"
-                      title="Clear Poster"
+                      title="Clear Video 3"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </div>
+
+                {/* Instant YouTube Preview Thumbnail */}
+                {extractYouTubeId(video3Url) && (
+                  <div className="mt-2 p-2.5 rounded-lg bg-slate-950/90 border border-red-900/60 flex items-center gap-3">
+                    <img 
+                      src={`https://img.youtube.com/vi/${extractYouTubeId(video3Url)}/hqdefault.jpg`} 
+                      alt="YouTube preview 3"
+                      className="w-16 h-10 object-cover rounded border border-slate-800 shrink-0"
+                    />
+                    <div className="flex-1 min-w-0 text-xs">
+                      <div className="font-semibold text-white truncate">▶ YouTube Video 3 Connected</div>
+                      <div className="text-[11px] text-emerald-400">✓ Ready for Autoplay in Hero Column 3</div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="cursor-pointer px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg flex items-center gap-2 border border-slate-700 transition-colors">
+              {/* Video 3 File Upload & Reset */}
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <label className="cursor-pointer px-3.5 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg flex items-center gap-2 shadow-sm transition-colors">
                   <Upload className="w-3.5 h-3.5" />
-                  <span>{uploadingPoster ? 'Uploading...' : 'Upload Poster Image'}</span>
+                  <span>{uploadingVideo3 ? 'ভিডিও আপলোড হচ্ছে...' : 'নতুন ভিডিও ৩ আপলোড করুন'}</span>
                   <input
                     type="file"
-                    accept="image/*"
-                    onChange={handlePosterFileUpload}
-                    disabled={uploadingPoster}
+                    accept="video/mp4,video/webm,video/ogg,video/quicktime,video/*"
+                    onChange={handleVideo3Upload}
+                    disabled={uploadingVideo3}
                     className="hidden"
                   />
                 </label>
+
+                <button
+                  type="button"
+                  onClick={() => setVideo3Url('https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4')}
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg flex items-center gap-1.5 border border-slate-700 transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>ডিফল্ট ভিডিও ৩ সেট করুন</span>
+                </button>
+              </div>
+
+              {/* Video 3 Poster / Fallback Image */}
+              <div className="pt-2 border-t border-slate-800/80">
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  ভিডিও ৩ পোস্টার ছবি (Fallback Poster Image)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={poster3Url}
+                    onChange={(e) => setPoster3Url(e.target.value)}
+                    placeholder="https://... or https://images.unsplash.com/..."
+                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
+                  />
+                  <label className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg flex items-center gap-1.5 border border-slate-700 shrink-0">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{uploadingPoster3 ? 'আপলোড...' : 'পোস্টার ৩ আপলোড'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePoster3Upload}
+                      disabled={uploadingPoster3}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               </div>
             </div>
 
-            {/* 5. Dark Transparent Overlay Opacity & Color */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            {/* Quick 1-Click Realistic Footage Presets */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Sliders className="w-5 h-5 text-blue-400" />
-                  <h3 className="text-base font-semibold text-white">Dark Transparent Overlay</h3>
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <h4 className="text-xs font-semibold text-white">৩টি ভিডিওর প্রস্তুতকৃত ফুটেজ প্রিসেট (Presets):</h4>
                 </div>
-                <span className="text-xs bg-blue-900/60 text-blue-300 border border-blue-700/50 px-2.5 py-1 rounded-md font-mono">
-                  {Math.round(overlayOpacity * 100)}% Opacity
-                </span>
+                <span className="text-[11px] text-slate-400">এক ক্লিকে ৩টি ভিডিও ও পোস্টার লোড করুন</span>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVideo1Url('/videos/tank-cleaning-desktop.mp4');
+                    setPoster1Url('/assets/aistudio/hero-rooftop-poster.jpg');
+                    setVideo2Url('/videos/tank-cleaning-mobile.mp4');
+                    setPoster2Url('/assets/aistudio/hero-underground-poster.jpg');
+                    setVideo3Url('https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4');
+                    setPoster3Url('https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75');
+                    setVideoEnabled(true);
+                  }}
+                  className="p-3 bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-blue-600 rounded-lg text-left transition-all"
+                >
+                  <div className="font-semibold text-white text-xs">স্ট্যান্ডার্ড ট্রাই-ভিডিও সেট (Default)</div>
+                  <div className="text-[11px] text-slate-400 mt-0.5">ছাদের ট্যাংক + আন্ডারগ্রাউন্ড রিজার্ভার + পাইপলাইন ওয়াশ</div>
+                </button>
 
-              <div>
-                <div className="flex justify-between items-center text-xs text-slate-300 mb-2">
-                  <span>Overlay Darkening (Higher = more text readability, Lower = brighter video)</span>
-                  <span className="font-semibold text-white">{overlayOpacity}</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.20"
-                  max="0.95"
-                  step="0.02"
-                  value={overlayOpacity}
-                  onChange={(e) => setOverlayOpacity(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                />
-                <div className="flex justify-between text-[11px] text-slate-500 mt-1">
-                  <span>20% (Light)</span>
-                  <span>72% (Recommended for high contrast)</span>
-                  <span>95% (Very Dark)</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-2">
-                  Overlay Color Tint
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setOverlayColor('navy')}
-                    className={`p-3 rounded-lg border text-xs font-medium flex items-center justify-center gap-2 transition-all ${
-                      overlayColor === 'navy'
-                        ? 'border-blue-500 bg-blue-950/60 text-white ring-1 ring-blue-500'
-                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <span className="w-3.5 h-3.5 rounded-full bg-[#07172c] border border-blue-400"></span>
-                    <span>Dark Navy (Default)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setOverlayColor('black')}
-                    className={`p-3 rounded-lg border text-xs font-medium flex items-center justify-center gap-2 transition-all ${
-                      overlayColor === 'black'
-                        ? 'border-blue-500 bg-blue-950/60 text-white ring-1 ring-blue-500'
-                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <span className="w-3.5 h-3.5 rounded-full bg-slate-950 border border-slate-600"></span>
-                    <span>Pure Black</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setOverlayColor('darkBlue')}
-                    className={`p-3 rounded-lg border text-xs font-medium flex items-center justify-center gap-2 transition-all ${
-                      overlayColor === 'darkBlue'
-                        ? 'border-blue-500 bg-blue-950/60 text-white ring-1 ring-blue-500'
-                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <span className="w-3.5 h-3.5 rounded-full bg-[#123047] border border-[#38BDF8]"></span>
-                    <span>Deep Navy</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVideo1Url('https://wombatsweepers.com.au/wp-content/uploads/2024/05/pressure-cleaning-brisbane.mp4');
+                    setPoster1Url('/assets/aistudio/hero-rooftop-poster.jpg');
+                    setVideo2Url('/videos/tank-cleaning-desktop.mp4');
+                    setPoster2Url('/assets/aistudio/hero-underground-poster.jpg');
+                    setVideo3Url('https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4');
+                    setPoster3Url('https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75');
+                    setVideoEnabled(true);
+                  }}
+                  className="p-3 bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-cyan-600 rounded-lg text-left transition-all"
+                >
+                  <div className="font-semibold text-white text-xs">হাই-প্রেশার রোটারি ওয়াশ সেট</div>
+                  <div className="text-[11px] text-slate-400 mt-0.5">১৫০ বার রোটারি জেট + ডাবল স্লাজ এক্সট্র্যাকশন</div>
+                </button>
               </div>
             </div>
 
             {/* Action Bar */}
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <div className="text-xs text-slate-400">
+                পরিবর্তনগুলো সাথে সাথে Supabase এবং লাইভ ওয়েবসাইটে সেভ হবে।
+              </div>
               <button
                 type="button"
                 onClick={handleSaveHeroVideo}
                 disabled={saving}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-blue-600/30 transition-all flex items-center gap-2 disabled:opacity-50"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-600/30 transition-all flex items-center gap-2 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                <span>{saving ? 'Saving to Database...' : 'Save Hero Video Settings'}</span>
+                <span>{saving ? 'ডেটাবেজে সেভ হচ্ছে...' : '৩টি কভার ভিডিও সংরক্ষণ করুন (Save All 3 Videos)'}</span>
               </button>
             </div>
           </div>
 
-          {/* Right column: Live Mini Preview */}
+          {/* Right column: Live Real-Time Tri-Video Preview */}
           <div className="lg:col-span-4 space-y-4">
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm sticky top-20">
               <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
                 <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
                   <Eye className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Real-Time Mini Preview</span>
+                  <span>কভার ৩টি ভিডিও লাইভ প্রিভিউ</span>
                 </span>
                 <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded border border-slate-800 text-[10px]">
                   <button
                     onClick={() => setPreviewDevice('desktop')}
-                    className={`px-2 py-0.5 rounded ${previewDevice === 'desktop' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}
+                    className={`px-2 py-0.5 rounded transition-all ${previewDevice === 'desktop' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}
                   >
-                    Desktop
+                    Desktop (3 Columns)
                   </button>
                   <button
                     onClick={() => setPreviewDevice('mobile')}
-                    className={`px-2 py-0.5 rounded ${previewDevice === 'mobile' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}
+                    className={`px-2 py-0.5 rounded transition-all ${previewDevice === 'mobile' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}
                   >
-                    Mobile
+                    Mobile (Stacked)
                   </button>
                 </div>
               </div>
 
-              {/* Live Preview Container */}
-              <div 
-                className={`relative overflow-hidden rounded-lg border border-slate-700 bg-slate-950 transition-all ${
-                  previewDevice === 'mobile' ? 'max-w-[260px] mx-auto aspect-[9/16]' : 'w-full aspect-[16/10]'
-                }`}
-              >
-                {/* Background Video */}
-                {videoEnabled && (desktopVideoUrl || mobileVideoUrl) ? (
-                  (() => {
-                    const activeUrl = previewDevice === 'mobile' && mobileVideoUrl ? mobileVideoUrl : desktopVideoUrl;
-                    const ytId = extractYouTubeId(activeUrl);
-                    if (ytId) {
-                      return (
-                        <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
-                          <iframe
-                            src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${ytId}&playsinline=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1&modestbranding=1`}
-                            className="absolute inset-0 w-full h-full object-cover border-0 scale-125 pointer-events-none"
-                            title="YouTube Preview"
-                            allow="autoplay"
-                          />
-                        </div>
-                      );
-                    }
-                    return (
+              {/* Tri-Video Container */}
+              <div className="bg-[#123047] p-2 sm:p-2.5 rounded-lg border border-slate-700">
+                <div className={previewDevice === 'desktop' ? 'grid grid-cols-3 gap-1.5' : 'grid grid-cols-1 gap-1.5'}>
+                  {/* Preview Video 1 */}
+                  <div className="w-full aspect-video rounded overflow-hidden bg-black relative border border-cyan-500/30">
+                    {extractYouTubeId(video1Url) ? (
+                      <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${extractYouTubeId(video1Url)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${extractYouTubeId(video1Url)}&playsinline=1`}
+                        className="w-full h-full object-cover pointer-events-none"
+                        title="V1"
+                      />
+                    ) : (
                       <video
-                        key={desktopVideoUrl + mobileVideoUrl}
+                        key={video1Url}
+                        src={video1Url}
+                        poster={poster1Url}
                         autoPlay
                         muted
                         loop
                         playsInline
-                        poster={posterImageUrl}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      >
-                        <source src={activeUrl} type="video/mp4" />
-                      </video>
-                    );
-                  })()
-                ) : (
-                  <div 
-                    className="absolute inset-0 w-full h-full bg-cover bg-center"
-                    style={{ backgroundImage: `url('${posterImageUrl}')` }}
-                  />
-                )}
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                    )}
+                    <div className="absolute top-1 left-1 bg-black/70 text-[9px] text-cyan-300 px-1 py-0.5 rounded font-mono">
+                      V1: ছাদ
+                    </div>
+                  </div>
 
-                {/* Dark Overlay */}
-                <div 
-                  className="absolute inset-0"
-                  style={{
-                    backgroundColor: overlayColor === 'black' 
-                      ? `rgba(2, 6, 23, ${overlayOpacity})`
-                      : overlayColor === 'darkBlue'
-                      ? `rgba(11, 43, 92, ${overlayOpacity})`
-                      : `rgba(7, 23, 44, ${overlayOpacity})`
-                  }}
-                />
+                  {/* Preview Video 2 */}
+                  <div className="w-full aspect-video rounded overflow-hidden bg-black relative border border-blue-500/30">
+                    {extractYouTubeId(video2Url) ? (
+                      <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${extractYouTubeId(video2Url)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${extractYouTubeId(video2Url)}&playsinline=1`}
+                        className="w-full h-full object-cover pointer-events-none"
+                        title="V2"
+                      />
+                    ) : (
+                      <video
+                        key={video2Url}
+                        src={video2Url}
+                        poster={poster2Url}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                    )}
+                    <div className="absolute top-1 left-1 bg-black/70 text-[9px] text-blue-300 px-1 py-0.5 rounded font-mono">
+                      V2: রিজার্ভার
+                    </div>
+                  </div>
 
-                {/* Content Preview Overlay */}
-                <div className="relative z-10 p-4 h-full flex flex-col justify-center text-center items-center text-white">
-                  <span className="inline-block px-2 py-0.5 mb-2 text-[9px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30 rounded-full">
-                    ঢাকা শহরের সকল এলাকায়
-                  </span>
-                  <h4 className="text-xs font-bold leading-tight drop-shadow-md line-clamp-2">
-                    ঢাকায় প্রফেশনাল ওয়াটার ট্যাংক ক্লিনিং সার্ভিস
-                  </h4>
-                  <p className="text-[9px] text-slate-300 mt-1 line-clamp-2 max-w-[220px]">
-                    রূফটপ ও আন্ডারগ্রাউন্ড পানির ট্যাংক স্বাস্থ্যসম্মতভাবে পরিষ্কার
-                  </p>
-                  <div className="mt-3 flex gap-1.5 justify-center">
-                    <span className="px-2 py-1 bg-blue-600 text-[9px] font-semibold rounded text-white shadow">
-                      কোটেশন নিন
-                    </span>
-                    <span className="px-2 py-1 bg-white/20 text-[9px] font-semibold rounded text-white backdrop-blur">
-                      কল করুন
-                    </span>
+                  {/* Preview Video 3 */}
+                  <div className="w-full aspect-video rounded overflow-hidden bg-black relative border border-emerald-500/30">
+                    {extractYouTubeId(video3Url) ? (
+                      <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${extractYouTubeId(video3Url)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${extractYouTubeId(video3Url)}&playsinline=1`}
+                        className="w-full h-full object-cover pointer-events-none"
+                        title="V3"
+                      />
+                    ) : (
+                      <video
+                        key={video3Url}
+                        src={video3Url}
+                        poster={poster3Url}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                    )}
+                    <div className="absolute top-1 left-1 bg-black/70 text-[9px] text-emerald-300 px-1 py-0.5 rounded font-mono">
+                      V3: পাইপলাইন
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Status breakdown */}
+              {/* Status details */}
               <div className="mt-3 pt-3 border-t border-slate-800 text-[11px] space-y-1.5 text-slate-400">
                 <div className="flex justify-between">
-                  <span>Video Engine:</span>
+                  <span>কভার ভিডিও স্ট্যাটাস:</span>
                   <span className={videoEnabled ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-semibold'}>
-                    {videoEnabled ? 'Active (Loop/Muted)' : 'Disabled (Poster Fallback)'}
+                    {videoEnabled ? 'Active (Auto-Play Muted Loop)' : 'Disabled'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Overlay Darkness:</span>
-                  <span className="text-white font-mono">{Math.round(overlayOpacity * 100)}%</span>
+                  <span>লেআউট মোড:</span>
+                  <span className="text-white font-medium">৩ কলাম (ডেস্কটপ) / ১ কলাম (মোবাইল)</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Color Tone:</span>
-                  <span className="text-white capitalize">{overlayColor}</span>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="truncate max-w-[120px]">ভিডিও ১:</span>
+                  <span className="text-cyan-300 font-mono truncate max-w-[180px]">{video1Url.split('/').pop() || 'Set'}</span>
                 </div>
-                <div className="flex justify-between truncate">
-                  <span>Desktop Source:</span>
-                  <span className="text-slate-300 font-mono text-[10px] truncate max-w-[150px]">
-                    {desktopVideoUrl ? desktopVideoUrl.split('/').pop() : 'None'}
-                  </span>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="truncate max-w-[120px]">ভিডিও ২:</span>
+                  <span className="text-blue-300 font-mono truncate max-w-[180px]">{video2Url.split('/').pop() || 'Set'}</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="truncate max-w-[120px]">ভিডিও ৩:</span>
+                  <span className="text-emerald-300 font-mono truncate max-w-[180px]">{video3Url.split('/').pop() || 'Set'}</span>
                 </div>
               </div>
             </div>
@@ -1154,10 +1312,10 @@ export const HomepageCmsTab: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {activeSubSection === 'preview' && (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="flex flex-wrap items-center justify-between pb-3 border-b border-slate-800 gap-3">
             <div>
-              <h3 className="text-base font-semibold text-white">Full Responsive Live Preview</h3>
-              <p className="text-xs text-slate-400">See exactly how the full-width background cleaning video renders with the current Bengali content and CTA buttons.</p>
+              <h3 className="text-base font-semibold text-white">কভার ৩টি ভিডিও ফুল প্রিভিউ (Tri-Video Live Layout)</h3>
+              <p className="text-xs text-slate-400">ডেস্কটপ এবং মোবাইল ভিউতে ৩টি ভিডিও পাশাপাশি ও ওপর-নিচে কীভাবে প্রদর্শিত হচ্ছে তা দেখুন।</p>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -1166,7 +1324,7 @@ export const HomepageCmsTab: React.FC = () => {
                   previewDevice === 'desktop' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-300'
                 }`}
               >
-                Desktop Full Width
+                Desktop View (৩টি পাশাপাশি)
               </button>
               <button
                 onClick={() => setPreviewDevice('mobile')}
@@ -1174,84 +1332,87 @@ export const HomepageCmsTab: React.FC = () => {
                   previewDevice === 'mobile' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-300'
                 }`}
               >
-                Mobile View
+                Mobile View (৩টি ওপর-নিচে)
               </button>
             </div>
           </div>
 
-          <div className="relative w-full overflow-hidden rounded-xl border border-slate-700 min-h-[420px] flex items-center justify-center p-6 text-center">
-            {/* Background Video */}
-            {videoEnabled && (desktopVideoUrl || mobileVideoUrl) ? (
-              (() => {
-                const activeUrl = previewDevice === 'mobile' && mobileVideoUrl ? mobileVideoUrl : desktopVideoUrl;
-                const ytId = extractYouTubeId(activeUrl);
-                if (ytId) {
-                  return (
-                    <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
-                      <iframe
-                        src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${ytId}&playsinline=1&rel=0&showinfo=0&iv_load_policy=3&disablekb=1&modestbranding=1`}
-                        className="absolute inset-0 w-full h-full object-cover border-0 scale-125 pointer-events-none"
-                        title="YouTube Preview"
-                        allow="autoplay"
-                      />
-                    </div>
-                  );
-                }
-                return (
+          <div className="w-full bg-[#123047] p-3 sm:p-5 rounded-xl border border-slate-700">
+            <div className={previewDevice === 'desktop' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4' : 'max-w-md mx-auto grid grid-cols-1 gap-3'}>
+              
+              {/* Video 1 Card */}
+              <div className="w-full aspect-video rounded-xl overflow-hidden bg-black relative shadow-lg border border-cyan-500/40">
+                {extractYouTubeId(video1Url) ? (
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${extractYouTubeId(video1Url)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${extractYouTubeId(video1Url)}&playsinline=1`}
+                    className="w-full h-full object-cover"
+                    title="Preview Video 1"
+                  />
+                ) : (
                   <video
-                    key={desktopVideoUrl + previewDevice}
+                    key={video1Url}
+                    src={video1Url}
+                    poster={poster1Url}
                     autoPlay
                     muted
                     loop
                     playsInline
-                    poster={posterImageUrl}
-                    className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
-                  >
-                    <source src={activeUrl} type="video/mp4" />
-                  </video>
-                );
-              })()
-            ) : (
-              <div 
-                className="absolute inset-0 w-full h-full bg-cover bg-center pointer-events-none"
-                style={{ backgroundImage: `url('${posterImageUrl}')` }}
-              />
-            )}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                <div className="absolute bottom-2 left-2 bg-black/75 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] text-cyan-300 font-semibold border border-cyan-500/40">
+                  ১. ছাদের পানির ট্যাংক ক্লিনিং
+                </div>
+              </div>
 
-            {/* Dark Overlay */}
-            <div 
-              className="absolute inset-0 pointer-events-none transition-all duration-300"
-              style={{
-                backgroundColor: overlayColor === 'black' 
-                  ? `rgba(2, 6, 23, ${overlayOpacity})`
-                  : overlayColor === 'darkBlue'
-                  ? `rgba(11, 43, 92, ${overlayOpacity})`
-                  : `rgba(7, 23, 44, ${overlayOpacity})`
-              }}
-            />
+              {/* Video 2 Card */}
+              <div className="w-full aspect-video rounded-xl overflow-hidden bg-black relative shadow-lg border border-blue-500/40">
+                {extractYouTubeId(video2Url) ? (
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${extractYouTubeId(video2Url)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${extractYouTubeId(video2Url)}&playsinline=1`}
+                    className="w-full h-full object-cover"
+                    title="Preview Video 2"
+                  />
+                ) : (
+                  <video
+                    key={video2Url}
+                    src={video2Url}
+                    poster={poster2Url}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                <div className="absolute bottom-2 left-2 bg-black/75 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] text-blue-300 font-semibold border border-blue-500/40">
+                  ২. আন্ডারগ্রাউন্ড রিজার্ভার ও স্লাজ উত্তোলন
+                </div>
+              </div>
 
-            {/* Bengali text overlay matching real hero */}
-            <div className="relative z-10 max-w-3xl mx-auto space-y-4 text-white">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30">
-                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                <span>ঢাকা শহরের সকল এলাকায় সার্ভিস প্রদান</span>
-              </span>
-
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight drop-shadow-lg">
-                ঢাকায় প্রফেশনাল ওয়াটার ট্যাংক ক্লিনিং সার্ভিস
-              </h1>
-
-              <p className="text-sm sm:text-base text-slate-200 max-w-2xl mx-auto leading-relaxed drop-shadow">
-                নিয়মিত পানির ট্যাংক পরিষ্কার রাখা আপনার ও পরিবারের সুস্থতার জন্য জরুরি। আপনার ট্যাংকের তথ্য জানিয়ে রিকোয়েস্ট করুন, আমাদের টিম সঠিক কোটেশন প্রদান করবে।
-              </p>
-
-              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                <span className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg flex items-center gap-2 cursor-pointer">
-                  <span>ফ্রি কোটেশন রিকোয়েস্ট করুন</span>
-                </span>
-                <span className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg flex items-center gap-2 cursor-pointer">
-                  <span>হোয়াটসঅ্যাপে যোগাযোগ</span>
-                </span>
+              {/* Video 3 Card */}
+              <div className="w-full aspect-video rounded-xl overflow-hidden bg-black relative shadow-lg border border-emerald-500/40">
+                {extractYouTubeId(video3Url) ? (
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${extractYouTubeId(video3Url)}?autoplay=1&mute=1&controls=0&loop=1&playlist=${extractYouTubeId(video3Url)}&playsinline=1`}
+                    className="w-full h-full object-cover"
+                    title="Preview Video 3"
+                  />
+                ) : (
+                  <video
+                    key={video3Url}
+                    src={video3Url}
+                    poster={poster3Url}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                <div className="absolute bottom-2 left-2 bg-black/75 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] text-emerald-300 font-semibold border border-emerald-500/40">
+                  ৩. পানির পাইপলাইন ফ্লাশিং ও ওয়াশ
+                </div>
               </div>
             </div>
           </div>

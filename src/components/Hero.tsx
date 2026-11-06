@@ -19,8 +19,8 @@ export const Hero: React.FC<HeroProps> = () => {
   const video1Poster = cmsHeroSection?.posterImageUrl || hero.posterImageUrl || '/assets/aistudio/hero-rooftop-poster.jpg';
 
   // Video 2 source & poster (Underground Reservoir & Sludge Extraction)
-  const video2Url = cmsHeroSection?.mobileVideoUrl || hero.video2Url || '/videos/tank-cleaning-mobile.mp4';
-  const video2Poster = hero.posterImage2Url || '/assets/aistudio/hero-underground-poster.jpg';
+  const video2Url = cmsHeroSection?.video2Url || cmsHeroSection?.mobileVideoUrl || hero.video2Url || hero.mobileVideoUrl || '/videos/tank-cleaning-mobile.mp4';
+  const video2Poster = cmsHeroSection?.posterImage2Url || hero.posterImage2Url || '/assets/aistudio/hero-underground-poster.jpg';
 
   // Video 3 source & poster (Water Supply Pipeline Descaling & Hydro-Pulse Wash)
   const video3Url = cmsHeroSection?.video3Url || hero.video3Url || 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4';
