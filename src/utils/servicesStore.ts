@@ -7,6 +7,11 @@ import {
 } from '../services/serviceRegistry';
 import { safeGetItem, safeSetItem } from './safeLocalStorage';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { 
+  getStoredImageRegistry, 
+  fetchCentralImageRegistry, 
+  CENTRAL_IMAGES_EVENT 
+} from '../services/imageSyncService';
 
 const STORAGE_KEY = 'sunviloz_authoritative_services_v8';
 const EVENT_NAME = 'sunviloz_services_changed';
@@ -17,6 +22,16 @@ export const INITIAL_SERVICES: ExtensibleServiceItem[] = AUTHORITATIVE_SERVICES;
  * Ensures canonical image assets for the core 3 services
  */
 const sanitizeStoredService = (s: ExtensibleServiceItem): ExtensibleServiceItem => {
+  const reg = getStoredImageRegistry();
+  const overrideImg = reg?.serviceImages?.[s.id] || reg?.serviceImages?.[s.slug];
+  if (overrideImg) {
+    return {
+      ...s,
+      image: overrideImg,
+      featured_image: overrideImg
+    };
+  }
+
   if (s.id === 'srv-overhead-water-tank' || s.slug === 'overhead-water-tank-cleaning') {
     return {
       ...s,
@@ -166,6 +181,29 @@ export const getStoredServices = (): ExtensibleServiceItem[] => {
  */
 export const fetchServicesFromSupabase = async (): Promise<ExtensibleServiceItem[]> => {
   let list = getStoredServices();
+
+  // Hydrate with Supabase Central Image Registry (Storage + Database)
+  try {
+    const registry = await fetchCentralImageRegistry();
+    if (registry?.serviceImages && Object.keys(registry.serviceImages).length > 0) {
+      list = list.map(item => {
+        const customUrl = registry.serviceImages[item.id] || registry.serviceImages[item.slug];
+        if (customUrl) {
+          return {
+            ...item,
+            image: customUrl,
+            featured_image: customUrl
+          };
+        }
+        return item;
+      });
+      if (typeof window !== 'undefined') {
+        safeSetItem(STORAGE_KEY, JSON.stringify(list));
+      }
+    }
+  } catch (regErr) {
+    console.warn('[ServicesStore] Central registry hydration notice:', regErr);
+  }
 
   if (isSupabaseConfigured()) {
     try {
@@ -442,6 +480,7 @@ export const useServices = () => {
       setAllServices(getStoredServices());
     };
     window.addEventListener(EVENT_NAME, handleUpdate);
+    window.addEventListener(CENTRAL_IMAGES_EVENT, handleUpdate);
 
     // 3. Supabase Realtime subscription for cross-device updates
     let channel: any = null;
@@ -464,6 +503,7 @@ export const useServices = () => {
 
     return () => {
       window.removeEventListener(EVENT_NAME, handleUpdate);
+      window.removeEventListener(CENTRAL_IMAGES_EVENT, handleUpdate);
       if (channel) {
         supabase.removeChannel(channel);
       }

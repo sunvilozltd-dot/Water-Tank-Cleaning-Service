@@ -4,6 +4,7 @@ import { useHeaderNav } from '../../context/HeaderNavContext';
 import { Settings, Save, Check, Video, Phone, Mail, MapPin, Upload, Droplets, RefreshCw } from 'lucide-react';
 import { compressImageFile } from '../../utils/imageCompressor';
 import { saveSiteConfig } from '../../utils/siteConfigStore';
+import { uploadImageToSupabase, persistImageChange } from '../../services/imageSyncService';
 
 interface SettingsTabProps {
   onGoToHeroVideo?: () => void;
@@ -75,26 +76,30 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ onGoToHeroVideo }) => 
     setLogoMessage('');
 
     try {
-      const dataUrl = await compressImageFile(file, {
-        maxWidth: 400,
-        maxHeight: 400,
-        quality: 0.9,
-        preserveTransparency: true
-      });
-      await saveHeader({ ...headerConfig, logoUrl: dataUrl, logoEnabled: true });
-      updateSiteImages({ logo: dataUrl });
-      setLogoMessage('Logo updated successfully!');
+      const uploadRes = await uploadImageToSupabase(file, 'branding', 'logo');
+      let targetLogoUrl = '';
+
+      if (uploadRes.success && uploadRes.publicUrl) {
+        targetLogoUrl = uploadRes.publicUrl;
+      } else {
+        targetLogoUrl = await compressImageFile(file, {
+          maxWidth: 400,
+          maxHeight: 400,
+          quality: 0.9,
+          preserveTransparency: true
+        });
+      }
+
+      await saveHeader({ ...headerConfig, logoUrl: targetLogoUrl, logoEnabled: true });
+      updateSiteImages({ logo: targetLogoUrl });
+      await persistImageChange('siteConfig', 'logo', targetLogoUrl);
+
+      setLogoMessage('Logo uploaded and permanently saved to Supabase!');
       setTimeout(() => setLogoMessage(''), 4000);
     } catch (err) {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const url = event.target?.result as string;
-        await saveHeader({ ...headerConfig, logoUrl: url, logoEnabled: true });
-        updateSiteImages({ logo: url });
-        setLogoMessage('Logo updated successfully!');
-        setTimeout(() => setLogoMessage(''), 4000);
-      };
-      reader.readAsDataURL(file);
+      console.error('Logo upload error:', err);
+      setLogoMessage('Failed to upload logo.');
+      setTimeout(() => setLogoMessage(''), 4000);
     } finally {
       setUploadingLogo(false);
       if (logoFileRef.current) logoFileRef.current.value = '';
@@ -104,6 +109,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ onGoToHeroVideo }) => 
   const handleRemoveLogo = async () => {
     await saveHeader({ ...headerConfig, logoUrl: '', logoEnabled: true });
     updateSiteImages({ logo: '' });
+    await persistImageChange('siteConfig', 'logo', '');
     setLogoMessage('Logo removed. Default droplet icon restored.');
     setTimeout(() => setLogoMessage(''), 4000);
   };

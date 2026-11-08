@@ -15,6 +15,7 @@ import { ServiceItem } from '../types';
 import { updateService } from '../utils/servicesStore';
 import { useLanguage } from '../context/LanguageContext';
 import { compressImageFile } from '../utils/imageCompressor';
+import { uploadImageToSupabase, persistImageChange } from '../services/imageSyncService';
 
 export interface ChangeServiceImageModalProps {
   service: ServiceItem | null;
@@ -110,7 +111,7 @@ export const ChangeServiceImageModal: React.FC<ChangeServiceImageModalProps> = (
 
   if (!isOpen || !service) return null;
 
-  // Handle local file upload (converts to lightweight compressed data URL)
+  // Handle local file upload (uploads directly to Supabase Storage bucket 'site-media')
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -129,27 +130,38 @@ export const ChangeServiceImageModal: React.FC<ChangeServiceImageModalProps> = (
     setErrorMessage('');
 
     try {
-      const compressedDataUrl = await compressImageFile(file, {
-        maxWidth: 1000,
-        maxHeight: 750,
-        quality: 0.72
-      });
-      setImageUrl(compressedDataUrl);
-      setUrlInput('');
-    } catch (err) {
-      console.error('Image compression failed:', err);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        setImageUrl(result);
+      const folder = 'services';
+      const prefix = service.slug || service.id || 'service';
+      const uploadRes = await uploadImageToSupabase(file, folder, prefix);
+
+      if (uploadRes.success && uploadRes.publicUrl) {
+        setImageUrl(uploadRes.publicUrl);
         setUrlInput('');
-      };
-      reader.onerror = () => {
+      } else {
+        console.warn('Supabase service upload notice:', uploadRes.error);
+        const compressedDataUrl = await compressImageFile(file, {
+          maxWidth: 1000,
+          maxHeight: 750,
+          quality: 0.75
+        });
+        setImageUrl(compressedDataUrl);
+        setUrlInput('');
+      }
+    } catch (err: any) {
+      console.error('Service image upload failed:', err);
+      try {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setImageUrl(event.target?.result as string);
+          setUrlInput('');
+        };
+        reader.readAsDataURL(file);
+      } catch (readErr) {
         setErrorMessage(lang === 'bn' ? 'ছবি পড়তে সমস্যা হয়েছে, আবার চেষ্টা করুন' : 'Failed to read image file');
-      };
-      reader.readAsDataURL(file);
+      }
     } finally {
       setUploadLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -163,16 +175,20 @@ export const ChangeServiceImageModal: React.FC<ChangeServiceImageModalProps> = (
     setErrorMessage('');
   };
 
-  // Save the selected image
-  const handleSave = () => {
+  // Save the selected image and persist to Supabase Storage & Database
+  const handleSave = async () => {
     if (!imageUrl) {
       setErrorMessage(lang === 'bn' ? 'কোনো ছবি নির্বাচন করা হয়নি' : 'No image selected');
       return;
     }
 
     try {
-      // Update service in localStorage & broadcast event
-      updateService(service.id, { image: imageUrl });
+      setUploadLoading(true);
+      // 1. Update service locally & trigger local broadcast
+      await updateService(service.id, { image: imageUrl, featured_image: imageUrl });
+
+      // 2. Persist to Supabase Storage & Database for global cross-device synchronization
+      await persistImageChange('service', service.slug || service.id, imageUrl, service.id);
 
       setSaveSuccess(true);
       if (onImageUpdated) {
@@ -186,6 +202,8 @@ export const ChangeServiceImageModal: React.FC<ChangeServiceImageModalProps> = (
     } catch (err) {
       console.error('Failed to save service image:', err);
       setErrorMessage(lang === 'bn' ? 'ছবি সংরক্ষণ করতে সমস্যা হয়েছে' : 'Failed to save image');
+    } finally {
+      setUploadLoading(false);
     }
   };
 

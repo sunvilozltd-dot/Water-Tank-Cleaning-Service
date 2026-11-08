@@ -25,7 +25,9 @@ export interface UniversalImageChangeModalProps {
   subtitle?: string;
   currentImageUrl: string;
   defaultImageUrl?: string;
-  onSave: (newImageUrl: string) => void;
+  folder?: 'services' | 'hero' | 'branding' | 'projects' | 'general';
+  targetKey?: string;
+  onSave: (newImageUrl: string) => void | Promise<void>;
 }
 
 export const CURATED_CLEANING_GALLERY = [
@@ -103,6 +105,8 @@ export const UniversalImageChangeModal: React.FC<UniversalImageChangeModalProps>
   subtitle,
   currentImageUrl,
   defaultImageUrl,
+  folder = 'general',
+  targetKey = 'image',
   onSave
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -111,16 +115,18 @@ export const UniversalImageChangeModal: React.FC<UniversalImageChangeModalProps>
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>(currentImageUrl || '');
   const [urlInput, setUrlInput] = useState<string>('');
   const [uploadLoading, setUploadLoading] = useState<boolean>(false);
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [mediaItems, setMediaItems] = useState<any[]>([]);
   const [loadingMedia, setLoadingMedia] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [uploadBadge, setUploadBadge] = useState<string>('');
 
   useEffect(() => {
     setSelectedImageUrl(currentImageUrl || '');
     setUrlInput('');
     setSaveSuccess(false);
     setErrorMessage('');
+    setUploadBadge('');
   }, [currentImageUrl, isOpen]);
 
   useEffect(() => {
@@ -133,7 +139,7 @@ export const UniversalImageChangeModal: React.FC<UniversalImageChangeModalProps>
     try {
       setLoadingMedia(true);
       const items = await getMediaItems();
-      setMediaItems(items.filter(i => i.fileType === 'image'));
+      setMediaItems(items.filter((i: any) => i.fileType === 'image'));
     } catch (e) {
       console.error(e);
     } finally {
@@ -159,28 +165,38 @@ export const UniversalImageChangeModal: React.FC<UniversalImageChangeModalProps>
 
     setUploadLoading(true);
     setErrorMessage('');
+    setUploadBadge('');
 
     try {
-      // Compress and resize image client-side to prevent QuotaExceededError
-      const compressedDataUrl = await compressImageFile(file, {
-        maxWidth: 1000,
-        maxHeight: 750,
-        quality: 0.72
-      });
-      setSelectedImageUrl(compressedDataUrl);
+      // Direct upload to Supabase Storage bucket 'site-media'
+      const uploadRes = await uploadImageToSupabase(file, folder, targetKey);
+      if (uploadRes.success && uploadRes.publicUrl) {
+        setSelectedImageUrl(uploadRes.publicUrl);
+        setUploadBadge('✓ Supabase Storage-এ আপলোড সম্পন্ন');
+      } else {
+        console.warn('Supabase upload notice:', uploadRes.error);
+        const compressedDataUrl = await compressImageFile(file, {
+          maxWidth: 1000,
+          maxHeight: 750,
+          quality: 0.75
+        });
+        setSelectedImageUrl(compressedDataUrl);
+        setUploadBadge('লোকাল প্রিভিউ প্রস্তুত (সেভ করলে ডাটাবেজে যাবে)');
+      }
     } catch (err: any) {
-      console.error('Image compression failed:', err);
-      // Fallback to FileReader if canvas compression encounters issues
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setSelectedImageUrl(event.target?.result as string);
-      };
-      reader.onerror = () => {
+      console.error('Image upload failed:', err);
+      try {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setSelectedImageUrl(event.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } catch (readErr) {
         setErrorMessage('ছবি লোড করতে সমস্যা হয়েছে');
-      };
-      reader.readAsDataURL(file);
+      }
     } finally {
       setUploadLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -191,25 +207,29 @@ export const UniversalImageChangeModal: React.FC<UniversalImageChangeModalProps>
       return;
     }
     setSelectedImageUrl(urlInput.trim());
+    setUploadBadge('অনলাইন URL সংযুক্ত');
     setErrorMessage('');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedImageUrl) {
       setErrorMessage('একটি ছবি নির্বাচন বা আপলোড করুন');
       return;
     }
 
     try {
-      onSave(selectedImageUrl);
+      setUploadLoading(true);
+      await Promise.resolve(onSave(selectedImageUrl));
       setSaveSuccess(true);
       setTimeout(() => {
         setSaveSuccess(false);
         onClose();
-      }, 500);
+      }, 600);
     } catch (err: any) {
       console.error('Save image failed:', err);
       setErrorMessage('ছবি সংরক্ষণ করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+    } finally {
+      setUploadLoading(false);
     }
   };
 
@@ -281,11 +301,18 @@ export const UniversalImageChangeModal: React.FC<UniversalImageChangeModalProps>
 
             <div className="relative aspect-video max-h-56 rounded-lg overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center">
               {selectedImageUrl ? (
-                <img 
-                  src={selectedImageUrl} 
-                  alt="Selected preview" 
-                  className="w-full h-full object-cover"
-                />
+                <>
+                  <img 
+                    src={selectedImageUrl} 
+                    alt="Selected preview" 
+                    className="w-full h-full object-cover"
+                  />
+                  {uploadBadge && (
+                    <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded bg-black/80 backdrop-blur-sm border border-emerald-500/40 text-emerald-300 text-[11px] font-semibold shadow">
+                      {uploadBadge}
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center p-4 text-slate-500">
                   <ImageIcon className="w-10 h-10 mx-auto mb-2 opacity-40" />

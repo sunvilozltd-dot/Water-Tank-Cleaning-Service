@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useHeaderNav } from '../../context/HeaderNavContext';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { compressImageFile } from '../../utils/imageCompressor';
+import { uploadImageToSupabase, persistImageChange } from '../../services/imageSyncService';
 import { NavItem, HeaderConfig } from '../../types/header';
 import { 
   Compass, 
@@ -86,30 +87,32 @@ export const HeaderNavTab: React.FC = () => {
     setLogoMessage('');
 
     try {
-      const dataUrl = await compressImageFile(file, {
-        maxWidth: 400,
-        maxHeight: 400,
-        quality: 0.9,
-        preserveTransparency: true
-      });
-      const updated = { ...configState, logoUrl: dataUrl, logoEnabled: true };
+      const uploadRes = await uploadImageToSupabase(file, 'branding', 'header_logo');
+      let targetUrl = '';
+
+      if (uploadRes.success && uploadRes.publicUrl) {
+        targetUrl = uploadRes.publicUrl;
+      } else {
+        targetUrl = await compressImageFile(file, {
+          maxWidth: 400,
+          maxHeight: 400,
+          quality: 0.9,
+          preserveTransparency: true
+        });
+      }
+
+      const updated = { ...configState, logoUrl: targetUrl, logoEnabled: true };
       setConfigState(updated);
       await saveHeader(updated);
-      updateSiteImages({ logo: dataUrl });
-      setLogoMessage('লোগো সফলভাবে আপলোড ও সেভ হয়েছে!');
+      updateSiteImages({ logo: targetUrl });
+      await persistImageChange('siteConfig', 'logo', targetUrl);
+
+      setLogoMessage('লোগো সফলভাবে Supabase Storage ও Database-এ সেভ হয়েছে!');
       setTimeout(() => setLogoMessage(''), 4000);
     } catch (err) {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const url = event.target?.result as string;
-        const updated = { ...configState, logoUrl: url, logoEnabled: true };
-        setConfigState(updated);
-        await saveHeader(updated);
-        updateSiteImages({ logo: url });
-        setLogoMessage('লোগো সফলভাবে সেভ হয়েছে!');
-        setTimeout(() => setLogoMessage(''), 4000);
-      };
-      reader.readAsDataURL(file);
+      console.error('Logo upload notice:', err);
+      setLogoMessage('লোগো সেভ করতে সমস্যা হয়েছে।');
+      setTimeout(() => setLogoMessage(''), 4000);
     } finally {
       setUploadingLogo(false);
       if (logoFileRef.current) logoFileRef.current.value = '';
@@ -118,13 +121,15 @@ export const HeaderNavTab: React.FC = () => {
 
   const handleApplyLogoUrl = async () => {
     if (!logoUrlInput.trim()) return;
-    const updated = { ...configState, logoUrl: logoUrlInput.trim(), logoEnabled: true };
+    const finalUrl = logoUrlInput.trim();
+    const updated = { ...configState, logoUrl: finalUrl, logoEnabled: true };
     setConfigState(updated);
     await saveHeader(updated);
-    updateSiteImages({ logo: logoUrlInput.trim() });
+    updateSiteImages({ logo: finalUrl });
+    await persistImageChange('siteConfig', 'logo', finalUrl);
     setShowLogoUrlInput(false);
     setLogoUrlInput('');
-    setLogoMessage('লোগো URL সফলভাবে সেভ হয়েছে!');
+    setLogoMessage('লোগো URL সফলভাবে Supabase-এ সেভ হয়েছে!');
     setTimeout(() => setLogoMessage(''), 4000);
   };
 
@@ -133,6 +138,7 @@ export const HeaderNavTab: React.FC = () => {
     setConfigState(updated);
     await saveHeader(updated);
     updateSiteImages({ logo: '' });
+    await persistImageChange('siteConfig', 'logo', '');
     setLogoMessage('লোগো মুছে ফেলা হয়েছে (ডিফল্ট ওয়াটার ড্রপ আইকন কার্যকর)');
     setTimeout(() => setLogoMessage(''), 4000);
   };

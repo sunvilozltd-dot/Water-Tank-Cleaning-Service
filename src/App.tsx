@@ -14,6 +14,7 @@ import { PrivacyConsentBanner } from './components/PrivacyConsentBanner';
 import { AmbientWaterBackground } from './components/AmbientWaterBackground';
 import { initUtmTracking } from './utils/utmTracking';
 import { initAnalytics, trackPageView } from './utils/tracking';
+import { fetchCentralImageRegistry } from './services/imageSyncService';
 
 // Critical Homepage eagerly loaded for instant FCP / LCP
 import { HomePage } from './pages/HomePage';
@@ -81,6 +82,7 @@ function AppContent() {
   useEffect(() => {
     initUtmTracking();
     initAnalytics();
+    fetchCentralImageRegistry(); // Hydrate authoritative image assets from Supabase
     const handlePopState = () => {
       setCurrentPath(window.location.pathname || '/');
     };

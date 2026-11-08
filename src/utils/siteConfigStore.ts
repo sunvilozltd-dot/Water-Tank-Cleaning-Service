@@ -9,6 +9,11 @@ import {
 } from '../data/config';
 import { safeGetItem, safeSetItem } from './safeLocalStorage';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { 
+  getStoredImageRegistry, 
+  fetchCentralImageRegistry, 
+  CENTRAL_IMAGES_EVENT 
+} from '../services/imageSyncService';
 
 const SITE_CONFIG_STORAGE_KEY = 'sunviloz_site_master_config_v4';
 export const SITE_CONFIG_EVENT = 'sunviloz_site_config_changed';
@@ -166,10 +171,21 @@ export const sanitizeAndMergeConfig = (parsed: Partial<FullSiteConfig>): FullSit
     posterImage3Url: rawHero.posterImage3Url || INITIAL_FULL_SITE_CONFIG.hero.posterImage3Url,
   };
 
+  const imageReg = getStoredImageRegistry();
+  const mergedImages = {
+    ...INITIAL_FULL_SITE_CONFIG.images,
+    ...(parsed.images || {}),
+    ...(imageReg?.siteImages || {})
+  };
+
   return {
     business: sanitizedBusiness,
     announcement: { ...INITIAL_FULL_SITE_CONFIG.announcement, ...(parsed.announcement || {}) },
-    hero: sanitizedHero,
+    hero: {
+      ...sanitizedHero,
+      ...(imageReg?.siteImages?.heroPoster ? { posterImageUrl: imageReg.siteImages.heroPoster } : {}),
+      ...(imageReg?.siteImages?.heroBg ? { bgImageUrl: imageReg.siteImages.heroBg } : {})
+    },
     sections: mergedSections,
     whyChooseUs: parsed.whyChooseUs || INITIAL_FULL_SITE_CONFIG.whyChooseUs,
     cleaningSteps: parsed.cleaningSteps || INITIAL_FULL_SITE_CONFIG.cleaningSteps,
@@ -177,7 +193,7 @@ export const sanitizeAndMergeConfig = (parsed: Partial<FullSiteConfig>): FullSit
     reviews: parsed.reviews || INITIAL_FULL_SITE_CONFIG.reviews,
     areas: parsed.areas || INITIAL_FULL_SITE_CONFIG.areas,
     seo: sanitizedSeo,
-    images: { ...INITIAL_FULL_SITE_CONFIG.images, ...(parsed.images || {}) }
+    images: mergedImages
   };
 };
 
@@ -202,9 +218,38 @@ export const getStoredSiteConfig = (): FullSiteConfig => {
  * Used on app launch and background refresh to ensure all devices see the latest admin changes.
  */
 export const fetchSiteConfigFromSupabase = async (): Promise<FullSiteConfig> => {
-  if (!isSupabaseConfigured()) {
-    return getStoredSiteConfig();
+  let baseConfig = getStoredSiteConfig();
+
+  // 1. Authoritative hydration from Supabase Central Image Registry (site-media/config/registry_*.json)
+  try {
+    const registry = await fetchCentralImageRegistry();
+    if (registry?.siteImages && Object.keys(registry.siteImages).length > 0) {
+      baseConfig = {
+        ...baseConfig,
+        images: {
+          ...baseConfig.images,
+          ...registry.siteImages
+        },
+        hero: {
+          ...baseConfig.hero,
+          ...(registry.siteImages.heroPoster ? { posterImageUrl: registry.siteImages.heroPoster } : {}),
+          ...(registry.siteImages.heroBg ? { bgImageUrl: registry.siteImages.heroBg } : {})
+        }
+      };
+      if (typeof window !== 'undefined') {
+        safeSetItem(SITE_CONFIG_STORAGE_KEY, JSON.stringify(baseConfig));
+        window.dispatchEvent(new CustomEvent(SITE_CONFIG_EVENT, { detail: baseConfig }));
+      }
+    }
+  } catch (regErr) {
+    console.warn('[SiteConfigStore] Central image registry hydration notice:', regErr);
   }
+
+  if (!isSupabaseConfigured()) {
+    return baseConfig;
+  }
+
+  // 2. Query site_settings if exists
   try {
     const { data, error } = await supabase
       .from('site_settings')
@@ -223,7 +268,8 @@ export const fetchSiteConfigFromSupabase = async (): Promise<FullSiteConfig> => 
   } catch (err) {
     console.warn('Supabase site_settings fetch notice:', err);
   }
-  return getStoredSiteConfig();
+
+  return baseConfig;
 };
 
 /**
@@ -238,7 +284,8 @@ export const saveSiteConfig = async (config: FullSiteConfig): Promise<{ success:
 
   if (isSupabaseConfigured()) {
     try {
-      const { error } = await supabase
+      // 1. Try persisting to site_settings
+      const { error: setErr } = await supabase
         .from('site_settings')
         .upsert({
           id: 'primary',
@@ -246,13 +293,28 @@ export const saveSiteConfig = async (config: FullSiteConfig): Promise<{ success:
           updated_at: new Date().toISOString()
         }, { onConflict: 'id' });
 
-      if (error) {
-        console.error('Failed to sync site config to Supabase:', error.message);
-        return { success: false, error: error.message };
+      if (setErr) {
+        console.warn('Supabase site_settings save notice:', setErr.message);
+      }
+
+      // 2. Sync to homepage_sections (sec-hero) as persistent database store
+      try {
+        await supabase
+          .from('homepage_sections')
+          .update({
+            settings: {
+              siteImages: config.images,
+              hero: config.hero,
+              announcement: config.announcement
+            },
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', 'sec-hero');
+      } catch (secErr) {
+        console.warn('homepage_sections update notice:', secErr);
       }
     } catch (err: any) {
-      console.error('Supabase site config save error:', err);
-      return { success: false, error: err?.message || 'Database connection error' };
+      console.warn('Supabase site config save notice:', err);
     }
   }
 

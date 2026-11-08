@@ -24,6 +24,7 @@ import { UniversalImageChangeModal } from '../UniversalImageChangeModal';
 import { recordAuditLog } from '../../services/auditService';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { compressImageFile } from '../../utils/imageCompressor';
+import { uploadImageToSupabase, persistImageChange } from '../../services/imageSyncService';
 
 export interface ImageSlotItem {
   id: string;
@@ -72,32 +73,36 @@ export const WebsiteImagesTab: React.FC = () => {
 
     setUploadingLogo(true);
     try {
-      const dataUrl = await compressImageFile(file, {
-        maxWidth: 400,
-        maxHeight: 400,
-        quality: 0.9
-      });
-      await saveHeader({ ...headerConfig, logoUrl: dataUrl, logoEnabled: true });
-      updateSiteImages({ logo: dataUrl });
+      const uploadRes = await uploadImageToSupabase(file, 'branding', 'logo');
+      let targetLogoUrl = '';
+
+      if (uploadRes.success && uploadRes.publicUrl) {
+        targetLogoUrl = uploadRes.publicUrl;
+      } else {
+        targetLogoUrl = await compressImageFile(file, {
+          maxWidth: 400,
+          maxHeight: 400,
+          quality: 0.9
+        });
+      }
+
+      await saveHeader({ ...headerConfig, logoUrl: targetLogoUrl, logoEnabled: true });
+      updateSiteImages({ logo: targetLogoUrl });
+      await persistImageChange('siteConfig', 'logo', targetLogoUrl);
+
       recordAuditLog(
         adminUser?.email || 'admin@sunviloz.com',
         'Uploaded Brand Logo',
         'Branding',
         'header-logo',
-        'Updated brand logo image'
+        'Updated brand logo image to Supabase'
       );
-      setSuccessToast('ওয়েবসাইট ব্র্যান্ড লোগো সফলভাবে আপলোড ও আপডেট হয়েছে!');
+      setSuccessToast('ওয়েবসাইট ব্র্যান্ড লোগো স্থায়ীভাবে Supabase-এ আপলোড ও আপডেট হয়েছে!');
       setTimeout(() => setSuccessToast(null), 4000);
-    } catch (err) {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const url = event.target?.result as string;
-        await saveHeader({ ...headerConfig, logoUrl: url, logoEnabled: true });
-        updateSiteImages({ logo: url });
-        setSuccessToast('ওয়েবসাইট ব্র্যান্ড লোগো সফলভাবে আপলোড ও আপডেট হয়েছে!');
-        setTimeout(() => setSuccessToast(null), 4000);
-      };
-      reader.readAsDataURL(file);
+    } catch (err: any) {
+      console.error('Logo upload error:', err);
+      setSuccessToast('লোগো আপলোড করতে সমস্যা হয়েছে।');
+      setTimeout(() => setSuccessToast(null), 4000);
     } finally {
       setUploadingLogo(false);
       if (logoFileInputRef.current) logoFileInputRef.current.value = '';
@@ -106,17 +111,20 @@ export const WebsiteImagesTab: React.FC = () => {
 
   const handleApplyLogoUrl = async () => {
     if (!logoUrlInput.trim()) return;
-    await saveHeader({ ...headerConfig, logoUrl: logoUrlInput.trim(), logoEnabled: true });
-    updateSiteImages({ logo: logoUrlInput.trim() });
+    const finalUrl = logoUrlInput.trim();
+    await saveHeader({ ...headerConfig, logoUrl: finalUrl, logoEnabled: true });
+    updateSiteImages({ logo: finalUrl });
+    await persistImageChange('siteConfig', 'logo', finalUrl);
     setIsLogoUrlOpen(false);
     setLogoUrlInput('');
-    setSuccessToast('ব্র্যান্ড লোগো URL সফলভাবে সেভ করা হয়েছে!');
+    setSuccessToast('ব্র্যান্ড লোগো URL স্থায়ীভাবে সেভ করা হয়েছে!');
     setTimeout(() => setSuccessToast(null), 4000);
   };
 
   const handleRemoveLogo = async () => {
     await saveHeader({ ...headerConfig, logoUrl: '', logoEnabled: true });
     updateSiteImages({ logo: '' });
+    await persistImageChange('siteConfig', 'logo', '');
     setSuccessToast('কাস্টম লোগো মুছে ফেলা হয়েছে (ডিফল্ট ওয়াটারড্রপ আইকন সক্রিয়)');
     setTimeout(() => setSuccessToast(null), 4000);
   };
@@ -316,13 +324,13 @@ export const WebsiteImagesTab: React.FC = () => {
     return slot.category === activeCategory;
   });
 
-  const handleApplyNewImage = (newUrl: string) => {
+  const handleApplyNewImage = async (newUrl: string) => {
     if (!editingSlot) return;
 
     try {
       if (editingSlot.targetType === 'siteConfig') {
         if (editingSlot.targetKey === 'logo') {
-          saveHeader({ ...headerConfig, logoUrl: newUrl, logoEnabled: true });
+          await saveHeader({ ...headerConfig, logoUrl: newUrl, logoEnabled: true });
           updateSiteImages({ logo: newUrl });
         } else if (editingSlot.targetKey === 'heroPoster') {
           updateHero({ posterImageUrl: newUrl, bgImageUrl: newUrl });
@@ -332,7 +340,7 @@ export const WebsiteImagesTab: React.FC = () => {
         }
       } else if (editingSlot.targetType === 'service') {
         if (editingSlot.targetId) {
-          updateService(editingSlot.targetId, { image: newUrl });
+          await updateService(editingSlot.targetId, { image: newUrl, featured_image: newUrl });
         }
         if (editingSlot.targetKey === 'popularTankImage') {
           updateSiteImages({ popularTankImage: newUrl });
@@ -342,22 +350,30 @@ export const WebsiteImagesTab: React.FC = () => {
       } else if (editingSlot.targetType === 'project') {
         if (editingSlot.targetId) {
           if (editingSlot.subTarget === 'before') {
-            updateProject(editingSlot.targetId, { beforeImg: newUrl, beforeImage: newUrl });
+            await updateProject(editingSlot.targetId, { beforeImg: newUrl, beforeImage: newUrl });
           } else {
-            updateProject(editingSlot.targetId, { afterImg: newUrl, afterImage: newUrl });
+            await updateProject(editingSlot.targetId, { afterImg: newUrl, afterImage: newUrl });
           }
         }
       }
+
+      // Persist permanently to Supabase Storage registry and Supabase Database
+      await persistImageChange(
+        editingSlot.targetType,
+        editingSlot.targetKey,
+        newUrl,
+        editingSlot.targetId
+      );
 
       recordAuditLog(
         adminUser?.email || 'admin@sunviloz.com',
         'Changed Website Image',
         'MediaManager',
         editingSlot.id,
-        `Updated image for ${editingSlot.title}`
+        `Updated image for ${editingSlot.title} to Supabase`
       );
 
-      setSuccessToast(`"${editingSlot.titleBn}" এর ছবি সফলভাবে পরিবর্তন ও প্রকাশ করা হয়েছে!`);
+      setSuccessToast(`"${editingSlot.titleBn}" এর ছবি স্থায়ীভাবে Supabase-এ সংরক্ষিত ও প্রকাশিত হয়েছে!`);
       setTimeout(() => setSuccessToast(null), 4000);
       setEditingSlot(null);
     } catch (err) {
@@ -704,6 +720,8 @@ export const WebsiteImagesTab: React.FC = () => {
           subtitle={`অবস্থান: ${editingSlot.locationLabel}`}
           currentImageUrl={editingSlot.currentUrl}
           defaultImageUrl={editingSlot.defaultUrl}
+          folder={editingSlot.category === 'services' ? 'services' : editingSlot.category === 'homepage' ? 'hero' : 'projects'}
+          targetKey={editingSlot.targetKey || editingSlot.id}
           onSave={handleApplyNewImage}
         />
       )}

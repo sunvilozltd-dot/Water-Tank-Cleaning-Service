@@ -3,6 +3,7 @@ import { ProjectItem } from '../../types';
 import { X, Save, Upload, Image as ImageIcon, Sparkles, RefreshCw, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { CURATED_CLEANING_GALLERY } from '../UniversalImageChangeModal';
 import { compressImageFile } from '../../utils/imageCompressor';
+import { uploadImageToSupabase, persistImageChange } from '../../services/imageSyncService';
 
 interface ProjectModalProps {
   project: ProjectItem | null;
@@ -51,15 +52,21 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose, on
 
     setUploadingBefore(true);
     try {
-      const dataUrl = await compressImageFile(file, {
-        maxWidth: 900,
-        maxHeight: 650,
-        quality: 0.75
-      });
+      const uploadRes = await uploadImageToSupabase(file, 'projects', `${formData.id}_before`);
+      let targetUrl = '';
+      if (uploadRes.success && uploadRes.publicUrl) {
+        targetUrl = uploadRes.publicUrl;
+      } else {
+        targetUrl = await compressImageFile(file, {
+          maxWidth: 900,
+          maxHeight: 650,
+          quality: 0.75
+        });
+      }
       setFormData(prev => ({
         ...prev,
-        beforeImage: dataUrl,
-        beforeImg: dataUrl
+        beforeImage: targetUrl,
+        beforeImg: targetUrl
       }));
     } catch {
       const reader = new FileReader();
@@ -89,15 +96,21 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose, on
 
     setUploadingAfter(true);
     try {
-      const dataUrl = await compressImageFile(file, {
-        maxWidth: 900,
-        maxHeight: 650,
-        quality: 0.75
-      });
+      const uploadRes = await uploadImageToSupabase(file, 'projects', `${formData.id}_after`);
+      let targetUrl = '';
+      if (uploadRes.success && uploadRes.publicUrl) {
+        targetUrl = uploadRes.publicUrl;
+      } else {
+        targetUrl = await compressImageFile(file, {
+          maxWidth: 900,
+          maxHeight: 650,
+          quality: 0.75
+        });
+      }
       setFormData(prev => ({
         ...prev,
-        afterImage: dataUrl,
-        afterImg: dataUrl
+        afterImage: targetUrl,
+        afterImg: targetUrl
       }));
     } catch {
       const reader = new FileReader();
@@ -116,7 +129,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose, on
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.title.trim()) {
       alert('অনুগ্রহ করে প্রজেক্টের নাম (Title) দিন');
       return;
@@ -132,6 +145,13 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose, on
       customerConsentGranted: formData.customerConsentGranted !== false,
       sourceType: formData.sourceType || 'company_work'
     };
+
+    if (finalData.beforeImage) {
+      await persistImageChange('project', 'before', finalData.beforeImage, finalData.id);
+    }
+    if (finalData.afterImage) {
+      await persistImageChange('project', 'after', finalData.afterImage, finalData.id);
+    }
 
     onSave(finalData);
   };
