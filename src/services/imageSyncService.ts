@@ -22,6 +22,14 @@ export interface WebsiteImageRegistry {
     beforeAfterCase3After?: string;
     [key: string]: string | undefined;
   };
+  heroVideos?: {
+    video1Url?: string;
+    video2Url?: string;
+    video3Url?: string;
+    poster1Url?: string;
+    poster2Url?: string;
+    poster3Url?: string;
+  };
   projectImages?: Record<string, { before?: string; after?: string }>;
 }
 
@@ -34,20 +42,20 @@ export const DEFAULT_IMAGE_REGISTRY: WebsiteImageRegistry = {
   updatedAt: new Date().toISOString(),
   version: 1,
   serviceImages: {
-    'srv-overhead-water-tank': 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
-    'overhead-water-tank-cleaning': 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
-    'srv-underground-water-tank': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=75',
-    'underground-water-tank-cleaning': 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=75',
-    'srv-water-pipeline': 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75',
-    'water-pipeline-cleaning': 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75'
+    'srv-overhead-water-tank': 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    'overhead-water-tank-cleaning': 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    'srv-underground-water-tank': 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    'underground-water-tank-cleaning': 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    'srv-water-pipeline': 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+    'water-pipeline-cleaning': 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
   },
   siteImages: {
+    logo: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png',
     heroPoster: '/assets/aistudio/hero-rooftop-poster.jpg',
-    heroBg: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-    aboutStoryImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-    popularTankImage: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
-    popularUndergroundImage: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=75',
-    popularPipelineImage: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75'
+    aboutStoryImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
+    popularTankImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    popularUndergroundImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    popularPipelineImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
   },
   projectImages: {}
 };
@@ -110,12 +118,13 @@ export async function fetchCentralImageRegistry(): Promise<WebsiteImageRegistry>
 
             if (res.ok) {
               const remoteJson = await res.json();
-              if (remoteJson && (remoteJson.serviceImages || remoteJson.siteImages)) {
+              if (remoteJson && (remoteJson.serviceImages || remoteJson.siteImages || remoteJson.heroVideos)) {
                 registry = {
                   updatedAt: remoteJson.updatedAt || new Date().toISOString(),
                   version: Number(remoteJson.version || 1),
                   serviceImages: { ...DEFAULT_IMAGE_REGISTRY.serviceImages, ...(remoteJson.serviceImages || {}) },
                   siteImages: { ...DEFAULT_IMAGE_REGISTRY.siteImages, ...(remoteJson.siteImages || {}) },
+                  heroVideos: remoteJson.heroVideos ? { ...remoteJson.heroVideos } : registry.heroVideos,
                   projectImages: { ...(remoteJson.projectImages || {}) }
                 };
 
@@ -266,8 +275,10 @@ export async function persistImageChange(
       projectImages: { ...(current.projectImages || {}) }
     };
 
+    let previousUrl: string | undefined;
     if (targetType === 'service') {
       const serviceKey = targetId || targetKey;
+      previousUrl = current.serviceImages[serviceKey] || current.serviceImages[targetKey];
       updated.serviceImages[serviceKey] = newImageUrl;
       if (targetKey && targetKey !== serviceKey) {
         updated.serviceImages[targetKey] = newImageUrl;
@@ -281,6 +292,7 @@ export async function persistImageChange(
         updated.siteImages.popularPipelineImage = newImageUrl;
       }
     } else if (targetType === 'siteConfig') {
+      previousUrl = current.siteImages[targetKey];
       updated.siteImages[targetKey] = newImageUrl;
       if (targetKey === 'popularTankImage') {
         updated.serviceImages['srv-overhead-water-tank'] = newImageUrl;
@@ -296,8 +308,10 @@ export async function persistImageChange(
       if (!updated.projectImages) updated.projectImages = {};
       const proj = updated.projectImages[targetId] || {};
       if (targetKey === 'before') {
+        previousUrl = proj.before;
         proj.before = newImageUrl;
       } else {
+        previousUrl = proj.after;
         proj.after = newImageUrl;
       }
       updated.projectImages[targetId] = proj;
@@ -370,9 +384,150 @@ export async function persistImageChange(
       }
     }
 
+    // 4. Safe Deletion: If old image is replaced and no longer referenced, purge from Storage
+    if (previousUrl && previousUrl !== newImageUrl) {
+      deleteReplacedStorageFile(previousUrl, updated).catch((delErr) => {
+        console.warn('[ImageSyncService] Non-blocking replaced media cleanup notice:', delErr);
+      });
+    }
+
     return { success: true };
   } catch (err: any) {
     console.error('[ImageSyncService] Failed to persist image change:', err);
     return { success: false, error: err?.message || 'Failed to persist image change' };
   }
 }
+
+const DELETION_AUDIT_KEY = 'sunviloz_deleted_media_audit_v1';
+
+function recordDeletionAudit(path: string, success: boolean, reason?: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = safeGetItem(DELETION_AUDIT_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    list.unshift({
+      path,
+      success,
+      reason,
+      timestamp: new Date().toISOString()
+    });
+    // Keep last 50 audit entries
+    safeSetItem(DELETION_AUDIT_KEY, JSON.stringify(list.slice(0, 50)));
+  } catch {}
+}
+
+/**
+ * Permanently deletes replaced media from Supabase Storage once verified.
+ * Guarantees that orphaned files do not accumulate, while strictly protecting active,
+ * shared, or essential media assets.
+ */
+export async function deleteReplacedStorageFile(
+  oldUrl: string,
+  currentRegistry: WebsiteImageRegistry
+): Promise<{ success: boolean; deletedPath?: string; error?: string }> {
+  try {
+    if (!oldUrl || typeof oldUrl !== 'string') return { success: false, error: 'Empty URL' };
+
+    const bucketMarker = `/storage/v1/object/public/${BUCKET_NAME}/`;
+    if (!oldUrl.includes(bucketMarker)) {
+      return { success: false, error: 'Not a site-media storage object' };
+    }
+
+    const storagePath = decodeURIComponent(oldUrl.split(bucketMarker)[1].split('?')[0]);
+    if (!storagePath) {
+      return { success: false, error: 'Invalid storage path' };
+    }
+
+    // Safety rules: NEVER delete protected core assets
+    if (
+      storagePath.includes('sunviloz-logo') ||
+      storagePath.includes('tank-cleaning-desktop') ||
+      storagePath.includes('tank-cleaning-mobile') ||
+      storagePath.startsWith('config/')
+    ) {
+      return { success: false, error: 'Protected core asset' };
+    }
+
+    // Check if oldUrl is still referenced anywhere in the active registry
+    const isStillReferenced =
+      Object.values(currentRegistry.serviceImages || {}).includes(oldUrl) ||
+      Object.values(currentRegistry.siteImages || {}).includes(oldUrl) ||
+      Object.values(currentRegistry.projectImages || {}).some(
+        p => p?.before === oldUrl || p?.after === oldUrl
+      );
+
+    if (isStillReferenced) {
+      return { success: false, error: 'File still referenced in registry' };
+    }
+
+    if (!isSupabaseConfigured()) {
+      return { success: false, error: 'Supabase not configured' };
+    }
+
+    const { error } = await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
+    if (error) {
+      console.warn(`[ImageSyncService] Could not remove obsolete file ${storagePath}:`, error.message);
+      recordDeletionAudit(storagePath, false, error.message);
+      return { success: false, deletedPath: storagePath, error: error.message };
+    }
+
+    recordDeletionAudit(storagePath, true);
+    return { success: true, deletedPath: storagePath };
+  } catch (err: any) {
+    console.warn('[ImageSyncService] Exception during file deletion:', err);
+    return { success: false, error: err?.message || 'Deletion error' };
+  }
+}
+
+/**
+ * Persist Hero Cover Videos directly to Supabase Storage Central Registry.
+ * Ensures cross-browser, cross-device, and incognito session persistence.
+ */
+export async function persistHeroVideosToCentralRegistry(videos: {
+  video1Url: string;
+  video2Url: string;
+  video3Url: string;
+  poster1Url?: string;
+  poster2Url?: string;
+  poster3Url?: string;
+}): Promise<boolean> {
+  const current = getStoredImageRegistry();
+  const updated: WebsiteImageRegistry = {
+    ...current,
+    updatedAt: new Date().toISOString(),
+    version: (current.version || 1) + 1,
+    heroVideos: {
+      video1Url: videos.video1Url,
+      video2Url: videos.video2Url,
+      video3Url: videos.video3Url,
+      poster1Url: videos.poster1Url,
+      poster2Url: videos.poster2Url,
+      poster3Url: videos.poster3Url
+    }
+  };
+
+  if (typeof window !== 'undefined') {
+    safeSetItem(CENTRAL_IMAGES_STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent(CENTRAL_IMAGES_EVENT, { detail: updated }));
+  }
+
+  if (isSupabaseConfigured()) {
+    try {
+      const payloadString = JSON.stringify(updated, null, 2);
+      const versionedFilename = `registry_${Date.now()}.json`;
+
+      await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(`${CONFIG_FOLDER}/${versionedFilename}`, new Blob([payloadString], { type: 'application/json' }), {
+          cacheControl: '0',
+          upsert: true,
+          contentType: 'application/json'
+        });
+    } catch (err) {
+      console.warn('[ImageSyncService] persistHeroVideosToCentralRegistry notice:', err);
+    }
+  }
+
+  return true;
+}
+

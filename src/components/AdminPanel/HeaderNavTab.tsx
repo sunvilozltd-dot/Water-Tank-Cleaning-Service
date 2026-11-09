@@ -1000,16 +1000,17 @@ export const HeaderNavTab: React.FC = () => {
               <div className="w-full bg-[#07172C] border-b border-cyan-800/40 px-4 py-3 flex items-center justify-between text-white">
                 
                 {/* Brand Logo - Transparent Background */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   {configState.logoEnabled && (configState.logoUrl || headerConfig.logoUrl) ? (
                     <img
                       src={configState.logoUrl || headerConfig.logoUrl}
                       alt="Brand Logo"
                       style={{
-                        width: `${configState.logoWidth || 36}px`,
-                        height: `${configState.logoHeight || 36}px`
+                        height: `${configState.logoHeight || 36}px`,
+                        width: 'auto',
+                        maxWidth: `${configState.logoWidth || 48}px`
                       }}
-                      className="object-contain bg-transparent shrink-0"
+                      className="object-contain object-left bg-transparent shrink-0"
                     />
                   ) : (
                     <div className="flex items-center justify-center text-cyan-400 font-extrabold text-sm shrink-0 bg-transparent">

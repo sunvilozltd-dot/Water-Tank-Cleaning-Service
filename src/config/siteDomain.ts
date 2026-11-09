@@ -31,9 +31,9 @@ export const getCanonicalUrl = (path: string = '/'): string => {
  */
 export const DEFAULT_GOOGLE_CONFIG = {
   // Configurable Google Business Profile URL
-  businessProfileUrl: 'https://maps.google.com/?q=Sunviloz+Clean+Care+Dhaka',
+  businessProfileUrl: 'https://www.google.com/maps/place/Sunviloz+Clean+Care/@23.8267734,90.4179331,17z/data=!4m8!3m7!1s0x4caea8c73c1a3949:0x3a92e0082947d375!8m2!3d23.8267734!4d90.4179331!9m1!1b1!16s%2Fg%2F11zdmdqbwt',
   // Direct Google Review submission link
-  reviewsUrl: 'https://search.google.com/local/writereview?placeid=ChIJc123_sunviloz_clean_care',
+  reviewsUrl: 'https://www.google.com/maps/place/Sunviloz+Clean+Care/@23.8266213,90.4190328,15z/data=!4m8!3m7!1s0x4caea8c73c1a3949:0x3a92e0082947d375!8m2!3d23.8267734!4d90.4179331!9m1!1b1!16s%2Fg%2F11zdmdqbwt?entry=ttu',
   // Google Maps Directions link
-  directionsUrl: 'https://maps.google.com/maps/dir//Dhaka,+Bangladesh/@23.8103,90.4125',
+  directionsUrl: 'https://maps.google.com/maps/dir//Sunviloz+Clean+Care,+Dhaka/@23.8267734,90.4179331',
 };

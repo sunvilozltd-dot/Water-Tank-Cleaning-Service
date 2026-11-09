@@ -3,6 +3,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { SiteConfigProvider } from './context/SiteConfigContext';
 import { HeaderNavProvider } from './context/HeaderNavContext';
 import { HomepageCmsProvider } from './context/HomepageCmsContext';
+import { ProjectVideosProvider } from './context/ProjectVideosContext';
 import { TrackingProvider } from './context/TrackingContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 
@@ -19,23 +20,23 @@ import { fetchCentralImageRegistry } from './services/imageSyncService';
 // Critical Homepage eagerly loaded for instant FCP / LCP
 import { HomePage } from './pages/HomePage';
 
-// Code-split secondary pages for fast initial bundle
-const AboutPage = React.lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
-const ServicesPage = React.lazy(() => import('./pages/ServicesPage').then(m => ({ default: m.ServicesPage })));
-const WaterTankCleaningPage = React.lazy(() => import('./pages/WaterTankCleaningPage').then(m => ({ default: m.WaterTankCleaningPage })));
-const PipelineCleaningPage = React.lazy(() => import('./pages/PipelineCleaningPage').then(m => ({ default: m.PipelineCleaningPage })));
-const ContactPage = React.lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
-const ServiceAreaPage = React.lazy(() => import('./pages/ServiceAreaPage').then(m => ({ default: m.ServiceAreaPage })));
-const LocationDetailPage = React.lazy(() => import('./pages/LocationDetailPage').then(m => ({ default: m.LocationDetailPage })));
-const BlogPage = React.lazy(() => import('./pages/BlogPage').then(m => ({ default: m.BlogPage })));
-const BlogPostDetailPage = React.lazy(() => import('./pages/BlogPostDetailPage').then(m => ({ default: m.BlogPostDetailPage })));
-const PortfolioPage = React.lazy(() => import('./pages/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
-const TermsPage = React.lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
-const PrivacyPolicyPage = React.lazy(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
-const FaqPage = React.lazy(() => import('./pages/FaqPage').then(m => ({ default: m.FaqPage })));
-const ServiceDetailPage = React.lazy(() => import('./pages/ServiceDetailPage').then(m => ({ default: m.ServiceDetailPage })));
-const GetQuotePage = React.lazy(() => import('./pages/GetQuotePage').then(m => ({ default: m.GetQuotePage })));
-const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+// Eagerly import public pages for authentic SSR/prerendering of full React DOM trees
+import { AboutPage } from './pages/AboutPage';
+import { ServicesPage } from './pages/ServicesPage';
+import { WaterTankCleaningPage } from './pages/WaterTankCleaningPage';
+import { PipelineCleaningPage } from './pages/PipelineCleaningPage';
+import { ContactPage } from './pages/ContactPage';
+import { ServiceAreaPage } from './pages/ServiceAreaPage';
+import { LocationDetailPage } from './pages/LocationDetailPage';
+import { BlogPage } from './pages/BlogPage';
+import { BlogPostDetailPage } from './pages/BlogPostDetailPage';
+import { PortfolioPage } from './pages/PortfolioPage';
+import { TermsPage } from './pages/TermsPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { FaqPage } from './pages/FaqPage';
+import { ServiceDetailPage } from './pages/ServiceDetailPage';
+import { GetQuotePage } from './pages/GetQuotePage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 // Code-split Admin pages (Prevents downloading heavy admin tabs/tables on public site)
 const AdminLoginPage = React.lazy(() => import('./pages/AdminLoginPage').then(m => ({ default: m.AdminLoginPage })));
@@ -54,9 +55,14 @@ const PageLoadingFallback: React.FC = () => (
   </div>
 );
 
-function AppContent() {
+interface AppProps {
+  initialPath?: string;
+}
+
+function AppContent({ initialPath }: AppProps) {
   const { isAuthenticated } = useAdminAuth();
   const [currentPath, setCurrentPath] = useState<string>(() => {
+    if (initialPath) return initialPath;
     if (typeof window !== 'undefined') {
       return window.location.pathname || '/';
     }
@@ -360,17 +366,19 @@ function AppContent() {
   );
 }
 
-export default function App() {
+export default function App({ initialPath }: AppProps = {}) {
   return (
     <LanguageProvider>
       <SiteConfigProvider>
         <HeaderNavProvider>
           <HomepageCmsProvider>
-            <TrackingProvider>
-              <AdminAuthProvider>
-                <AppContent />
-              </AdminAuthProvider>
-            </TrackingProvider>
+            <ProjectVideosProvider>
+              <TrackingProvider>
+                <AdminAuthProvider>
+                  <AppContent initialPath={initialPath} />
+                </AdminAuthProvider>
+              </TrackingProvider>
+            </ProjectVideosProvider>
           </HomepageCmsProvider>
         </HeaderNavProvider>
       </SiteConfigProvider>

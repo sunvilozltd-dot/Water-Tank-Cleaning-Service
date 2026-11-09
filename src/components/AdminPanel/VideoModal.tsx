@@ -17,7 +17,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ video, onClose, onSave }
       description: '',
       youtubeId: '',
       url: '',
-      thumbnailUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=75',
+      thumbnailUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
       duration: '3:45'
     }
   );

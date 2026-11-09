@@ -17,9 +17,13 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onOpenQuoteModal, on
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-12">
       <SeoHead
-        title={lang === 'bn' ? 'আমাদের সেবাসমূহ | সানভিলোজ ক্লিন কেয়ার ঢাকা' : 'Our Services - Water Tank & Pipeline Cleaning in Dhaka'}
-        description="Comprehensive water tank cleaning services including underground reservoir deep wash, rooftop overhead tank sanitization, and pipeline descaling in Dhaka."
+        title="Water Tank & Pipeline Cleaning Services in Dhaka | SUNVILOZ CLEAN CARE"
+        description="Comprehensive water tank cleaning services including underground reservoir deep wash, rooftop overhead tank sanitization, and pipeline descaling in Dhaka. 01609999612."
         canonicalUrl="https://sunvilozcleancare.com/services"
+        breadcrumbs={[
+          { name: lang === 'bn' ? 'হোম' : 'Home', path: '/' },
+          { name: lang === 'bn' ? 'সার্ভিসসমূহ' : 'Services', path: '/services' }
+        ]}
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'সার্ভিসসমূহ' : 'Services', href: '/services' }]} />
 

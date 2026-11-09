@@ -30,7 +30,7 @@ export const LOCATIONS_DATA: LocationPageData[] = [
       },
       {
         question: 'Do you offer non-toxic food-grade sanitizers?',
-        answer: 'Yes. We strictly use WHO-compliant, certified food-grade safe disinfectants with zero harsh chlorine odors, safe for immediate domestic water usage.'
+        answer: 'Yes. We strictly use approved, safe food-contact water tank disinfectants with zero harsh chemical odors, safe for immediate domestic water usage.'
       }
     ]
   },
@@ -423,7 +423,7 @@ export const LOCATIONS_DATA: LocationPageData[] = [
       },
       {
         question: 'How do you clean tanks without damaging waterproofing?',
-        answer: 'Our rotary pressure nozzles are calibrated between 120 and 150 bar, effectively dislodging grime without scratching or stripping waterproofing membranes.'
+        answer: 'Our specialized rotary pressure nozzles are engineered to dislodge grime, sludge, and algae effectively without scratching or stripping waterproofing membranes.'
       }
     ]
   },

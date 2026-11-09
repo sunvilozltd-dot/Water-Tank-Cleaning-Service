@@ -9,6 +9,7 @@ import { ServicesTab } from '../components/AdminPanel/ServicesTab';
 import { ServicesFaqTab } from '../components/AdminPanel/ServicesFaqTab';
 import { ServiceFormBuilderTab } from '../components/AdminPanel/ServiceFormBuilderTab';
 import { PortfolioTab } from '../components/AdminPanel/PortfolioTab';
+import { ProjectVideosTab } from '../components/AdminPanel/ProjectVideosTab';
 import { VideosTab } from '../components/AdminPanel/VideosTab';
 import { BlogTab } from '../components/AdminPanel/BlogTab';
 import { MediaLibraryTab } from '../components/AdminPanel/MediaLibraryTab';
@@ -208,11 +209,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
           )}
 
           {currentTab === 'videos' && (
-            <VideosTab
-              videos={videos}
-              onSaveVideo={handleSaveVideo}
-              onDeleteVideo={handleDeleteVideo}
-            />
+            <ProjectVideosTab />
           )}
 
           {currentTab === 'blog' && (

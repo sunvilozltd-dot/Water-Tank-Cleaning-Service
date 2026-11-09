@@ -103,10 +103,10 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({
             const cardImage = 
               service.image || 
               service.featured_image || 
-              (service.slug.includes('overhead') ? (images?.popularTankImage || 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75') :
-               service.slug.includes('underground') ? (images?.popularUndergroundImage || 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=75') :
-               service.slug.includes('pipeline') ? (images?.popularPipelineImage || 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75') :
-               'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75');
+              (service.slug.includes('overhead') ? (images?.popularTankImage || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg') :
+               service.slug.includes('underground') ? (images?.popularUndergroundImage || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png') :
+               service.slug.includes('pipeline') ? (images?.popularPipelineImage || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg') :
+               'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg');
 
             return (
               <article 

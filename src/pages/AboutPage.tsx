@@ -32,9 +32,13 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onOpenQuoteModal }) => {
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-10 px-4 sm:px-6 max-w-7xl mx-auto space-y-16">
       <SeoHead
-        title="About Us in Dhaka | Sunviloz Clean Care"
-        description="Learn about Sunviloz Clean Care, established in 2020 in Dhaka. Specializing in professional water tank and pipeline cleaning with transparent quotations."
+        title="About Us | SUNVILOZ CLEAN CARE — Professional Cleaning Service Dhaka"
+        description="Learn about SUNVILOZ CLEAN CARE, established in 2020 in Dhaka. Specializing in mechanized water tank and pipeline cleaning with transparent quotations. 01609999612."
         canonicalUrl="https://sunvilozcleancare.com/about"
+        breadcrumbs={[
+          { name: lang === 'bn' ? 'হোম' : 'Home', path: '/' },
+          { name: lang === 'bn' ? 'আমাদের সম্পর্কে' : 'About Us', path: '/about' }
+        ]}
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'আমাদের সম্পর্কে' : 'About Us', href: '/about' }]} />
 

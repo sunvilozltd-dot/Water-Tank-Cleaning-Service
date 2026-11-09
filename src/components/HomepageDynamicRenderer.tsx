@@ -13,6 +13,7 @@ import { SmartQuoteWizard } from './SmartQuoteWizard';
 import { ServiceAreaSection } from './ServiceAreaSection';
 import { ReviewsSection } from './ReviewsSection';
 import { BlogSection } from './BlogSection';
+import { ProjectVideoSliderSection } from './ProjectVideoSliderSection';
 import { OurWorkVideosSection } from './OurWorkVideosSection';
 import { FinalCtaSection } from './FinalCtaSection';
 import { CustomSectionRenderer } from './CustomSectionRenderer';
@@ -66,8 +67,8 @@ export const HomepageDynamicRenderer: React.FC<HomepageDynamicRendererProps> = (
 
       {/* 8. Remaining Useful Sections */}
       <TrustSection />
-      {/* Replaced BeforeAfterSection with Work Video Documentation */}
-      <OurWorkVideosSection />
+      {/* Project Video Slider Section (Direct Video Documentation) */}
+      <ProjectVideoSliderSection />
       <ReviewsSection />
       {/* Water Wave Divider leading into Smart Quote Section */}
       <WaterWaveDivider variant="flowing" fillColor="#FFFFFF" />
@@ -147,7 +148,9 @@ export const HomepageDynamicRenderer: React.FC<HomepageDynamicRendererProps> = (
           case 'trust':
             return <TrustSection key={section.id} />;
           case 'beforeAfter':
-            return <OurWorkVideosSection key={section.id} />;
+          case 'projectVideos':
+          case 'videos':
+            return <ProjectVideoSliderSection key={section.id} />;
           case 'pricing':
             return null;
           case 'calculator':

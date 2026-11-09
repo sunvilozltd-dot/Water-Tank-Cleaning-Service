@@ -21,7 +21,7 @@ export const BlogPostModal: React.FC<BlogPostModalProps> = ({ post, onClose, onS
       excerptBn: '',
       content: '',
       contentBn: '',
-      imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=75',
+      imageUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
       author: 'Sunviloz Tech Team',
       publishedAt: new Date().toISOString().slice(0, 10),
       readTime: '4 min read',

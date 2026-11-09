@@ -32,19 +32,11 @@ export interface UniversalImageChangeModalProps {
 
 export const CURATED_CLEANING_GALLERY = [
   {
-    id: 'team-modern-equipment',
-    titleBn: 'পেশাদার ক্লিনিং টিম ও আধুনিক সরঞ্জাম',
-    titleEn: 'Professional Cleaning Team with Modern Equipment',
-    category: 'Team & Equipment',
-    url: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=80',
-    description: 'Technicians with high-pressure gear and safety uniforms'
-  },
-  {
     id: 'rooftop-pvc-clean',
     titleBn: 'ছাদের ওভারহেড পিভিসি ও আরসিসি ট্যাংক',
     titleEn: 'Rooftop PVC & Concrete Overhead Tank',
     category: 'Rooftop Tanks',
-    url: 'https://images.unsplash.com/photo-1541888946425-d0fbb186156f?auto=format&fit=crop&w=1200&q=80',
+    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     description: 'Clean rooftop water storage tank on apartment roof'
   },
   {
@@ -52,48 +44,40 @@ export const CURATED_CLEANING_GALLERY = [
     titleBn: 'আন্ডারগ্রাউন্ড রিজার্ভার মেকানাইজড ডিপ ক্লিন',
     titleEn: 'Underground Reservoir Deep Sludge Extraction',
     category: 'Underground Reserve',
-    url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=80',
+    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
     description: 'Industrial pump sludge extraction and floor scoured'
-  },
-  {
-    id: 'rotary-pressure-jet',
-    titleBn: '১৫০-বার হাই-প্রেসার রোটারি জেট ওয়াশ',
-    titleEn: '150-Bar Rotary High-Pressure Jet Wash',
-    category: 'Jet Wash',
-    url: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=80',
-    description: 'Rotary nozzle blasting stubborn algae biofilm'
-  },
-  {
-    id: 'sanitized-spotless-tank',
-    titleBn: 'জীবাণুমুক্ত স্ফটিক স্বচ্ছ পানির ট্যাংক',
-    titleEn: 'Sanitized Spotless Interior Water Tank',
-    category: 'Sanitization',
-    url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1200&q=80',
-    description: 'Pristine, sterilized walls and floor ready for fresh water'
-  },
-  {
-    id: 'pure-crystal-water',
-    titleBn: 'স্ফটিক স্বচ্ছ পানযোগ্য বিশুদ্ধ পানি',
-    titleEn: 'Crystal Clear Pure Safe Drinking Water',
-    category: 'Clean Water',
-    url: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=80',
-    description: 'Fresh flowing safe water free from iron & dirt'
   },
   {
     id: 'pipeline-descaling-lines',
     titleBn: 'পানির পাইপলাইন আয়রন ও মরিচা ক্লিন',
     titleEn: 'Plumbing Pipeline Descaling & Hydro Flushing',
     category: 'Pipelines',
-    url: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=80',
+    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
     description: 'Internal water pipe hydro flushing'
   },
   {
-    id: 'dirty-tank-before',
-    titleBn: 'পূর্বে: ভারী শ্যাওলা ও ঘন কাদার আস্তরণ',
-    titleEn: 'Before: Thick Mud Sludge & Biofilm Accumulation',
-    category: 'Before Cleaning',
-    url: 'https://images.unsplash.com/photo-1616401784845-180882ba9ba8?auto=format&fit=crop&w=1200&q=80',
-    description: 'Uncleaned water tank with brown silt and algae'
+    id: 'about-story-team',
+    titleBn: 'পেশাদার ক্লিনিং টিম ও গল্প',
+    titleEn: 'Professional Team Story',
+    category: 'Team & Equipment',
+    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
+    description: 'Sunviloz trained team at real project site'
+  },
+  {
+    id: 'rooftop-poster-real',
+    titleBn: 'ছাদের ট্যাংক রিয়েল জব পোস্টার',
+    titleEn: 'Rooftop Tank Real Job Poster',
+    category: 'Job Poster',
+    url: '/assets/aistudio/hero-rooftop-poster.jpg',
+    description: 'Real verified cleaning operation by Sunviloz team'
+  },
+  {
+    id: 'underground-poster-real',
+    titleBn: 'আন্ডারগ্রাউন্ড ট্যাংক রিয়েল জব পোস্টার',
+    titleEn: 'Underground Tank Real Job Poster',
+    category: 'Job Poster',
+    url: '/assets/aistudio/hero-underground-poster.jpg',
+    description: 'Real verified subterranean reservoir desiltation'
   }
 ];
 

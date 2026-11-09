@@ -14,12 +14,12 @@ export const Hero: React.FC<HeroProps> = () => {
 
   const cmsHeroSection = sections.find(s => s.sectionKey === 'hero');
 
-  // Helper to ensure legacy test YouTube placeholder ID never renders in any browser
+  // Helper to ensure empty or placeholder video URLs fallback safely
   const sanitizeHeroVideo = (url: string | undefined, fallback: string): string => {
-    if (!url || typeof url !== 'string' || url.includes('jrfRHWs3WSw') || url.includes('placeholder')) {
+    if (!url || typeof url !== 'string' || !url.trim() || url.includes('placeholder')) {
       return fallback;
     }
-    return url;
+    return url.trim();
   };
 
   // Video 1 source & poster (Rooftop Tank Cleaning)
@@ -36,12 +36,11 @@ export const Hero: React.FC<HeroProps> = () => {
   );
   const video2Poster = cmsHeroSection?.posterImage2Url || hero.posterImage2Url || '/assets/aistudio/hero-underground-poster.jpg';
 
-  // Video 3 source & poster (Water Supply Pipeline Descaling & Hydro-Pulse Wash)
   const video3Url = sanitizeHeroVideo(
     cmsHeroSection?.video3Url || hero.video3Url,
-    'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4'
+    ''
   );
-  const video3Poster = cmsHeroSection?.posterImage3Url || hero.posterImage3Url || 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75';
+  const video3Poster = cmsHeroSection?.posterImage3Url || hero.posterImage3Url || '/assets/aistudio/hero-underground-poster.jpg';
 
   // Video 1 Refs & State
   const video1Ref = useRef<HTMLVideoElement>(null);
@@ -206,7 +205,7 @@ export const Hero: React.FC<HeroProps> = () => {
                     src={video1Poster} 
                     alt="Cleaning Service Video 1" 
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=75';
+                      (e.currentTarget as HTMLImageElement).src = '/assets/aistudio/hero-rooftop-poster.jpg';
                     }}
                     className="absolute inset-0 w-full h-full object-contain bg-black" 
                   />
@@ -273,7 +272,7 @@ export const Hero: React.FC<HeroProps> = () => {
                     src={video2Poster} 
                     alt="Cleaning Service Video 2" 
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=75';
+                      (e.currentTarget as HTMLImageElement).src = '/assets/aistudio/hero-underground-poster.jpg';
                     }}
                     className="absolute inset-0 w-full h-full object-contain bg-black" 
                   />
@@ -331,7 +330,7 @@ export const Hero: React.FC<HeroProps> = () => {
                   onError={() => setHasError3(true)}
                   className="w-full h-full object-contain bg-black"
                 >
-                  <source src={video3Url} type="video/mp4" />
+                  {video3Url ? <source src={video3Url} type="video/mp4" /> : null}
                 </video>
  
                 {/* Poster fallback when video load fails */}
@@ -340,7 +339,7 @@ export const Hero: React.FC<HeroProps> = () => {
                     src={video3Poster} 
                     alt="Cleaning Service Video 3" 
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75';
+                      (e.currentTarget as HTMLImageElement).src = '/assets/aistudio/hero-underground-poster.jpg';
                     }}
                     className="absolute inset-0 w-full h-full object-contain bg-black" 
                   />

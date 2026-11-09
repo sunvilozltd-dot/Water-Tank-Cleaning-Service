@@ -30,7 +30,7 @@ export const Footer: React.FC<FooterProps> = ({
   const { services } = useServices();
   const { headerConfig } = useHeaderNav();
   const { images } = useSiteConfig();
-  const activeLogoUrl = headerConfig.logoUrl || images?.logo;
+  const activeLogoUrl = headerConfig.logoUrl || images?.logo || '/assets/aistudio/sunviloz-logo.png';
   const currentYear = new Date().getFullYear();
   const [modalPolicy, setModalPolicy] = useState<'privacy' | 'terms' | null>(null);
 
@@ -55,25 +55,29 @@ export const Footer: React.FC<FooterProps> = ({
             
             {/* Col 1 & 2: Brand Information */}
             <div className="lg:col-span-2 space-y-4">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {headerConfig.logoEnabled && activeLogoUrl ? (
                   <img
                     src={activeLogoUrl}
                     alt={headerConfig.logoAlt || `${headerConfig.brandName || 'Sunviloz'} Logo`}
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = 'none';
+                      const target = e.currentTarget as HTMLImageElement;
+                      if (!target.src.includes('sunviloz-logo.png')) {
+                        target.src = '/assets/aistudio/sunviloz-logo.png';
+                      }
                     }}
                     style={{
-                      width: `${headerConfig.logoWidth || 40}px`,
-                      height: `${headerConfig.logoHeight || 40}px`
+                      height: `${headerConfig.logoHeight || 38}px`,
+                      width: 'auto',
+                      maxWidth: `${headerConfig.logoWidth || 48}px`
                     }}
-                    className="object-contain bg-transparent"
+                    className="object-contain object-left shrink-0 bg-transparent"
                   />
                 ) : headerConfig.logoEnabled ? (
                   <div 
                     style={{
-                      width: `${headerConfig.logoWidth || 40}px`,
-                      height: `${headerConfig.logoHeight || 40}px`
+                      width: `${headerConfig.logoWidth || 38}px`,
+                      height: `${headerConfig.logoHeight || 38}px`
                     }}
                     className="flex items-center justify-center text-[#38BDF8] shrink-0 bg-transparent" 
                     aria-hidden="true"

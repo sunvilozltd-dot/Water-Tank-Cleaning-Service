@@ -6,47 +6,7 @@ import { supabase, isSupabaseConfigured } from './supabaseClient';
 const STORAGE_KEY = 'sunviloz_work_videos_v2';
 const EVENT_NAME = 'sunviloz_work_videos_changed';
 
-export const INITIAL_VIDEOS: WorkVideoItem[] = [
-  {
-    id: 'vid-1',
-    title: 'Rooftop PVC Overhead Tank High-Pressure Jet Cleaning',
-    titleBn: 'ছাদের পিভিসি ট্যাংকের হাই-প্রেসার রোটারি জেট দিয়ে শ্যাওলা পরিষ্কার',
-    description: '150-bar rotary water jet removing algae, biofilms, and deep dirt without damaging PVC walls.',
-    descriptionBn: 'ট্যাংকের প্লাস্টিক ক্ষতি না করে ভেতরের কঠিন শ্যাওলা ও ব্যাকটেরিয়া লেয়ার পরিষ্কার করার দৃশ্য।',
-    youtubeUrl: 'https://www.youtube.com/watch?v=ScMzIvxBSi4',
-    youtubeId: 'ScMzIvxBSi4',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=75',
-    relatedServiceSlug: 'water-overhead-tank-cleaning',
-    featured: true,
-    createdAt: '2026-08-10'
-  },
-  {
-    id: 'vid-2',
-    title: 'Underground Reserve Tank Heavy Sludge & WASA Mud Pumping',
-    titleBn: 'মাটির নিচের রিজার্ভার থেকে ওয়াসা কাদা ও স্লাজ উত্তোলন পদ্ধতি',
-    description: 'Industrial submersible slurry pumps extracting thick municipal sediment and deep wall power washing.',
-    descriptionBn: 'সাবমারসিবল পাম্প ও সাকশন ভ্যাকুয়ামের সাহায্যে নিচ থেকে ভারী কাদা অপসারণের সরাসরি দৃশ্য।',
-    youtubeUrl: 'https://www.youtube.com/watch?v=ScMzIvxBSi4',
-    youtubeId: 'ScMzIvxBSi4',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=75',
-    relatedServiceSlug: 'underground-water-tank-cleaning',
-    featured: true,
-    createdAt: '2026-08-22'
-  },
-  {
-    id: 'vid-3',
-    title: 'Residential Water Supply Pipeline Flushing & Iron Scale Removal',
-    titleBn: 'ঘরের ভেতরের পানির পাইপলাইন ফ্লাশিং ও জমে থাকা আয়রন পরিষ্কার',
-    description: 'Pressurized hydrodynamic pulsing cleaning pipes, eliminating rust, and restoring faucet pressure.',
-    descriptionBn: 'দেয়াল না ভেঙে হাইড্রো-পালস মেশিনে পাইপের ভেতরের মরিচা ও লালচে আয়রন ধুয়ে বের করা।',
-    youtubeUrl: 'https://www.youtube.com/watch?v=kJQP7kiw5Fk',
-    youtubeId: 'kJQP7kiw5Fk',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75',
-    relatedServiceSlug: 'water-pipeline-cleaning',
-    featured: true,
-    createdAt: '2026-09-05'
-  }
-];
+export const INITIAL_VIDEOS: WorkVideoItem[] = [];
 
 export const extractYouTubeId = (url: string): string => {
   if (!url) return '';
@@ -128,9 +88,7 @@ export const fetchVideosFromSupabase = async (): Promise<WorkVideoItem[]> => {
           window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: list }));
         }
       } else if (!error && Array.isArray(data) && data.length === 0) {
-        // Table exists but empty, seed default videos
-        const rows = INITIAL_VIDEOS.map((v, i) => mapVideoToRow(v, i));
-        await supabase.from('work_videos').upsert(rows, { onConflict: 'id' });
+        list = [];
       }
     } catch (err) {
       console.warn('Could not query work_videos from Supabase, using local store:', err);

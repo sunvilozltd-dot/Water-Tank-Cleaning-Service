@@ -29,8 +29,8 @@ export const TrustSection: React.FC<TrustSectionProps> = ({ onOpenQuoteModal }) 
     },
     {
       icon: Waves,
-      titleEn: '120-150 Bar Rotary Pressure Jet',
-      titleBn: '১২০-১৫০ বার রোটারি জেট ওয়াশ',
+      titleEn: 'High-Pressure Rotary Jet Wash',
+      titleBn: 'মেকানাইজড রোটারি জেট ওয়াশ',
       descEn: 'Industrial rotary water pressure strips stubborn algae, mineral scale, and biofilm without damaging PVC or concrete waterproofing.',
       descBn: 'উচ্চ চাপের ঘূর্ণায়মান রোটারি নজল ট্যাংকের দেয়াল ও প্লাম্বিং অক্ষত রেখেই ভেতরের শেওলা ও কাদা নিমেষে পরিষ্কার করে।'
     },

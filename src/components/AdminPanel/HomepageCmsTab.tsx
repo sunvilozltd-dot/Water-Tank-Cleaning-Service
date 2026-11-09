@@ -28,7 +28,8 @@ import { useHomepageCms } from '../../context/HomepageCmsContext';
 import { useSiteConfig } from '../../context/SiteConfigContext';
 import { HomepageSection } from '../../types/homepageCms';
 import { updateHeroVideoConfig } from '../../utils/siteConfigStore';
-import { uploadMediaItem, extractYouTubeId } from '../../services/mediaService';
+import { uploadMediaItem, extractYouTubeId, validateVideoUrl } from '../../services/mediaService';
+import { persistHeroVideosToCentralRegistry } from '../../services/imageSyncService';
 import { recordAuditLog } from '../../services/auditService';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { WebsiteImagesTab } from './WebsiteImagesTab';
@@ -65,8 +66,8 @@ export const HomepageCmsTab: React.FC = () => {
   const [offersSaved, setOffersSaved] = useState(false);
 
   // Find existing hero section from CMS or fallback to default
-  const heroSection = sections.find(s => s.sectionKey === 'hero') || {
-    id: 'hero',
+  const heroSection = sections.find(s => s.sectionKey === 'hero' || s.id === 'sec-hero') || {
+    id: 'sec-hero',
     sectionKey: 'hero',
     title: 'Professional Water Tank Cleaning Service in Dhaka',
     titleBn: 'ঢাকায় প্রফেশনাল ওয়াটার ট্যাংক ক্লিনিং সার্ভিস',
@@ -76,7 +77,7 @@ export const HomepageCmsTab: React.FC = () => {
     order: 0,
     videoUrl: '/videos/tank-cleaning-desktop.mp4',
     mobileVideoUrl: '/videos/tank-cleaning-mobile.mp4',
-    posterImageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
+    posterImageUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
     settings: {
       videoEnabled: true,
       overlayOpacity: 0.72,
@@ -107,10 +108,10 @@ export const HomepageCmsTab: React.FC = () => {
 
   // Video 3 (পানির পাইপলাইন ক্লিনিং - Water Pipeline Descaling & Hydro-Pulse Wash)
   const [video3Url, setVideo3Url] = useState<string>(
-    heroSection.video3Url || hero.video3Url || 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4'
+    heroSection.video3Url || hero.video3Url || ''
   );
   const [poster3Url, setPoster3Url] = useState<string>(
-    heroSection.posterImage3Url || hero.posterImage3Url || 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75'
+    heroSection.posterImage3Url || hero.posterImage3Url || '/assets/aistudio/hero-underground-poster.jpg'
   );
 
   const [overlayOpacity, setOverlayOpacity] = useState<number>(
@@ -132,6 +133,53 @@ export const HomepageCmsTab: React.FC = () => {
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [uploadFeedback, setUploadFeedback] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
 
+  // Bengali Validation Messages for URLs
+  const [video1ErrorBn, setVideo1ErrorBn] = useState<string | null>(null);
+  const [video2ErrorBn, setVideo2ErrorBn] = useState<string | null>(null);
+  const [video3ErrorBn, setVideo3ErrorBn] = useState<string | null>(null);
+
+  const handleVideo1Change = (val: string) => {
+    setVideo1Url(val);
+    if (!val.trim()) {
+      setVideo1ErrorBn(null);
+      return;
+    }
+    const check = validateVideoUrl(val);
+    if (!check.isValid) {
+      setVideo1ErrorBn(check.errorBn || 'সঠিক ইউটিউব লিঙ্ক বা ভিডিও পাথ দিন।');
+    } else {
+      setVideo1ErrorBn(null);
+    }
+  };
+
+  const handleVideo2Change = (val: string) => {
+    setVideo2Url(val);
+    if (!val.trim()) {
+      setVideo2ErrorBn(null);
+      return;
+    }
+    const check = validateVideoUrl(val);
+    if (!check.isValid) {
+      setVideo2ErrorBn(check.errorBn || 'সঠিক ইউটিউব লিঙ্ক বা ভিডিও পাথ দিন।');
+    } else {
+      setVideo2ErrorBn(null);
+    }
+  };
+
+  const handleVideo3Change = (val: string) => {
+    setVideo3Url(val);
+    if (!val.trim()) {
+      setVideo3ErrorBn(null);
+      return;
+    }
+    const check = validateVideoUrl(val);
+    if (!check.isValid) {
+      setVideo3ErrorBn(check.errorBn || 'সঠিক ইউটিউব লিঙ্ক বা ভিডিও পাথ দিন।');
+    } else {
+      setVideo3ErrorBn(null);
+    }
+  };
+
   // Sync state if external hero config updates
   useEffect(() => {
     if (heroSection) {
@@ -140,8 +188,8 @@ export const HomepageCmsTab: React.FC = () => {
       setPoster1Url(heroSection.posterImageUrl || hero.posterImageUrl || '/assets/aistudio/hero-rooftop-poster.jpg');
       setVideo2Url(heroSection.video2Url || heroSection.mobileVideoUrl || hero.video2Url || hero.mobileVideoUrl || '/videos/tank-cleaning-mobile.mp4');
       setPoster2Url(heroSection.posterImage2Url || hero.posterImage2Url || '/assets/aistudio/hero-underground-poster.jpg');
-      setVideo3Url(heroSection.video3Url || hero.video3Url || 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4');
-      setPoster3Url(heroSection.posterImage3Url || hero.posterImage3Url || 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75');
+      setVideo3Url(heroSection.video3Url || hero.video3Url || '');
+      setPoster3Url(heroSection.posterImage3Url || hero.posterImage3Url || '/assets/aistudio/hero-underground-poster.jpg');
       setOverlayOpacity(heroSection.settings?.overlayOpacity ?? hero.overlayOpacity ?? 0.72);
       setOverlayColor((heroSection.settings?.overlayColor as any) ?? hero.overlayColor ?? 'navy');
     }
@@ -271,10 +319,47 @@ export const HomepageCmsTab: React.FC = () => {
       setSavedSuccess(false);
       setUploadFeedback(null);
 
-      // 1. Update Homepage CMS Section in Supabase
+      // Validate Video 1 URL
+      const v1Check = validateVideoUrl(video1Url);
+      if (!v1Check.isValid) {
+        setVideo1ErrorBn(v1Check.errorBn || 'কভার কলাম ১ (ভিডিও ১) এর লিঙ্কটি সঠিক নয়।');
+        setUploadFeedback({ type: 'error', message: `কভার কলাম ১ (ভিডিও ১): ${v1Check.errorBn}` });
+        setSaving(false);
+        return;
+      }
+      setVideo1ErrorBn(null);
+
+      // Validate Video 2 URL
+      const v2Check = validateVideoUrl(video2Url);
+      if (!v2Check.isValid) {
+        setVideo2ErrorBn(v2Check.errorBn || 'কভার কলাম ২ (ভিডিও ২) এর লিঙ্কটি সঠিক নয়।');
+        setUploadFeedback({ type: 'error', message: `কভার কলাম ২ (ভিডিও ২): ${v2Check.errorBn}` });
+        setSaving(false);
+        return;
+      }
+      setVideo2ErrorBn(null);
+
+      // Validate Video 3 URL if provided
+      if (video3Url && video3Url.trim()) {
+        const v3Check = validateVideoUrl(video3Url);
+        if (!v3Check.isValid) {
+          setVideo3ErrorBn(v3Check.errorBn || 'কভার কলাম ৩ (ভিডিও ৩) এর লিঙ্কটি সঠিক নয়।');
+          setUploadFeedback({ type: 'error', message: `কভার কলাম ৩ (ভিডিও ৩): ${v3Check.errorBn}` });
+          setSaving(false);
+          return;
+        }
+        setVideo3ErrorBn(null);
+      }
+
+      // 1. Update Homepage CMS Section in Supabase (targeting 'sec-hero')
       const ytId1 = extractYouTubeId(video1Url);
+      const ytId2 = extractYouTubeId(video2Url);
+      const ytId3 = extractYouTubeId(video3Url);
+
       const updatedHeroSection: HomepageSection = {
         ...heroSection,
+        id: 'sec-hero',
+        sectionKey: 'hero',
         videoUrl: video1Url,
         video2Url: video2Url,
         mobileVideoUrl: video2Url,
@@ -283,16 +368,37 @@ export const HomepageCmsTab: React.FC = () => {
         posterImage2Url: poster2Url,
         posterImage3Url: poster3Url,
         mediaType: ytId1 ? 'youtube' : 'video',
-        youtubeUrl: ytId1 ? video1Url : heroSection.youtubeUrl,
-        youtubeVideoId: ytId1 || heroSection.youtubeVideoId,
+        youtubeUrl: ytId1 ? video1Url : undefined,
+        youtubeVideoId: ytId1 || undefined,
+        content: {
+          ...(heroSection.content || {}),
+          video1Url,
+          video2Url,
+          video3Url,
+          mobileVideoUrl: video2Url,
+          posterImage1Url: poster1Url,
+          posterImage2Url: poster2Url,
+          posterImage3Url: poster3Url
+        },
         settings: {
           ...(heroSection.settings || {}),
           videoEnabled,
           overlayOpacity: Number(overlayOpacity),
-          overlayColor
+          overlayColor,
+          video1Url,
+          video2Url,
+          video3Url,
+          mobileVideoUrl: video2Url,
+          posterImage1Url: poster1Url,
+          posterImage2Url: poster2Url,
+          posterImage3Url: poster3Url
         }
       };
-      await updateSection(updatedHeroSection);
+
+      const cmsSaved = await updateSection(updatedHeroSection);
+      if (!cmsSaved) {
+        throw new Error('Supabase ডেটাবেজে ভিডিও সংরক্ষণ করা সম্ভব হয়নি। অনুগ্রহ করে ইন্টারনেট সংযোগ চেক করে পুনরায় চেষ্টা করুন।');
+      }
 
       // 2. Persist to siteConfigStore (public.site_settings) for cross-browser synchronization
       await updateHeroVideoConfig({
@@ -308,20 +414,30 @@ export const HomepageCmsTab: React.FC = () => {
         overlayColor
       });
 
-      // 3. Log audit event
+      // 3. Persist to Central Storage Registry (site-media/config/registry_*.json) for cross-device/incognito sync
+      await persistHeroVideosToCentralRegistry({
+        video1Url,
+        video2Url,
+        video3Url,
+        poster1Url,
+        poster2Url,
+        poster3Url
+      });
+
+      // 4. Log audit event
       await recordAuditLog(
         adminUser?.email || 'admin@sunviloz.com',
         'Updated Cover Tri-Videos',
         'HeroSection',
-        'hero',
+        'sec-hero',
         `Cover Videos Saved: V1=${video1Url.slice(0, 35)}, V2=${video2Url.slice(0, 35)}, V3=${video3Url.slice(0, 35)}`
       );
 
-      // 4. Refresh global config context
+      // 5. Refresh global config context
       refreshConfig();
 
       setSavedSuccess(true);
-      setUploadFeedback({ type: 'success', message: 'কভারের ৩টি ভিডিও সফলভাবে ডেটাবেজে সংরক্ষিত ও আপডেট করা হয়েছে!' });
+      setUploadFeedback({ type: 'success', message: 'কভার কলাম ১ ও কলাম ২-এর ভিডিও সফলভাবে Supabase ডেটাবেজে সংরক্ষিত হয়েছে!' });
       setTimeout(() => {
         setSavedSuccess(false);
       }, 5000);
@@ -344,13 +460,13 @@ export const HomepageCmsTab: React.FC = () => {
     },
     {
       title: 'Pressure Cleaning & Surface Wash',
-      url: 'https://wombatsweepers.com.au/wp-content/uploads/2024/05/pressure-cleaning-brisbane.mp4',
-      mobileUrl: 'https://wombatsweepers.com.au/wp-content/uploads/2024/05/pressure-cleaning-brisbane.mp4'
+      url: '/videos/tank-cleaning-desktop.mp4',
+      mobileUrl: '/videos/tank-cleaning-mobile.mp4'
     },
     {
-      title: 'Deep Water Tank Cleaning Footage',
-      url: 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4',
-      mobileUrl: 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4'
+      title: 'Water Tank High-Pressure Wash',
+      url: '/videos/tank-cleaning-desktop.mp4',
+      mobileUrl: '/videos/tank-cleaning-desktop.mp4'
     }
   ];
 
@@ -544,14 +660,19 @@ export const HomepageCmsTab: React.FC = () => {
                   <input
                     type="text"
                     value={video1Url}
-                    onChange={(e) => setVideo1Url(e.target.value)}
+                    onChange={(e) => handleVideo1Change(e.target.value)}
                     placeholder="e.g. /videos/tank-cleaning-desktop.mp4 or https://www.youtube.com/watch?v=..."
-                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
+                    className={`flex-1 bg-slate-950 border rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none font-mono ${
+                      video1ErrorBn ? 'border-red-500 focus:border-red-400' : 'border-slate-700 focus:border-cyan-500'
+                    }`}
                   />
                   {video1Url && (
                     <button
                       type="button"
-                      onClick={() => setVideo1Url('')}
+                      onClick={() => {
+                        setVideo1Url('');
+                        setVideo1ErrorBn(null);
+                      }}
                       className="p-2 text-red-400 hover:text-red-300 hover:bg-slate-800 rounded-lg border border-slate-700 transition-colors"
                       title="Clear Video 1"
                     >
@@ -559,6 +680,14 @@ export const HomepageCmsTab: React.FC = () => {
                     </button>
                   )}
                 </div>
+
+                {/* Video 1 Bengali Validation Error */}
+                {video1ErrorBn && (
+                  <div className="mt-2 p-2 bg-red-950/80 border border-red-700 text-red-200 text-xs rounded-lg flex items-center gap-1.5 animate-fadeIn">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                    <span>{video1ErrorBn}</span>
+                  </div>
+                )}
 
                 {/* Instant YouTube Preview Thumbnail */}
                 {extractYouTubeId(video1Url) && (
@@ -592,7 +721,10 @@ export const HomepageCmsTab: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => setVideo1Url('/videos/tank-cleaning-desktop.mp4')}
+                  onClick={() => {
+                    setVideo1Url('/videos/tank-cleaning-desktop.mp4');
+                    setVideo1ErrorBn(null);
+                  }}
                   className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg flex items-center gap-1.5 border border-slate-700 transition-colors"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -663,14 +795,19 @@ export const HomepageCmsTab: React.FC = () => {
                   <input
                     type="text"
                     value={video2Url}
-                    onChange={(e) => setVideo2Url(e.target.value)}
+                    onChange={(e) => handleVideo2Change(e.target.value)}
                     placeholder="e.g. /videos/tank-cleaning-mobile.mp4 or https://www.youtube.com/watch?v=..."
-                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
+                    className={`flex-1 bg-slate-950 border rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none font-mono ${
+                      video2ErrorBn ? 'border-red-500 focus:border-red-400' : 'border-slate-700 focus:border-blue-500'
+                    }`}
                   />
                   {video2Url && (
                     <button
                       type="button"
-                      onClick={() => setVideo2Url('')}
+                      onClick={() => {
+                        setVideo2Url('');
+                        setVideo2ErrorBn(null);
+                      }}
                       className="p-2 text-red-400 hover:text-red-300 hover:bg-slate-800 rounded-lg border border-slate-700 transition-colors"
                       title="Clear Video 2"
                     >
@@ -678,6 +815,14 @@ export const HomepageCmsTab: React.FC = () => {
                     </button>
                   )}
                 </div>
+
+                {/* Video 2 Bengali Validation Error */}
+                {video2ErrorBn && (
+                  <div className="mt-2 p-2 bg-red-950/80 border border-red-700 text-red-200 text-xs rounded-lg flex items-center gap-1.5 animate-fadeIn">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                    <span>{video2ErrorBn}</span>
+                  </div>
+                )}
 
                 {/* Instant YouTube Preview Thumbnail */}
                 {extractYouTubeId(video2Url) && (
@@ -711,7 +856,10 @@ export const HomepageCmsTab: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => setVideo2Url('/videos/tank-cleaning-mobile.mp4')}
+                  onClick={() => {
+                    setVideo2Url('/videos/tank-cleaning-mobile.mp4');
+                    setVideo2ErrorBn(null);
+                  }}
                   className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg flex items-center gap-1.5 border border-slate-700 transition-colors"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -782,14 +930,19 @@ export const HomepageCmsTab: React.FC = () => {
                   <input
                     type="text"
                     value={video3Url}
-                    onChange={(e) => setVideo3Url(e.target.value)}
-                    placeholder="e.g. https://spwatertankcleaner.com/... or https://www.youtube.com/watch?v=..."
-                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
+                    onChange={(e) => handleVideo3Change(e.target.value)}
+                    placeholder="e.g. https://www.youtube.com/watch?v=... or /videos/tank-cleaning-desktop.mp4"
+                    className={`flex-1 bg-slate-950 border rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none font-mono ${
+                      video3ErrorBn ? 'border-red-500 focus:border-red-400' : 'border-slate-700 focus:border-emerald-500'
+                    }`}
                   />
                   {video3Url && (
                     <button
                       type="button"
-                      onClick={() => setVideo3Url('')}
+                      onClick={() => {
+                        setVideo3Url('');
+                        setVideo3ErrorBn(null);
+                      }}
                       className="p-2 text-red-400 hover:text-red-300 hover:bg-slate-800 rounded-lg border border-slate-700 transition-colors"
                       title="Clear Video 3"
                     >
@@ -797,6 +950,14 @@ export const HomepageCmsTab: React.FC = () => {
                     </button>
                   )}
                 </div>
+
+                {/* Video 3 Bengali Validation Error */}
+                {video3ErrorBn && (
+                  <div className="mt-2 p-2 bg-red-950/80 border border-red-700 text-red-200 text-xs rounded-lg flex items-center gap-1.5 animate-fadeIn">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                    <span>{video3ErrorBn}</span>
+                  </div>
+                )}
 
                 {/* Instant YouTube Preview Thumbnail */}
                 {extractYouTubeId(video3Url) && (
@@ -830,11 +991,14 @@ export const HomepageCmsTab: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => setVideo3Url('https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4')}
+                  onClick={() => {
+                    setVideo3Url('');
+                    setVideo3ErrorBn(null);
+                  }}
                   className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg flex items-center gap-1.5 border border-slate-700 transition-colors"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  <span>ডিফল্ট ভিডিও ৩ সেট করুন</span>
+                  <span>ভিডিও ৩ ফাঁকা করুন</span>
                 </button>
               </div>
 
@@ -883,8 +1047,8 @@ export const HomepageCmsTab: React.FC = () => {
                     setPoster1Url('/assets/aistudio/hero-rooftop-poster.jpg');
                     setVideo2Url('/videos/tank-cleaning-mobile.mp4');
                     setPoster2Url('/assets/aistudio/hero-underground-poster.jpg');
-                    setVideo3Url('https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4');
-                    setPoster3Url('https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75');
+                    setVideo3Url('');
+                    setPoster3Url('/assets/aistudio/hero-underground-poster.jpg');
                     setVideoEnabled(true);
                   }}
                   className="p-3 bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-blue-600 rounded-lg text-left transition-all"
@@ -896,12 +1060,12 @@ export const HomepageCmsTab: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setVideo1Url('https://wombatsweepers.com.au/wp-content/uploads/2024/05/pressure-cleaning-brisbane.mp4');
+                    setVideo1Url('/videos/tank-cleaning-desktop.mp4');
                     setPoster1Url('/assets/aistudio/hero-rooftop-poster.jpg');
                     setVideo2Url('/videos/tank-cleaning-desktop.mp4');
                     setPoster2Url('/assets/aistudio/hero-underground-poster.jpg');
-                    setVideo3Url('https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4');
-                    setPoster3Url('https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75');
+                    setVideo3Url('');
+                    setPoster3Url('/assets/aistudio/hero-underground-poster.jpg');
                     setVideoEnabled(true);
                   }}
                   className="p-3 bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-cyan-600 rounded-lg text-left transition-all"

@@ -210,10 +210,15 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
       </div>
 
       <SeoHead
-        title={`${title} | Sunviloz Clean Care`}
+        title={`${title} | SUNVILOZ CLEAN CARE`}
         description={post.seo?.metaDescription || excerpt}
         canonicalUrl={`https://sunvilozcleancare.com/blog/${post.slug}`}
         ogType="article"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Tips & Guides', path: '/blog' },
+          { name: title, path: `/blog/${post.slug}` }
+        ]}
       />
 
       <div className="max-w-4xl mx-auto space-y-8">

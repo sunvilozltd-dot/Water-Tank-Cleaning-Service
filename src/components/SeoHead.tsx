@@ -19,13 +19,14 @@ export interface SeoProps {
 }
 
 export const formatSeoTitle = (rawTitle?: string): string => {
-  if (!rawTitle) return `Water Tank Cleaning Service in Dhaka | ${BUSINESS_CONFIG.name}`;
-  const brand = BUSINESS_CONFIG.name;
-  const regex = new RegExp(`\\s*(\\||-)\\s*(${brand}|Sunviloz Clean Care.*|Sunviloz.*)$`, 'i');
-  const cleaned = rawTitle.replace(regex, '').trim();
-  if (cleaned.toLowerCase().includes(brand.toLowerCase())) {
-    return cleaned;
+  const brand = 'SUNVILOZ CLEAN CARE';
+  if (!rawTitle) return `Water Tank Cleaning Service in Dhaka | ${brand}`;
+  const trimmed = rawTitle.trim();
+  if (trimmed.toLowerCase().includes(brand.toLowerCase()) || trimmed.toLowerCase().includes('sunviloz clean care')) {
+    return trimmed;
   }
+  const regex = new RegExp(`\\s*(\\||-)\\s*(${brand}|Sunviloz Clean Care.*|Sunviloz.*)$`, 'i');
+  const cleaned = trimmed.replace(regex, '').trim();
   return `${cleaned} | ${brand}`;
 };
 
@@ -43,7 +44,7 @@ export const SeoHead: React.FC<SeoProps> = ({
 }) => {
   const fullTitle = formatSeoTitle(title);
   const metaDesc = description || 
-    'Professional water tank cleaning service in Dhaka for rooftop, underground and residential or commercial water tanks. Request a free quotation on WhatsApp.';
+    'Professional water tank cleaning service in Dhaka. Overhead, underground reserve tank and water pipeline cleaning. Contact SUNVILOZ CLEAN CARE: 01609999612.';
   const canonicalUrl = customCanonicalUrl || `${BUSINESS_CONFIG.canonicalBaseUrl}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`;
   const socialImage = ogImage || `${BUSINESS_CONFIG.canonicalBaseUrl}/assets/aistudio/hero-rooftop-poster.jpg`;
 
@@ -146,10 +147,16 @@ export const SeoHead: React.FC<SeoProps> = ({
     const localBusinessSchema = {
       '@context': 'https://schema.org',
       '@type': ['LocalBusiness', 'HomeAndConstructionBusiness'],
-      name: BUSINESS_CONFIG.name,
-      description: 'Professional water tank cleaning service in Dhaka, Gazipur, Savar and Narayanganj for rooftop, underground and commercial water storage reservoirs.',
+      name: 'SUNVILOZ CLEAN CARE',
+      description: 'Professional water tank cleaning service in Dhaka, Gazipur, Savar and Narayanganj for rooftop overhead tanks, underground reserve tanks, and water pipeline flushing.',
       url: BUSINESS_CONFIG.canonicalBaseUrl,
       telephone: '+88' + BUSINESS_CONFIG.phone,
+      image: `${BUSINESS_CONFIG.canonicalBaseUrl}/assets/aistudio/sunviloz-logo.png`,
+      logo: `${BUSINESS_CONFIG.canonicalBaseUrl}/assets/aistudio/sunviloz-logo.png`,
+      sameAs: [
+        BUSINESS_CONFIG.googleBusinessProfileUrl || 'https://www.google.com/maps/place/Sunviloz+Clean+Care/@23.8267734,90.4179331,17z/data=!4m8!3m7!1s0x4caea8c73c1a3949:0x3a92e0082947d375!8m2!3d23.8267734!4d90.4179331!9m1!1b1!16s%2Fg%2F11zdmdqbwt'
+      ],
+      hasMap: BUSINESS_CONFIG.googleBusinessProfileUrl || 'https://www.google.com/maps/place/Sunviloz+Clean+Care/@23.8267734,90.4179331,17z/data=!4m8!3m7!1s0x4caea8c73c1a3949:0x3a92e0082947d375!8m2!3d23.8267734!4d90.4179331!9m1!1b1!16s%2Fg%2F11zdmdqbwt',
       contactPoint: {
         '@type': 'ContactPoint',
         telephone: '+88' + BUSINESS_CONFIG.phone,
@@ -165,8 +172,9 @@ export const SeoHead: React.FC<SeoProps> = ({
         addressCountry: 'BD'
       },
       areaServed: [
-        'Dhaka', 'Gazipur', 'Savar', 'Narayanganj', 'Kuril', 'Bashundhara', 'Baridhara', 'Gulshan', 'Banani', 
-        'Uttara', 'Khilkhet', 'Badda', 'Rampura', 'Mirpur', 'Mohammadpur', 'Dhanmondi'
+        'Dhaka', 'Gazipur', 'Savar', 'Narayanganj', 'Uttara', 'Gulshan', 'Banani', 
+        'Mirpur', 'Bashundhara', 'Mohammadpur', 'Dhanmondi', 'Badda', 'Baridhara', 
+        'Khilkhet', 'Rampura'
       ]
     };
 

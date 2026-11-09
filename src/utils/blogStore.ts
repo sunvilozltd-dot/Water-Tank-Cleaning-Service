@@ -44,7 +44,7 @@ Home remedies help control mild surface presence, but eggs hidden deep inside wo
 1. **উচ্চ তাপমাত্রার বাষ্প:** গরম স্টিম ক্লিনার দিয়ে তোশক ও খাটের জোড়াগুলো ভালোমতো বাষ্পায়িত করুন।
 2. **গরম পানিতে ধোয়া:** বিছানার চাদর ও বালিশের কভার নিয়মিত গরম পানিতে ধুয়ে রোদে শুকান।
 3. **প্রফেশনাল ডিপ ক্লিনিং:** সমস্যা বেশি হলে বিশেষায়িত সাকশন ও কীট-রোধী নিরাপদ স্যানিটাইজেশন প্রয়োজন।`,
-    imageUrl: 'https://images.unsplash.com/photo-1540518614846-7ede433c4550?auto=format&fit=crop&w=800&q=75',
+    imageUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
     author: 'Sunviloz Hygiene Experts',
     publishedAt: '2026-03-24',
     readTime: '4 min read',
@@ -92,7 +92,7 @@ Budget cleaners often reuse the same dirty buckets and contaminated hoses across
 
 ### ৩. সঠিক সমাধান
 সানভিলোজ ক্লিন কেয়ার কোনো ক্ষতিকর অ্যাসিড ব্যবহার করে না। আমরা ১৫০ বার রোটারি পানির প্রেসারে ট্যাংকের দেয়াল নিরাপদ রেখে ফুড-গ্রেড জীবাণুনাশক দিয়ে পরিষ্কার করি।`,
-    imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=75',
+    imageUrl: '/assets/aistudio/hero-underground-poster.jpg',
     author: 'Engr. Rafiqul Islam, Technical Lead',
     publishedAt: '2026-03-20',
     readTime: '5 min read',

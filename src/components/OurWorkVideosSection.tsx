@@ -16,6 +16,10 @@ export const OurWorkVideosSection: React.FC<OurWorkVideosSectionProps> = () => {
 
   const activeVideo = featuredVideos.find(v => v.youtubeId === activeVideoId) || featuredVideos[0];
 
+  if (!featuredVideos || featuredVideos.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-14 sm:py-20 bg-white text-[#172B3A] border-b border-[#E2E8F0]" id="work-videos" aria-labelledby="work-videos-heading">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

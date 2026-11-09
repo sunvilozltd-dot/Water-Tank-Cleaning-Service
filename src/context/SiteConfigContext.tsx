@@ -19,6 +19,7 @@ import {
   sanitizeAndMergeConfig,
   SITE_CONFIG_EVENT 
 } from '../utils/siteConfigStore';
+import { CENTRAL_IMAGES_EVENT } from '../services/imageSyncService';
 import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
 import { FaqItem, ProcessStep, ReviewItem, AreaInfo } from '../types';
 
@@ -82,6 +83,11 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
     window.addEventListener(SITE_CONFIG_EVENT, handleConfigChange);
 
+    const handleCentralImagesChange = () => {
+      setConfig(getStoredSiteConfig());
+    };
+    window.addEventListener(CENTRAL_IMAGES_EVENT, handleCentralImagesChange);
+
     // 3. Supabase Realtime subscription for cross-browser, cross-device instant sync
     let channel: any = null;
     if (isSupabaseConfigured()) {
@@ -106,6 +112,7 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     return () => {
       window.removeEventListener(SITE_CONFIG_EVENT, handleConfigChange);
+      window.removeEventListener(CENTRAL_IMAGES_EVENT, handleCentralImagesChange);
       if (channel) {
         supabase.removeChannel(channel);
       }
@@ -243,11 +250,11 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const updateSiteImages = (updates: Partial<NonNullable<FullSiteConfig['images']>>) => {
     const currentImages = config.images || {
-      heroPoster: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-      heroBg: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-      aboutStoryImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-      popularTankImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-      popularPipelineImage: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75'
+      heroPoster: '/assets/aistudio/hero-rooftop-poster.jpg',
+      heroBg: '/assets/aistudio/hero-rooftop-poster.jpg',
+      aboutStoryImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
+      popularTankImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+      popularPipelineImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
     };
     const updatedImages = { ...currentImages, ...updates };
     const updated: FullSiteConfig = {
@@ -261,11 +268,11 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const sortedSections = [...config.sections].sort((a, b) => a.order - b.order);
 
   const imagesValue = config.images || {
-    heroPoster: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-    heroBg: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-    aboutStoryImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-    popularTankImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-    popularPipelineImage: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75'
+    heroPoster: '/assets/aistudio/hero-rooftop-poster.jpg',
+    heroBg: '/assets/aistudio/hero-rooftop-poster.jpg',
+    aboutStoryImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
+    popularTankImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    popularPipelineImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
   };
 
   return (

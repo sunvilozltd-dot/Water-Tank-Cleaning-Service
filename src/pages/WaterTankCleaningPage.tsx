@@ -160,12 +160,30 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
     }
   ];
 
+  const breadcrumbsList = [
+    { name: lang === 'bn' ? 'হোম' : 'Home', path: '/' },
+    { name: lang === 'bn' ? 'সার্ভিসসমূহ' : 'Services', path: '/services' },
+    { name: lang === 'bn' ? 'পানির ট্যাংক পরিষ্কার সার্ভিস' : 'Water Tank Cleaning Service', path: '/services/water-tank-cleaning' }
+  ];
+
+  const structuredFaqs = waterTankFaqs.map(f => ({
+    question: f.qBn,
+    answer: f.aBn
+  }));
+
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-16">
       <SeoHead
-        title="Water Tank Cleaning Service in Dhaka | Sunviloz Clean Care"
-        description="Professional water tank cleaning service in Dhaka for rooftop and underground water tanks, including sludge, sediment and surface buildup removal. Call or WhatsApp 01609999612."
+        title="Professional Water Tank Cleaning in Dhaka | SUNVILOZ CLEAN CARE"
+        description="Specialized mechanized water tank deep cleaning in Dhaka for overhead and underground reserve tanks. Sludge extraction and safe disinfection. Call 01609999612."
         canonicalUrl="https://sunvilozcleancare.com/services/water-tank-cleaning"
+        serviceSchema={{
+          name: 'Professional Water Tank Cleaning in Dhaka',
+          serviceType: 'Water Tank Cleaning',
+          description: 'Mechanized deep cleaning and food-grade sanitization for rooftop overhead tanks (PVC and concrete RCC) and underground reserve tanks across Dhaka metro areas.'
+        }}
+        breadcrumbs={breadcrumbsList}
+        faqSchema={structuredFaqs}
       />
 
       <Breadcrumbs 
@@ -237,7 +255,7 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
           <div className="lg:col-span-5">
             <div className="relative aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-md bg-[#F5FAFC] group">
               <OptimizedImage
-                src="https://images.unsplash.com/photo-1581578731548-c64695cc6952"
+                src="https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg"
                 alt="Professional Water Tank Cleaning Service in Dhaka"
                 width={800}
                 height={600}

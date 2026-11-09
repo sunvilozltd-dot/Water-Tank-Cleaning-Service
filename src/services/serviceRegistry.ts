@@ -49,13 +49,13 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
     shortDesc: 'Professional cleaning of overhead water tanks made from plastic, steel, or concrete with high-pressure rotary jet and sanitization.',
     shortDescBn: 'প্লাস্টিক, স্টিল ও কংক্রিটের ছাদের ওভারহেড পানির ট্যাংক রোটারি হাই-প্রেসার জেট ও ফুড-গ্রেড জীবাণুমুক্তকরণে নির্ভরযোগ্য সেবা।',
     short_description: 'Professional cleaning of overhead water tanks made from plastic, steel, or concrete with high-pressure rotary jet and sanitization.',
-    fullDesc: 'Overhead water tanks on residential and commercial rooftops face intense sunlight, heat, and municipal sediment accumulation. Over months, thick layers of green algae, bio-films, and slime settle on tank walls and floors. Our specialized team uses calibrated 120-150 bar high-pressure rotary water jets, wet vacuum sludge extraction, and food-grade non-toxic sanitization to completely eliminate algae and bacteria without eroding plastic or concrete surfaces.',
-    full_description: 'Overhead water tanks on residential and commercial rooftops face intense sunlight, heat, and municipal sediment accumulation. Over months, thick layers of green algae, bio-films, and slime settle on tank walls and floors. Our specialized team uses calibrated 120-150 bar high-pressure rotary water jets, wet vacuum sludge extraction, and food-grade non-toxic sanitization to completely eliminate algae and bacteria without eroding plastic or concrete surfaces.',
+    fullDesc: 'Overhead water tanks on residential and commercial rooftops face intense sunlight, heat, and municipal sediment accumulation. Over months, thick layers of green algae, bio-films, and slime settle on tank walls and floors. Our specialized team uses modern high-pressure mechanized rotary water jets, wet vacuum sludge extraction, and food-grade non-toxic sanitization to completely eliminate algae and bacteria without eroding plastic or concrete surfaces.',
+    full_description: 'Overhead water tanks on residential and commercial rooftops face intense sunlight, heat, and municipal sediment accumulation. Over months, thick layers of green algae, bio-films, and slime settle on tank walls and floors. Our specialized team uses modern high-pressure mechanized rotary water jets, wet vacuum sludge extraction, and food-grade non-toxic sanitization to completely eliminate algae and bacteria without eroding plastic or concrete surfaces.',
     category: 'Overhead Tank',
     iconName: 'Building',
     icon: 'Building',
-    image: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
-    featured_image: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    featured_image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     is_active: true,
     display_order: 1,
     show_on_homepage: true,
@@ -83,24 +83,24 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
     },
     benefits: [
       'Safe for Plastic, Stainless Steel, and Concrete RCC tanks',
-      '120-150 bar calibrated high-pressure rotary wash without wall damage',
+      'Mechanized high-pressure rotary wash without wall damage',
       'Food-grade non-toxic odorless disinfectant treatment',
       'Complete sludge extraction using heavy-duty slurry pump & wet vacuum'
     ],
     benefitsBn: [
       'প্লাস্টিক, স্টেইনলেস স্টিল ও আরসিসি কংক্রিট সব ধরনের ট্যাংকে নিরাপদ',
-      'দেয়াল অক্ষত রেখে ১২০-১৫০ বার হাই-প্রেসার রোটারি জেট ওয়াশ',
+      'দেয়াল অক্ষত রেখে মেকানাইজড হাই-প্রেসার রোটারি জেট ওয়াশ',
       'ফুড-গ্রেড ও সম্পূর্ণ স্বাস্থ্যসম্মত নিরাপদ জীবাণুনাশক প্রয়োগ',
-      'হেভি পাম্প ও ওয়েট ভ্যাকুয়ামে কাদা ও শ্যাওলা ১০০% নিষ্কাশন'
+      'হেভি পাম্প ও ওয়েট ভ্যাকুয়ামে কাদা ও শ্যাওলা কার্যকর নিষ্কাশন'
     ],
     equipment: [
-      '120-150 Bar High-Pressure Rotary Jet Cleaner',
+      'Mechanized High-Pressure Rotary Jet Cleaner',
       'Submersible Sediment Slurry Pump',
       'Heavy-Duty Wet Vacuum Extractor',
       'Approved Food-Grade Non-Toxic Sanitizer'
     ],
     equipmentBn: [
-      '১২০-১৫০ বার হাই-প্রেসার রোটারি জেট ওয়াশার',
+      'মেকানাইজড হাই-প্রেসার রোটারি জেট ওয়াশার',
       'সাবমারসিবল স্লাজ সেচ পাম্প',
       'ইন্ডাস্ট্রিয়াল ওয়েট ভ্যাকুয়াম ক্লিনার',
       'ফুড-গ্রেড নন-টক্সিক জীবাণুনাশক'
@@ -109,7 +109,7 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
       'Pre-service inspection of tank inlet, float valve, and structural walls',
       'Controlled drainage of standing water using slurry pump',
       'Biofilm and wall algae scrubbing with non-scratch tools',
-      '120-150 bar high-pressure rotary jet wall and floor wash',
+      'Mechanized high-pressure rotary jet wall and floor wash',
       'Food-grade disinfectant spray and dwell time',
       'Fresh water rinse, vacuum suction of leftover residue, and lid sealing'
     ],
@@ -117,7 +117,7 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
       'ট্যাংকের ঢাকনা, ইনলেট ও দেয়ালের সার্বিক অবস্থা পরিদর্শন',
       'সাবমারসিবল পাম্পে তলদেশের অবশিষ্ট পানি ও ময়লা ড্রেন করা',
       'নন-স্ক্র্যাচ ব্রাশে দেয়ালের শ্যাওলা ও পিচ্ছিল আস্তরণ আলগা করা',
-      '১২০-১৫০ বার উচ্চচাপের রোটারি ওয়াটার জেটে গভীর ধৌতকরণ',
+      'উচ্চচাপের মেকানাইজড রোটারি ওয়াটার জেটে গভীর ধৌতকরণ',
       'ফুড-গ্রেড নিরাপদ জীবাণুনাশক স্প্রে ও স্যানিটাইজেশন',
       'বিশুদ্ধ পানি দিয়ে ফাইনাল রিন্স ও ভ্যাকুয়ামে শতভাগ পরিচ্ছন্ন হ্যান্ডওভার'
     ],
@@ -162,8 +162,8 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
     category: 'Underground Tank',
     iconName: 'Droplets',
     icon: 'Droplets',
-    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=75',
-    featured_image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=75',
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    featured_image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
     is_active: true,
     display_order: 2,
     show_on_homepage: true,
@@ -266,8 +266,8 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
     category: 'Pipeline',
     iconName: 'Wrench',
     icon: 'Wrench',
-    image: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75',
-    featured_image: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75',
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+    featured_image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
     is_active: true,
     display_order: 3,
     show_on_homepage: true,
@@ -293,13 +293,13 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
       'Zero wall damage or tile breaking — operates directly through faucet valves',
       'Completely clears internal rust scaling, iron slime, and tap odors',
       'Restores original shower flow and faucet water pressure',
-      '100% safe for PVC, CPVC, PPR, and GI galvanized plumbing lines'
+      'Engineered safely for PVC, CPVC, PPR, and GI galvanized plumbing lines'
     ],
     benefitsBn: [
       'কোনো দেয়াল বা টাইলস না ভেঙে বিদ্যমান কলের মুখ থেকে কাজ সম্পন্ন',
-      'পাইপের ভেতরের মরিচা, আয়রনের স্তর ও দুর্গন্ধ স্থায়ীভাবে অপসারণ',
+      'পাইপের ভেতরের মরিচা, আয়রনের স্তর ও দুর্গন্ধ কার্যকরভাবে অপসারণ',
       'শাওয়ার ও বেসিন কলে পানির স্বাভাবিক গতি ও স্পিড পুনরুদ্ধার',
-      'পিভিসি, সিপিভিসি, পিপিআর ও জিআই সব ধরনের পাইপলাইনে সম্পূর্ণ নিরাপদ'
+      'পিভিসি, সিপিভিসি, পিপিআর ও জিআই সব ধরনের পাইপলাইনে বিশেষভাবে নিরাপদ'
     ],
     equipment: [
       'High-Frequency Hydro-Pneumatic Pulse Pipeline Cleaning Generator',

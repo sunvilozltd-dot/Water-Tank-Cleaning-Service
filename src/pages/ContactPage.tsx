@@ -14,9 +14,13 @@ export const ContactPage: React.FC = () => {
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-12">
       <SeoHead
-        title="Contact Sunviloz Clean Care - Water Tank Cleaning Hotline Dhaka"
-        description="Get in touch with Sunviloz Clean Care for water tank cleaning in Dhaka. Call 01609-999612 or WhatsApp for instant service booking and quick response."
+        title="Contact Us | SUNVILOZ CLEAN CARE — Hotline 01609999612"
+        description="Contact SUNVILOZ CLEAN CARE for water tank and pipeline cleaning in Dhaka. Call 01609999612 or WhatsApp for instant service booking and quick response."
         canonicalUrl="https://sunvilozcleancare.com/contact"
+        breadcrumbs={[
+          { name: lang === 'bn' ? 'হোম' : 'Home', path: '/' },
+          { name: lang === 'bn' ? 'যোগাযোগ' : 'Contact Us', path: '/contact' }
+        ]}
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'যোগাযোগ' : 'Contact Us', href: '/contact' }]} />
 

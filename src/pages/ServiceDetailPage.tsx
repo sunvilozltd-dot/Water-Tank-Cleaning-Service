@@ -57,8 +57,15 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
     }
   };
 
-  // Find service by slug or match normalized slug
-  const service = services.find(s => s.slug === slug || s.id === slug) || services[0];
+  // Find service by slug or match normalized aliases
+  const service = services.find(s => {
+    if (s.slug === slug || s.id === slug) return true;
+    if (slug === 'overhead-water-tank-cleaning' && (s.slug === 'overhead-tank-cleaning' || s.id === 'srv-overhead-water-tank')) return true;
+    if (slug === 'overhead-tank-cleaning' && (s.slug === 'overhead-water-tank-cleaning' || s.id === 'srv-overhead-water-tank')) return true;
+    if (slug === 'water-pipeline-cleaning' && (s.slug === 'pipeline-cleaning' || s.id === 'srv-water-pipeline')) return true;
+    if (slug === 'underground-tank-cleaning' && s.slug === 'underground-water-tank-cleaning') return true;
+    return false;
+  }) || services[0];
 
   if (!service) {
     return (
@@ -128,12 +135,30 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
     .filter(s => s.id !== service.id)
     .slice(0, 3);
 
+  const breadcrumbsList = [
+    { name: lang === 'bn' ? 'হোম' : 'Home', path: '/' },
+    { name: lang === 'bn' ? 'সার্ভিসসমূহ' : 'Services', path: '/services' },
+    { name: title, path: `/services/${service.slug}` }
+  ];
+
+  const structuredFaqs = faqs.map(f => ({
+    question: lang === 'bn' ? (f.questionBn || f.question) : f.question,
+    answer: lang === 'bn' ? (f.answerBn || f.answer) : f.answer
+  }));
+
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-14">
       <SeoHead
-        title={`${title} - SUNVILOZ Clean & Care Dhaka`}
-        description={service.metaDesc || service.shortDesc || description}
+        title={`${title} | SUNVILOZ CLEAN CARE`}
+        description={service.metaDesc || service.shortDesc || description || ''}
         canonicalUrl={`https://sunvilozcleancare.com/services/${service.slug}`}
+        serviceSchema={{
+          name: service.title,
+          serviceType: service.title,
+          description: service.shortDesc || description || ''
+        }}
+        breadcrumbs={breadcrumbsList}
+        faqSchema={structuredFaqs}
       />
       
       <Breadcrumbs 
@@ -212,7 +237,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
           <div className="lg:col-span-5">
             <div className="relative aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-md bg-[#F5FAFC]">
               <img
-                src={service.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75'}
+                src={service.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'}
                 alt={title}
                 width="800"
                 height="600"

@@ -27,7 +27,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   height,
   aspectRatio,
   priority = false,
-  fallbackSrc = 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=75&fm=webp',
+  fallbackSrc = '/assets/aistudio/hero-rooftop-poster.jpg',
   className = '',
   sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 800px',
   ...rest

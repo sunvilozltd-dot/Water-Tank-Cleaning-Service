@@ -16,9 +16,13 @@ export const BlogPage: React.FC<BlogPageProps> = ({ onOpenPostModal, onNavigate 
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
       <SeoHead
-        title="Tips & Guides - Water Tank Cleaning & Hygiene | Sunviloz Dhaka"
-        description="Read articles and health guides about water tank sanitation, contamination risks, maintenance frequency, and cleaning guidelines for Dhaka properties."
+        title="Water Tank Cleaning Tips & Guides in Dhaka | SUNVILOZ CLEAN CARE"
+        description="Health guides and professional articles about water tank sanitation, WASA contamination risks, maintenance frequency, and cleaning guidelines for Dhaka properties."
         canonicalUrl="https://sunvilozcleancare.com/blog"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Tips & Guides', path: '/blog' }
+        ]}
       />
       <Breadcrumbs items={[{ label: 'Tips & Guides', href: '/blog' }]} />
       <BlogSection onNavigate={onNavigate} onOpenPostModal={onOpenPostModal} />

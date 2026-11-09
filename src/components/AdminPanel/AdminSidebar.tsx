@@ -99,7 +99,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       highlight: true 
     },
     { id: 'portfolio', label: 'Before/After Portfolio', icon: <Layers className="w-4 h-4" />, group: 'Content' },
-    { id: 'videos', label: 'Our Work Videos', icon: <Film className="w-4 h-4" />, group: 'Content' },
+    { 
+      id: 'videos', 
+      label: 'Project Video Management (প্রজেক্ট ভিডিও)', 
+      icon: <Film className="w-4 h-4 text-rose-400" />, 
+      group: 'Content',
+      highlight: true 
+    },
     { id: 'blog', label: 'Articles & Blog', icon: <FileText className="w-4 h-4" />, group: 'Content' },
     { id: 'media', label: 'Media Library', icon: <Image className="w-4 h-4" />, group: 'Assets' },
     { id: 'headernav', label: 'Header & Navigation Management', icon: <Compass className="w-4 h-4" />, group: 'Site Setup' },

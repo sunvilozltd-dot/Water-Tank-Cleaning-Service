@@ -1,6 +1,8 @@
 import { HomepageSection, HomepageSectionItem, BuiltinSectionType, CustomSectionTemplate } from '../types/homepageCms';
 import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
 import { safeGetItem, safeSetItem } from '../utils/safeLocalStorage';
+import { extractYouTubeId } from './mediaService';
+import { getStoredImageRegistry } from './imageSyncService';
 
 const HOMEPAGE_CACHE_KEY = 'sunviloz_homepage_sections_v3';
 export const HOMEPAGE_CMS_EVENT = 'sunviloz_homepage_sections_changed';
@@ -20,14 +22,14 @@ export const DEFAULT_HOMEPAGE_SECTIONS: HomepageSection[] = [
     badge: 'Serving All Areas Across Dhaka',
     badgeBn: 'ঢাকা শহরের সকল এলাকায় সার্ভিস প্রদান',
     mediaType: 'video',
-    imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
+    imageUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
     videoUrl: '/videos/tank-cleaning-desktop.mp4',
     video2Url: '/videos/tank-cleaning-mobile.mp4',
     mobileVideoUrl: '/videos/tank-cleaning-mobile.mp4',
-    video3Url: 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4',
+    video3Url: '',
     posterImageUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
     posterImage2Url: '/assets/aistudio/hero-underground-poster.jpg',
-    posterImage3Url: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75',
+    posterImage3Url: '/assets/aistudio/hero-underground-poster.jpg',
     buttonText: 'Request a Quote',
     buttonTextBn: 'কোটেশন রিকোয়েস্ট করুন',
     buttonUrl: '#quote',
@@ -139,7 +141,7 @@ export const DEFAULT_HOMEPAGE_SECTIONS: HomepageSection[] = [
     subtitle: 'Hidden dangers in untreated water storage',
     subtitleBn: 'শ্যাওলা, ওয়াসা পলি ও ব্যাকটেরিয়ার নীরব বিস্তার',
     mediaType: 'image',
-    imageUrl: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=800&q=75',
+    imageUrl: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     buttonText: 'Request a Quote',
     buttonTextBn: 'ট্যাংক পরিষ্কারের কোটেশন জানুন',
     buttonUrl: '#quote',
@@ -361,17 +363,18 @@ export async function getHomepageSections(): Promise<HomepageSection[]> {
 
       if (!error && data && data.length > 0) {
         sections = data.map((d: any) => {
-          const isHero = d.section_key === 'hero';
+          const isHero = d.section_key === 'hero' || d.id === 'sec-hero';
           const isLegacyYt = (url?: string | null) => 
-            !url || url.includes('jrfRHWs3WSw') || url.includes('youtube.com/watch?v=placeholder');
+            !url || url.includes('youtube.com/watch?v=placeholder');
 
-          let videoUrl = d.video_url;
-          let mobileVideoUrl = d.mobile_video_url;
-          let video2Url = d.settings?.video2Url || d.content?.video2Url;
-          let video3Url = d.settings?.video3Url || d.content?.video3Url;
-          let posterImageUrl = d.poster_image_url || d.settings?.posterImage1Url;
-          let posterImage2Url = d.settings?.posterImage2Url || d.content?.posterImage2Url;
-          let posterImage3Url = d.settings?.posterImage3Url || d.content?.posterImage3Url;
+          const imageReg = getStoredImageRegistry();
+          let videoUrl = d.video_url || d.settings?.video1Url || d.content?.video1Url || imageReg?.heroVideos?.video1Url || d.settings?.hero?.videoUrl;
+          let mobileVideoUrl = d.mobile_video_url || d.settings?.video2Url || d.content?.video2Url || imageReg?.heroVideos?.video2Url || d.settings?.hero?.video2Url;
+          let video2Url = d.settings?.video2Url || d.content?.video2Url || d.mobile_video_url || imageReg?.heroVideos?.video2Url || d.settings?.hero?.video2Url;
+          let video3Url = d.settings?.video3Url || d.content?.video3Url || imageReg?.heroVideos?.video3Url || d.settings?.hero?.video3Url;
+          let posterImageUrl = d.poster_image_url || d.settings?.posterImage1Url || imageReg?.heroVideos?.poster1Url || d.settings?.hero?.posterImageUrl;
+          let posterImage2Url = d.settings?.posterImage2Url || d.content?.posterImage2Url || imageReg?.heroVideos?.poster2Url || d.settings?.hero?.posterImage2Url;
+          let posterImage3Url = d.settings?.posterImage3Url || d.content?.posterImage3Url || imageReg?.heroVideos?.poster3Url || d.settings?.hero?.posterImage3Url;
           let mediaType = (d.media_type as BuiltinSectionType) ? (d.media_type as any) : 'video';
 
           if (isHero) {
@@ -383,10 +386,10 @@ export async function getHomepageSections(): Promise<HomepageSection[]> {
               video2Url = (mobileVideoUrl && !isLegacyYt(mobileVideoUrl)) ? mobileVideoUrl : '/videos/tank-cleaning-mobile.mp4';
             }
             if (isLegacyYt(mobileVideoUrl)) {
-              mobileVideoUrl = '/videos/tank-cleaning-mobile.mp4';
+              mobileVideoUrl = video2Url;
             }
-            if (!video3Url) {
-              video3Url = 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4';
+            if (!video3Url || isLegacyYt(video3Url)) {
+              video3Url = '';
             }
             if (!posterImageUrl) {
               posterImageUrl = '/assets/aistudio/hero-rooftop-poster.jpg';
@@ -395,9 +398,11 @@ export async function getHomepageSections(): Promise<HomepageSection[]> {
               posterImage2Url = '/assets/aistudio/hero-underground-poster.jpg';
             }
             if (!posterImage3Url) {
-              posterImage3Url = 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75';
+              posterImage3Url = '/assets/aistudio/hero-underground-poster.jpg';
             }
           }
+
+          const ytId1 = extractYouTubeId(videoUrl);
 
           return {
             id: d.id,
@@ -411,7 +416,7 @@ export async function getHomepageSections(): Promise<HomepageSection[]> {
             descriptionBn: d.description_bn,
             badge: d.badge,
             badgeBn: d.badge_bn,
-            mediaType,
+            mediaType: ytId1 ? 'youtube' : mediaType,
             imageUrl: d.image_url,
             videoUrl,
             mobileVideoUrl,
@@ -420,8 +425,8 @@ export async function getHomepageSections(): Promise<HomepageSection[]> {
             posterImageUrl,
             posterImage2Url,
             posterImage3Url,
-            youtubeUrl: isHero && isLegacyYt(d.youtube_url) ? null : d.youtube_url,
-            youtubeVideoId: isHero && d.youtube_video_id === 'jrfRHWs3WSw' ? null : d.youtube_video_id,
+            youtubeUrl: ytId1 ? videoUrl : (isHero && isLegacyYt(d.youtube_url) ? null : d.youtube_url),
+            youtubeVideoId: ytId1 || (isHero && isLegacyYt(d.youtube_video_id) ? null : d.youtube_video_id),
             buttonText: d.button_text,
             buttonTextBn: d.button_text_bn,
             buttonUrl: d.button_url,
@@ -457,15 +462,20 @@ export async function getHomepageSections(): Promise<HomepageSection[]> {
  * Save single or updated section to Supabase
  */
 export async function saveHomepageSection(section: HomepageSection): Promise<boolean> {
+  const isHero = section.sectionKey === 'hero' || section.id === 'hero' || section.id === 'sec-hero';
+  const targetId = isHero ? 'sec-hero' : section.id;
+
   const current = await getHomepageSections();
-  const exists = current.some(s => s.id === section.id);
+  const exists = current.some(s => s.id === targetId || (isHero && s.sectionKey === 'hero'));
   const updatedSection: HomepageSection = {
     ...section,
+    id: targetId,
+    sectionKey: isHero ? 'hero' : section.sectionKey,
     updatedAt: new Date().toISOString()
   };
 
   const updatedList = exists
-    ? current.map(s => s.id === section.id ? updatedSection : s)
+    ? current.map(s => (s.id === targetId || (isHero && s.sectionKey === 'hero')) ? updatedSection : s)
     : [...current, updatedSection];
 
   if (typeof window !== 'undefined') {
@@ -475,28 +485,39 @@ export async function saveHomepageSection(section: HomepageSection): Promise<boo
 
   if (isSupabaseConfigured()) {
     try {
+      const v1 = updatedSection.videoUrl || null;
+      const v2 = updatedSection.video2Url || updatedSection.mobileVideoUrl || null;
+      const v3 = updatedSection.video3Url || null;
+      const p1 = updatedSection.posterImageUrl || null;
+      const p2 = updatedSection.posterImage2Url || null;
+      const p3 = updatedSection.posterImage3Url || null;
+
+      const ytId1 = extractYouTubeId(v1);
+
       const sectionSettings = {
         ...(updatedSection.settings || {}),
-        video1Url: updatedSection.videoUrl,
-        video2Url: updatedSection.video2Url,
-        video3Url: updatedSection.video3Url,
-        posterImage1Url: updatedSection.posterImageUrl,
-        posterImage2Url: updatedSection.posterImage2Url,
-        posterImage3Url: updatedSection.posterImage3Url,
+        video1Url: v1,
+        video2Url: v2,
+        video3Url: v3,
+        mobileVideoUrl: v2,
+        posterImage1Url: p1,
+        posterImage2Url: p2,
+        posterImage3Url: p3,
       };
 
       const sectionContent = {
         ...(updatedSection.content || {}),
-        video1Url: updatedSection.videoUrl,
-        video2Url: updatedSection.video2Url,
-        video3Url: updatedSection.video3Url,
-        posterImage1Url: updatedSection.posterImageUrl,
-        posterImage2Url: updatedSection.posterImage2Url,
-        posterImage3Url: updatedSection.posterImage3Url,
+        video1Url: v1,
+        video2Url: v2,
+        video3Url: v3,
+        mobileVideoUrl: v2,
+        posterImage1Url: p1,
+        posterImage2Url: p2,
+        posterImage3Url: p3,
       };
 
       const payload = {
-        id: updatedSection.id,
+        id: targetId,
         section_key: updatedSection.sectionKey,
         section_type: updatedSection.sectionType,
         title: updatedSection.title || null,
@@ -507,13 +528,13 @@ export async function saveHomepageSection(section: HomepageSection): Promise<boo
         description_bn: updatedSection.descriptionBn || null,
         badge: updatedSection.badge || null,
         badge_bn: updatedSection.badgeBn || null,
-        media_type: updatedSection.mediaType || 'none',
+        media_type: ytId1 ? 'youtube' : (updatedSection.mediaType || 'none'),
         image_url: updatedSection.imageUrl || null,
-        video_url: updatedSection.videoUrl || null,
-        mobile_video_url: updatedSection.mobileVideoUrl || null,
-        poster_image_url: updatedSection.posterImageUrl || null,
-        youtube_url: updatedSection.youtubeUrl || null,
-        youtube_video_id: updatedSection.youtubeVideoId || null,
+        video_url: v1,
+        mobile_video_url: v2,
+        poster_image_url: p1,
+        youtube_url: ytId1 ? v1 : (updatedSection.youtubeUrl || null),
+        youtube_video_id: ytId1 || updatedSection.youtubeVideoId || null,
         button_text: updatedSection.buttonText || null,
         button_text_bn: updatedSection.buttonTextBn || null,
         button_url: updatedSection.buttonUrl || null,
@@ -531,14 +552,23 @@ export async function saveHomepageSection(section: HomepageSection): Promise<boo
         updated_at: updatedSection.updatedAt
       };
 
-      const { error } = await supabase
+      // Perform update targeting targetId (avoids RLS 42501 on insert)
+      const { error: updateError } = await supabase
         .from('homepage_sections')
-        .upsert(payload, { onConflict: 'id' });
+        .update(payload)
+        .eq('id', targetId);
 
-      if (error) {
-        console.error('Supabase saveHomepageSection error:', error);
-        return false;
+      if (updateError) {
+        console.warn('Supabase update notice, attempting upsert:', updateError.message);
+        const { error: upsertError } = await supabase
+          .from('homepage_sections')
+          .upsert(payload, { onConflict: 'id' });
+        if (upsertError) {
+          console.error('Supabase saveHomepageSection error:', upsertError);
+          return false;
+        }
       }
+
       return true;
     } catch (err) {
       console.error('Failed to save homepage section:', err);
@@ -675,7 +705,7 @@ export async function createCustomSection(
     description: 'Customized solutions for residential and commercial water reservoirs in Dhaka.',
     descriptionBn: 'ঢাকা শহরের বাসাবাড়ি ও ভবনের পানি সুরক্ষায় কাস্টমাইজড সমাধান।',
     mediaType: template === 'video' ? 'youtube' : template.includes('image') ? 'image' : 'none',
-    imageUrl: template.includes('image') ? 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=75' : undefined,
+    imageUrl: template.includes('image') ? 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg' : undefined,
     youtubeUrl: template === 'video' ? 'https://www.youtube.com/watch?v=ScMzIvxBSi4' : undefined,
     youtubeVideoId: template === 'video' ? 'ScMzIvxBSi4' : undefined,
     buttonText: 'Book Service',

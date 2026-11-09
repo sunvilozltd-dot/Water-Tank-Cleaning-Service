@@ -26,9 +26,9 @@ interface LeadAdminModalProps {
 }
 
 const PRESET_IMAGES = [
-  { label: 'PVC Rooftop Tank', url: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=800&q=75' },
-  { label: 'RCC Underground Reserve', url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=75' },
-  { label: 'Hygienic Clean Interior', url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=75' }
+  { label: 'PVC Rooftop Tank', url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg' },
+  { label: 'RCC Underground Reserve', url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png' },
+  { label: 'Pipeline Flushing', url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg' }
 ];
 
 export const LeadAdminModal: React.FC<LeadAdminModalProps> = ({ 

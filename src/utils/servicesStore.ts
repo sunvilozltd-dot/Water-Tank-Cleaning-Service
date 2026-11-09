@@ -35,22 +35,22 @@ const sanitizeStoredService = (s: ExtensibleServiceItem): ExtensibleServiceItem 
   if (s.id === 'srv-overhead-water-tank' || s.slug === 'overhead-water-tank-cleaning') {
     return {
       ...s,
-      image: s.image || 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
-      featured_image: s.featured_image || s.image || 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75'
+      image: s.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+      featured_image: s.featured_image || s.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
     };
   }
   if (s.id === 'srv-underground-water-tank' || s.slug === 'underground-water-tank-cleaning') {
     return {
       ...s,
-      image: s.image || 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=75',
-      featured_image: s.featured_image || s.image || 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=75'
+      image: s.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+      featured_image: s.featured_image || s.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png'
     };
   }
   if (s.id === 'srv-water-pipeline' || s.slug === 'water-pipeline-cleaning') {
     return {
       ...s,
-      image: s.image || 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75',
-      featured_image: s.featured_image || s.image || 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75'
+      image: s.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+      featured_image: s.featured_image || s.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
     };
   }
   return s;
@@ -75,8 +75,8 @@ function mapRowToService(d: any): ExtensibleServiceItem {
     category: d.category || 'General Water Hygiene',
     iconName: d.icon_name || d.icon || 'Droplets',
     icon: d.icon || d.icon_name || 'Droplets',
-    image: d.image || d.featured_image || 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
-    featured_image: d.featured_image || d.image || 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
+    image: d.image || d.featured_image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    featured_image: d.featured_image || d.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     is_active: d.is_active !== false,
     display_order: Number(d.display_order ?? 1),
     show_on_homepage: d.show_on_homepage !== false,
@@ -330,8 +330,8 @@ export const addNewService = async (serviceData: Partial<ExtensibleServiceItem>)
     category: serviceData.category || 'General Water Hygiene',
     iconName: serviceData.iconName || serviceData.icon || 'Droplets',
     icon: serviceData.icon || serviceData.iconName || 'Droplets',
-    image: serviceData.image || serviceData.featured_image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-    featured_image: serviceData.featured_image || serviceData.image || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
+    image: serviceData.image || serviceData.featured_image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    featured_image: serviceData.featured_image || serviceData.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     is_active: serviceData.is_active !== undefined ? serviceData.is_active : true,
     display_order: serviceData.display_order ?? (maxOrder + 1),
     show_on_homepage: serviceData.show_on_homepage !== undefined ? serviceData.show_on_homepage : true,

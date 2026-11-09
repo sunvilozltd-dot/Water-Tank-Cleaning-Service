@@ -88,7 +88,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     titleBn: 'পানির ট্যাংক পরিষ্কার সার্ভিস',
     shortDesc: 'Underground and overhead water tank cleaning service for residences, apartments, and commercial buildings.',
     shortDescBn: 'বাসা, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের আন্ডারগ্রাউন্ড এবং ওভারহেড পানির ট্যাংক পরিষ্কারের সার্ভিস।',
-    fullDesc: 'Complete mechanized deep cleaning for both rooftop overhead tanks (PVC and concrete RCC) and underground reserve tanks. Our specialized team uses calibrated 120-150 bar high-pressure rotary water jets, sludge extraction pumps, and food-grade sanitization for hygienic water storage.',
+    fullDesc: 'Complete mechanized deep cleaning for both rooftop overhead tanks (PVC and concrete RCC) and underground reserve tanks. Our specialized team uses modern high-pressure rotary water jets, sludge extraction pumps, and food-grade sanitization for hygienic water storage.',
     whatIsThis: 'Water Tank Cleaning Service is a mechanized deep-cleaning service specifically designed for both rooftop and subterranean water storage reservoirs.',
     whatIsThisBn: 'পানির ট্যাংক পরিষ্কার সার্ভিস হলো বাসা, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের আন্ডারগ্রাউন্ড এবং ওভারহেড পানির ট্যাংক আধুনিক মেশিনে নিখুঁতভাবে পরিষ্কার করার পেশাদার সেবা।',
     whyNeeded: 'Tanks develop heavy sludge, municipal sand, and green algae that cultivate harmful bacteria, causing foul odors and clogged taps.',
@@ -104,12 +104,12 @@ export const SERVICES_DATA: ServiceItem[] = [
       'গত ৪-৬ মাসের মধ্যে ট্যাংক ডিপ ক্লিন না করা হলে'
     ],
     equipment: [
-      '120-150 Bar High-Pressure Rotary Jet Cleaner',
+      'High-Pressure Rotary Jet Cleaner',
       'Submersible Sediment Slurry Pump',
       'Approved Food-Grade Non-Toxic Sanitizer'
     ],
     equipmentBn: [
-      '১২০-১৫০ বার হাই-প্রেসার রোটারি জেট ওয়াশার',
+      'মেকানাইজড হাই-প্রেসার রোটারি জেট ওয়াশার',
       'সাবমারসিবল স্লাজ সেচ পাম্প ও ওয়েট ভ্যাকুয়াম',
       'ফুড-গ্রেড নন-টক্সিক জীবাণুনাশক'
     ],
@@ -138,7 +138,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'বাণিজ্যিক ভবন ও কর্পোরেট অফিস',
       'হাসপাতাল, স্কুল ও রেস্টুরেন্ট'
     ],
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     faqs: [
       {
         question: 'How often should water tanks be cleaned in Dhaka?',
@@ -184,16 +184,16 @@ export const SERVICES_DATA: ServiceItem[] = [
     isPrimary: false,
     popular: true,
     benefits: [
-      'Restores clear water flow and eliminates tap odor',
+      'Restores clear water flow and helps eliminate tap odor',
       'Zero wall damage or tile breaking required',
-      'Increases water pressure across all faucets',
-      '100% safe for PVC, CPVC, PPR, and metal pipes'
+      'Increases water flow across restricted faucets',
+      'Engineered safely for PVC, CPVC, PPR, and metal pipes'
     ],
     benefitsBn: [
-      'কলের পানিতে আয়রন ও দুর্গন্ধ স্থায়ীভাবে দূর করে',
+      'কলের পানিতে আয়রন ও দুর্গন্ধ কার্যকরভাবে দূর করে',
       'কোনো দেয়াল বা টাইলস না ভেঙে সম্পূর্ণ কাজ সম্পন্ন',
       'শাওয়ার ও ট্যাপের পানির আসল স্পিড ফিরে আসে',
-      'সব ধরনের পাইপলাইনের জন্য সম্পূর্ণ নিরাপদ'
+      'সব ধরনের অনুমোদিত পাইপলাইনের জন্য নিরাপদ'
     ],
     idealFor: [
       'Apartments and multi-family residential buildings',
@@ -205,7 +205,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'বাণিজ্যিক অফিস ও শপিং মল',
       'আয়রনযুক্ত পুরানো পানির পাইপলাইন'
     ],
-    image: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75',
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
     faqs: [
       {
         question: 'Do you need to break walls for pipeline cleaning?',
@@ -222,7 +222,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     titleBn: 'ওভারহেড ও ছাদের পানির ট্যাংক পরিষ্কার সার্ভিস',
     shortDesc: 'Mechanized deep cleaning and food-grade sanitization for rooftop PVC and concrete RCC overhead tanks.',
     shortDescBn: 'ছাদের পিভিসি ও আরসিসি কংক্রিট ওভারহেড ট্যাংক উচ্চচাপের রোটারি ওয়াটার জেটে শ্যাওলা ও ময়লামুক্তকরণ।',
-    fullDesc: 'Rooftop water tanks face direct sunlight and heat, accelerating green algae formation, bio-film slime, and airborne dust contamination. We use calibrated 120-150 bar high-pressure rotary wash, manual biofilm scrubbing, safe odorless disinfection, and wet vacuum extraction to restore clean water flow to all building taps.',
+    fullDesc: 'Rooftop water tanks face direct sunlight and heat, accelerating green algae formation, bio-film slime, and airborne dust contamination. We use modern high-pressure rotary wash, manual biofilm scrubbing, safe odorless disinfection, and wet vacuum extraction to restore clean water flow to all building taps.',
     whatIsThis: 'Overhead Tank Cleaning is a mechanized descaling and sanitization service for rooftop storage units, ensuring safe gravity-fed water throughout the property.',
     whatIsThisBn: 'ওভারহেড ট্যাংক ক্লিনিং হলো ভবনের ছাদের পিভিসি ও আরসিসি ট্যাংকের ভেতর জমে থাকা শ্যাওলা, কাদা ও ব্যাক্টেরিয়া মেকানাইজড পদ্ধতিতে পরিষ্কার করার সেবা।',
     whyNeeded: 'Direct sun exposure fosters algae buildup and warm water accelerates bacterial biofilms, causing murky tap water and clogged plumbing.',
@@ -238,13 +238,13 @@ export const SERVICES_DATA: ServiceItem[] = [
       'গত ৪-৬ মাসের মধ্যে ছাদের ট্যাংক ডিপ ক্লিন না করা হলে'
     ],
     equipment: [
-      '120-150 Bar High-Pressure Rotary Jet Washer',
+      'High-Pressure Rotary Jet Washer',
       'Non-Scratch Soft Mechanical Scrubbing Tools',
       'Approved Food-Grade Non-Toxic Sanitizer',
       'Heavy-Duty Wet Vacuum Extractor'
     ],
     equipmentBn: [
-      '১২০-১৫০ বার হাই-প্রেসার রোটারি জেট ওয়াশার',
+      'মেকানাইজড হাই-প্রেসার রোটারি জেট ওয়াশার',
       'নন-স্ক্র্যাচ মেকানিক্যাল স্ক্রাবিং ব্রাশ',
       'ফুড-গ্রেড নন-টক্সিক জীবাণুনাশক',
       'ইন্ডাস্ট্রিয়াল ওয়েট ভ্যাকুয়াম ক্লিনার'
@@ -254,13 +254,13 @@ export const SERVICES_DATA: ServiceItem[] = [
     popular: true,
     benefits: [
       'Zero damage to PVC, rotomold, or concrete surfaces',
-      'Complete eradication of green algae and bacterial biofilms',
+      'Effective removal of green algae and bacterial biofilms',
       'Approved food-grade non-toxic sanitization',
       'Experienced rooftop technician team with safety rigging'
     ],
     benefitsBn: [
       'ট্যাংকের দেয়ালে কোনো ক্ষতি না করে রোটারি জেটে পরিষ্কার',
-      'সবুজ শ্যাওলা ও ব্যাক্টেরিয়ার আস্তরণ সম্পূর্ণ দূরীকরণ',
+      'সবুজ শ্যাওলা ও ব্যাক্টেরিয়ার আস্তরণ কার্যকর দূরীকরণ',
       'ফুড-গ্রেড ও দুর্গন্ধহীন জীবাণুনাশক প্রয়োগ',
       'নিরাপদ ও প্রশিক্ষিত টেকনিশিয়ান দ্বারা কাজ পরিচালনা'
     ],
@@ -268,7 +268,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'Tank structural and inlet inspection',
       'Controlled de-watering through drainage lines',
       'Mechanical scrubbing of wall algae and bottom sediment',
-      '120-150 bar high-pressure rotary wall jet wash',
+      'High-pressure rotary wall jet wash',
       'Food-grade safe disinfection treatment',
       'Fresh water rinse and wet vacuuming extraction',
       'Lid sealing and client inspection handover'
@@ -292,7 +292,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'বাণিজ্যিক ভবন ও কর্পোরেট অফিস',
       'ডুপ্লেক্স বাড়ি ও ছাদের পিভিসি ব্যাটারি ট্যাংক'
     ],
-    image: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     faqs: [
       {
         question: 'Will high pressure water jet damage my PVC rooftop tank?',
@@ -367,7 +367,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'Blower ventilation & safety illumination setup',
       'Complete de-watering and thick sludge slurry pumping',
       'Industrial wet vacuuming of base silt from sump pit',
-      '150 bar high-pressure rotary floor & wall scouring',
+      'High-pressure mechanized rotary floor & wall scouring',
       'Food-grade sanitization wash and fresh water rinse',
       'Final clearance, sealing, and client inspection'
     ],
@@ -375,7 +375,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'সাইট নিরাপত্তা যাচাই ও এয়ার ভেন্টিলেশন চালু করা',
       'সাবমারসিবল পাম্পে নোংরা পানি ও ভারী কাদার স্তুপ উত্তোলন',
       'ওয়েট ভ্যাকুয়ামে তলদেশের ড্রেন পিটের অবশিষ্টাংশ পরিষ্কার',
-      '১৫০ বার রোটারি জেটে দেয়াল ও মেঝের ময়লা দূরীকরণ',
+      'মেকানাইজড রোটারি ওয়াটার জেটে দেয়াল ও মেঝের ময়লা দূরীকরণ',
       'জীবাণুনাশক ওয়াশ ও পুনরায় স্বচ্ছ পানি দিয়ে ফ্লাশিং',
       'ম্যানহোল সিলিং ও গ্রাহককে কাজ বুঝিয়ে দিয়ে হ্যান্ডওভার'
     ],
@@ -389,10 +389,10 @@ export const SERVICES_DATA: ServiceItem[] = [
       'বাণিজ্যিক কমপ্লেক্স, শপিং মল ও কর্পোরেট অফিস',
       'হাসপাতাল, শিক্ষাপ্রতিষ্ঠান ও আবাসিক হোটেল'
     ],
-    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=75',
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
     beforeAfterImage: {
-      before: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=75',
-      after: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=75'
+      before: '/assets/aistudio/hero-underground-poster.jpg',
+      after: '/assets/aistudio/hero-rooftop-poster.jpg'
     },
     faqs: [
       {
@@ -477,7 +477,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'বহুতল বাণিজ্যিক ভবন ও কর্পোরেট সেন্টার',
       'শিক্ষাপ্রতিষ্ঠান, রেস্তোরাঁ ও কারখানা'
     ],
-    image: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=800&q=75',
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     faqs: [
       {
         question: 'Can both tanks be cleaned on the same day?',
@@ -561,7 +561,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'পুরাতন বিল্ডিং যেখানে পাইপের মুখে আয়রন আটকে প্রেশার কমে গেছে',
       'শিশুদের ত্বক ও পরিবারের সুস্বাস্থ্যে সচেতন পরিবারসমূহ'
     ],
-    image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=75',
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
     faqs: [
       {
         question: 'Will pipeline cleaning damage internal CPVC, PPR, or PVC pipes?',
@@ -641,7 +641,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'ভবনের পাইপলাইনের স্বাভাবিক পানির গতি ফেরাতে',
       'কল বা শাওয়ারের মুখে আটকে থাকা ময়লা পরিষ্কার করতে'
     ],
-    image: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75',
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
     faqs: [
       {
         question: 'Do I need to break any walls or replace pipes?',
@@ -725,7 +725,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'হাসপাতাল, কিন্ডারগার্টেন, কলেজ ও বিশ্ববিদ্যালয় হোস্টেল',
       'স্বাস্থ্য সচেতন আধুনিক পরিবারবর্গ'
     ],
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=75',
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     faqs: [
       {
         question: 'How do you coordinate with tenants so water is not shut off for too long?',
@@ -745,7 +745,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Comprehensive home cleaning designed to make your living spaces hygienic and sparkling. Our trained cleaning specialists thoroughly sanitize living rooms, bedrooms, balconies, and common areas using eco-friendly solutions.',
     iconName: 'Home',
     isPrimary: false,
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=75'
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
   },
   {
     id: 'service-office-cleaning',
@@ -757,7 +757,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Keep your workplace spotless, hygienic, and productive with our commercial office cleaning services. We sanitize workstations, meeting rooms, glass partitions, and executive suites.',
     iconName: 'Briefcase',
     isPrimary: false,
-    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=75'
+    image: '/assets/aistudio/hero-rooftop-poster.jpg'
   },
   {
     id: 'service-deep-cleaning',
@@ -769,7 +769,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Goes beyond routine surface dusting. Our deep cleaning tackles hidden grime, tile grout calcification, appliance exteriors, light fixtures, and neglected corners.',
     iconName: 'Sparkles',
     isPrimary: false,
-    image: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&fit=crop&w=800&q=75'
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
   },
   {
     id: 'service-sofa-cleaning',
@@ -781,7 +781,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Restore freshness and hygiene to your sofas and armchairs. We use specialized injection-extraction vacuum machines that lift deep grime, food stains, and allergen dust mites.',
     iconName: 'Layers',
     isPrimary: false,
-    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=75'
+    image: '/assets/aistudio/hero-rooftop-poster.jpg'
   },
   {
     id: 'service-bathroom-cleaning',
@@ -793,7 +793,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Intensive descaling and bacterial disinfection for washrooms. Removes stubborn yellowish iron stains from floor tiles, glass shower enclosures, mirrors, and sanitary fittings.',
     iconName: 'Droplets',
     isPrimary: false,
-    image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=75'
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
   },
   {
     id: 'service-kitchen-cleaning',
@@ -805,7 +805,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Thorough grease removal and kitchen hygiene. Eliminates oily films from exhaust hoods, cooktops, countertops, cabinets, and splashback tiles.',
     iconName: 'Wrench',
     isPrimary: false,
-    image: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=75'
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
   },
   {
     id: 'service-pest-control',
@@ -814,10 +814,10 @@ export const SERVICES_DATA: ServiceItem[] = [
     titleBn: 'পেস্ট কন্ট্রোল সার্ভিস',
     shortDesc: 'Eco-friendly and odorless eradication of cockroaches, bedbugs, termites, and rodents.',
     shortDescBn: 'তেলাপোকা, ছারপোকা, উইপোকা ও ইঁদুর দমনে নিরাপদ ও পরিবেশবান্ধব পেস্ট কন্ট্রোল।',
-    fullDesc: 'Certified pest eradication using WHO-approved, odorless formulations that protect your children and pets while permanently eradicating harmful infestations.',
+    fullDesc: 'Safe, odorless formulations designed to help protect your living environment and manage household pest infestations responsibly.',
     iconName: 'ShieldAlert',
     isPrimary: false,
-    image: 'https://images.unsplash.com/photo-1584744982491-665216d95f8b?auto=format&fit=crop&w=800&q=75'
+    image: '/assets/aistudio/hero-underground-poster.jpg'
   },
   {
     id: 'service-glass-window-cleaning',
@@ -829,7 +829,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Crystal clear glass cleaning for residential windows, high-rise building facades, and office glass partitions using scratch-free squeegees and purified water rinses.',
     iconName: 'Building',
     isPrimary: false,
-    image: 'https://images.unsplash.com/photo-1527515545081-5db817172677?auto=format&fit=crop&w=800&q=75'
+    image: '/assets/aistudio/hero-rooftop-poster.jpg'
   },
   {
     id: 'service-carpet-cleaning',
@@ -841,7 +841,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Deep carpet shampooing using industrial injection-extraction equipment that lifts trapped mud and dust mites without over-wetting, ensuring fast drying.',
     iconName: 'Layers',
     isPrimary: false,
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=75'
+    image: '/assets/aistudio/hero-rooftop-poster.jpg'
   },
   {
     id: 'service-commercial-cleaning',
@@ -853,7 +853,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Turnkey facility maintenance and post-renovation commercial scrubbing with multi-person squads equipped with rotary floor scrubbers and wet vacuum extractors.',
     iconName: 'Building',
     isPrimary: false,
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=75'
+    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
   }
 ];
 
@@ -898,9 +898,9 @@ export const CLEANING_STEPS: ProcessStep[] = [
     step: 'Step 05',
     number: '05',
     title: 'Deep Cleaning',
-    titleBn: 'হাই-প্রেসার ওয়াশ (150-Bar Rotary Jet)',
-    description: 'High-pressure 120-150 bar rotary water jets blast every internal rib, corner, and pipe joint to strip away embedded grime without damaging waterproofing.',
-    descriptionBn: '১৫০ বার উচ্চ চাপের রোটারি জেট দিয়ে ট্যাংকের প্রতিটি কোণা, ছাদ ও খাঁজ থেকে অবশিষ্ট দাগ ও ময়লা ধুয়ে ফেলা।',
+    titleBn: 'হাই-প্রেসার ওয়াশ (High-Pressure Rotary Jet)',
+    description: 'High-pressure rotary water jets wash internal ribs, corners, and joints to strip away embedded grime without damaging waterproofing.',
+    descriptionBn: 'উচ্চ চাপের মেকানাইজড রোটারি জেট দিয়ে ট্যাংকের প্রতিটি কোণা, ছাদ ও খাঁজ থেকে অবশিষ্ট দাগ ও ময়লা ধুয়ে ফেলা।',
     icon: 'Waves'
   },
   {
@@ -917,8 +917,8 @@ export const CLEANING_STEPS: ProcessStep[] = [
     number: '07',
     title: 'Final Rinse',
     titleBn: 'ফাইনাল ওয়াশ ও ভ্যাকুমিং (Fresh Water Rinse)',
-    description: 'Complete fresh water high-volume flushing followed by heavy-duty wet vacuuming to evacuate 100% of rinse residue and particulates.',
-    descriptionBn: 'সম্পূর্ণ পরিষ্কার পানি দিয়ে ধুয়ে তলদেশের অবশিষ্ট পানি ভ্যাকুয়াম মেশিনে টেনে সম্পূর্ণ শুকনো ও ঝকঝকে করা।',
+    description: 'Complete fresh water high-volume flushing followed by heavy-duty wet vacuuming to evacuate rinse residue and particulates.',
+    descriptionBn: 'সম্পূর্ণ পরিষ্কার পানি দিয়ে ধুয়ে তলদেশের অবশিষ্ট পানি ভ্যাকুয়াম মেশিনে টেনে সম্পূর্ণ শুকনো ও পরিচ্ছন্ন করা।',
     icon: 'Droplets'
   },
   {

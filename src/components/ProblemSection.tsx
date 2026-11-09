@@ -139,7 +139,7 @@ export const ProblemSection: React.FC<ProblemSectionProps> = ({ onCheckPrice = (
               <div 
                 className="absolute inset-0 bg-cover bg-center"
                 style={{
-                  backgroundImage: `url('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1200&q=75')`
+                  backgroundImage: `url('/assets/aistudio/hero-rooftop-poster.jpg')`
                 }}
               >
                 <div className="absolute top-4 right-4 bg-cyan-950/90 backdrop-blur-md text-cyan-200 text-xs font-extrabold px-3 py-1.5 rounded-full border border-cyan-400/40 shadow-lg">
@@ -152,7 +152,7 @@ export const ProblemSection: React.FC<ProblemSectionProps> = ({ onCheckPrice = (
                 className="absolute inset-0 bg-cover bg-center overflow-hidden border-r-2 border-white filter contrast-125"
                 style={{
                   width: `${sliderPos}%`,
-                  backgroundImage: `url('https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75')`
+                  backgroundImage: `url('/assets/aistudio/hero-underground-poster.jpg')`
                 }}
               >
                 <div className="absolute inset-0 bg-amber-950/40 mix-blend-multiply" />

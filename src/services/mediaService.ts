@@ -10,58 +10,54 @@ export const MEDIA_CHANGE_EVENT = 'sunviloz_media_library_changed';
 // Initial curated preset media library items
 export const INITIAL_MEDIA_ITEMS: MediaItem[] = [
   {
-    id: 'med-hero-default',
-    fileName: 'dhaka-tank-cleaning-hero.webp',
+    id: 'med-logo-official',
+    fileName: 'sunviloz-logo-official.png',
     fileType: 'image',
-    mimeType: 'image/webp',
-    publicUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=300&q=75',
-    sourceType: 'external_url',
-    altText: 'Professional water tank cleaning service Dhaka',
-    title: 'Homepage Hero Tank Cleaning Specialist',
-    caption: 'Trained technicians performing high-pressure tank disinfection',
-    fileSize: 145000,
-    width: 1200,
-    height: 800,
+    mimeType: 'image/png',
+    publicUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png',
+    thumbnailUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png',
+    sourceType: 'upload',
+    altText: 'Sunviloz Clean Care Official Logo',
+    title: 'Sunviloz Clean Care Official Logo',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
   {
-    id: 'med-pvc-tank',
-    fileName: 'pvc-rooftop-clean.webp',
+    id: 'med-overhead-tank',
+    fileName: 'overhead-water-tank-cleaning.jpg',
     fileType: 'image',
-    mimeType: 'image/webp',
-    publicUrl: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=800&q=75',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=300&q=75',
-    sourceType: 'external_url',
-    altText: 'Overhead rooftop PVC water tank in Dhaka',
-    title: 'Rooftop PVC Overhead Tank',
+    mimeType: 'image/jpeg',
+    publicUrl: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    thumbnailUrl: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    sourceType: 'upload',
+    altText: 'Overhead rooftop water tank cleaning in Dhaka',
+    title: 'Overhead Rooftop Water Tank Cleaning',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
   {
-    id: 'med-concrete-reservoir',
-    fileName: 'underground-concrete-reservoir.webp',
+    id: 'med-underground-tank',
+    fileName: 'underground-water-tank-cleaning.png',
     fileType: 'image',
-    mimeType: 'image/webp',
-    publicUrl: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=75',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=300&q=75',
-    sourceType: 'external_url',
-    altText: 'Underground concrete water reservoir desiltation',
-    title: 'Underground Reserve Tank Cleaning',
+    mimeType: 'image/png',
+    publicUrl: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    thumbnailUrl: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    sourceType: 'upload',
+    altText: 'Underground reserve tank cleaning and desiltation',
+    title: 'Underground Reserve Water Tank Cleaning',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
   {
-    id: 'med-clean-interior',
-    fileName: 'sparkling-clean-tank-interior.webp',
+    id: 'med-water-pipeline',
+    fileName: 'water-pipeline-cleaning.jpg',
     fileType: 'image',
-    mimeType: 'image/webp',
-    publicUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=75',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=75',
-    sourceType: 'external_url',
-    altText: 'Clean and sanitized water tank interior surface',
-    title: 'Sanitized Clean Interior Surface',
+    mimeType: 'image/jpeg',
+    publicUrl: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+    thumbnailUrl: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+    sourceType: 'upload',
+    altText: 'Water supply pipeline hydro pulse cleaning',
+    title: 'Water Pipeline Cleaning & Descaling',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -71,7 +67,7 @@ export const INITIAL_MEDIA_ITEMS: MediaItem[] = [
     fileType: 'video',
     mimeType: 'video/mp4',
     publicUrl: '/videos/tank-cleaning-desktop.mp4',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=75',
+    thumbnailUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
     sourceType: 'external_url',
     altText: 'High pressure water tank cleaning service video',
     title: 'Professional Cleaning Service Video - Desktop',
@@ -84,23 +80,10 @@ export const INITIAL_MEDIA_ITEMS: MediaItem[] = [
     fileType: 'video',
     mimeType: 'video/mp4',
     publicUrl: '/videos/tank-cleaning-mobile.mp4',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=75',
+    thumbnailUrl: '/assets/aistudio/hero-underground-poster.jpg',
     sourceType: 'external_url',
     altText: 'High pressure water tank cleaning service video for mobile',
     title: 'Professional Cleaning Service Video - Mobile',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'med-youtube-demo',
-    fileName: 'sunviloz-water-tank-cleaning-process-video',
-    fileType: 'youtube',
-    publicUrl: 'https://www.youtube.com/watch?v=ScMzIvxBSi4',
-    thumbnailUrl: 'https://img.youtube.com/vi/ScMzIvxBSi4/hqdefault.jpg',
-    sourceType: 'youtube',
-    youtubeVideoId: 'ScMzIvxBSi4',
-    altText: 'Sunviloz Clean Care Cleaning Process Video Demonstration',
-    title: 'Professional 6-Stage Water Tank Cleaning Process in Dhaka',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
@@ -114,18 +97,144 @@ function notifyMediaChange() {
 
 /**
  * Extracts YouTube video ID from various standard YouTube URL formats or raw ID.
+ * Supports:
+ * - https://www.youtube.com/watch?v=VIDEO_ID (&feature=..., &t=...)
+ * - https://youtu.be/VIDEO_ID (?si=...)
+ * - https://www.youtube.com/embed/VIDEO_ID
+ * - https://www.youtube.com/shorts/VIDEO_ID
+ * - https://youtube.com/live/VIDEO_ID
+ * - https://www.youtube-nocookie.com/embed/VIDEO_ID
+ * - Raw 11-char ID
  */
-export function extractYouTubeId(urlOrId: string): string | null {
+export function extractYouTubeId(urlOrId: string | null | undefined): string | null {
   if (!urlOrId) return null;
   const trimmed = urlOrId.trim();
-  // If already an 11-char ID without URL slashes
+  if (!trimmed) return null;
+
+  // 1. If it's already an 11-char ID (alphanumeric, -, _)
   if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
     return trimmed;
   }
-  // Matches youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID, youtube.com/shorts/ID
-  const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+
+  // 2. Parse via URL constructor for robust parameter & path extraction
+  try {
+    const urlStr = trimmed.startsWith('http://') || trimmed.startsWith('https://')
+      ? trimmed
+      : trimmed.startsWith('//')
+        ? `https:${trimmed}`
+        : `https://${trimmed}`;
+
+    const parsed = new URL(urlStr);
+    const hostname = parsed.hostname.toLowerCase().replace(/^www\./, '');
+
+    if (
+      hostname === 'youtube.com' || 
+      hostname === 'm.youtube.com' || 
+      hostname === 'youtube-nocookie.com'
+    ) {
+      // /watch?v=ID
+      const v = parsed.searchParams.get('v');
+      if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) {
+        return v;
+      }
+      // /embed/ID, /shorts/ID, /live/ID, /v/ID, /e/ID
+      const pathParts = parsed.pathname.split('/').filter(Boolean);
+      if (pathParts.length >= 2 && ['embed', 'shorts', 'live', 'v', 'e'].includes(pathParts[0].toLowerCase())) {
+        const candidate = pathParts[1];
+        if (/^[a-zA-Z0-9_-]{11}$/.test(candidate)) {
+          return candidate;
+        }
+      }
+    } else if (hostname === 'youtu.be') {
+      const pathParts = parsed.pathname.split('/').filter(Boolean);
+      if (pathParts.length >= 1) {
+        const candidate = pathParts[0];
+        if (/^[a-zA-Z0-9_-]{11}$/.test(candidate)) {
+          return candidate;
+        }
+      }
+    }
+  } catch {
+    // Fallback to regex if URL parsing encounters atypical syntax
+  }
+
+  // 3. Robust regex fallback covering all standard patterns
+  const regExp = /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|shorts\/|live\/|v\/|e\/|watch\?v=|.*[?&]v=))([a-zA-Z0-9_-]{11})/;
   const match = trimmed.match(regExp);
-  return match && match[1] ? match[1] : null;
+  if (match && match[1]) {
+    return match[1];
+  }
+
+  return null;
+}
+
+/**
+ * Validates a video input URL (YouTube, MP4/WebM, or local relative path)
+ * and returns Bengali feedback message if invalid.
+ */
+export function validateVideoUrl(input: string | null | undefined): { 
+  isValid: boolean; 
+  isYouTube: boolean; 
+  ytId: string | null; 
+  errorBn?: string 
+} {
+  if (!input || !input.trim()) {
+    return { 
+      isValid: false, 
+      isYouTube: false, 
+      ytId: null, 
+      errorBn: 'অনুগ্রহ করে ভিডিও লিঙ্ক বা পাথ প্রদান করুন।' 
+    };
+  }
+
+  const trimmed = input.trim();
+  const ytId = extractYouTubeId(trimmed);
+  if (ytId) {
+    return { isValid: true, isYouTube: true, ytId };
+  }
+
+  // Check if input looks like a YouTube link that has an invalid or missing video ID
+  if (trimmed.toLowerCase().includes('youtube.com') || trimmed.toLowerCase().includes('youtu.be')) {
+    return {
+      isValid: false,
+      isYouTube: false,
+      ytId: null,
+      errorBn: 'ইউটিউব লিঙ্কটি সঠিক নয়। অনুগ্রহ করে সঠিক ইউটিউব লিঙ্ক দিন (যেমন: https://www.youtube.com/watch?v=... বা https://youtu.be/...)'
+    };
+  }
+
+  // Check for local relative file paths
+  if (trimmed.startsWith('/') && (trimmed.endsWith('.mp4') || trimmed.endsWith('.webm') || trimmed.endsWith('.ogg') || trimmed.includes('/videos/'))) {
+    return { isValid: true, isYouTube: false, ytId: null };
+  }
+
+  // Direct MP4/WebM/Media URLs (must start with http:// or https://)
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    try {
+      const url = new URL(trimmed);
+      const pathname = url.pathname.toLowerCase();
+      if (
+        pathname.endsWith('.mp4') || 
+        pathname.endsWith('.webm') || 
+        pathname.endsWith('.ogg') || 
+        pathname.endsWith('.mov') ||
+        trimmed.includes('storage') || 
+        trimmed.includes('media')
+      ) {
+        return { isValid: true, isYouTube: false, ytId: null };
+      }
+      return { isValid: true, isYouTube: false, ytId: null };
+    } catch {
+      // Invalid URL
+    }
+  }
+
+  return {
+    isValid: false,
+    isYouTube: false,
+    ytId: null,
+    errorBn: 'সঠিক ভিডিও URL বা ইউটিউব লিঙ্ক প্রদান করুন (যেমন: https://www.youtube.com/watch?v=... বা https://youtu.be/...)'
+  };
 }
 
 /**
@@ -144,7 +253,7 @@ export function getYouTubeMetadata(urlOrId: string): YouTubeMetadata {
   return {
     videoId,
     thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-    embedUrl: `https://www.youtube.com/embed/${videoId}?rel=0`,
+    embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`,
     isValid: true
   };
 }

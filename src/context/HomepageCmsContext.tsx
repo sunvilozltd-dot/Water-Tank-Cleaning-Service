@@ -10,6 +10,7 @@ import {
   DEFAULT_HOMEPAGE_SECTIONS,
   HOMEPAGE_CMS_EVENT 
 } from '../services/homepageCmsService';
+import { CENTRAL_IMAGES_EVENT } from '../services/imageSyncService';
 
 interface HomepageCmsContextType {
   sections: HomepageSection[];
@@ -48,8 +49,10 @@ export const HomepageCmsProvider: React.FC<{ children: React.ReactNode }> = ({ c
       loadSections();
     };
     window.addEventListener(HOMEPAGE_CMS_EVENT, handleUpdate);
+    window.addEventListener(CENTRAL_IMAGES_EVENT, handleUpdate);
     return () => {
       window.removeEventListener(HOMEPAGE_CMS_EVENT, handleUpdate);
+      window.removeEventListener(CENTRAL_IMAGES_EVENT, handleUpdate);
     };
   }, [loadSections]);
 

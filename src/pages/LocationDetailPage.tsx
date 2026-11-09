@@ -42,12 +42,30 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
   const areaInquiryMsg = `আসসালামু আলাইকুম। আমি ${location.areaNameBn} (${location.areaName}) এলাকায় ওয়াটার ট্যাংক পরিষ্কার সার্ভিসের জন্য কোটেশন জানতে চাই।`;
   const whatsappUrl = `https://wa.me/${rawWhatsapp}?text=${encodeURIComponent(areaInquiryMsg)}`;
 
+  const breadcrumbsList = [
+    { name: lang === 'bn' ? 'হোম' : 'Home', path: '/' },
+    { name: lang === 'bn' ? 'সার্ভিস এরিয়া' : 'Service Areas', path: '/service-areas' },
+    { name: lang === 'bn' ? location.areaNameBn : location.areaName, path: `/service-areas/${location.slug}` }
+  ];
+
+  const structuredFaqs = location.faqs ? location.faqs.map(f => ({
+    question: f.question,
+    answer: f.answer
+  })) : undefined;
+
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-12">
       <SeoHead
-        title={location.title || `${location.areaName} Water Tank Cleaning Service | Sunviloz Clean Care`}
+        title={location.title || `${location.areaName} Water Tank Cleaning Service | SUNVILOZ CLEAN CARE`}
         description={location.metaDesc || location.metaDescription || location.intro}
         canonicalUrl={`https://sunvilozcleancare.com/service-areas/${location.slug}`}
+        serviceSchema={{
+          name: `Water Tank Cleaning Service in ${location.areaName}`,
+          serviceType: 'Water Tank Cleaning Service',
+          description: location.intro || `Professional rooftop overhead and underground water tank cleaning service in ${location.areaName}, Dhaka.`
+        }}
+        breadcrumbs={breadcrumbsList}
+        faqSchema={structuredFaqs}
       />
 
       <Breadcrumbs 

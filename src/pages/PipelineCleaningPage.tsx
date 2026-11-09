@@ -76,12 +76,30 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
     }
   ];
 
+  const breadcrumbsList = [
+    { name: lang === 'bn' ? 'হোম' : 'Home', path: '/' },
+    { name: lang === 'bn' ? 'সার্ভিসসমূহ' : 'Services', path: '/services' },
+    { name: lang === 'bn' ? 'পাইপলাইন পরিষ্কার সার্ভিস' : 'Water Pipeline Cleaning Service', path: '/services/pipeline-cleaning' }
+  ];
+
+  const structuredFaqs = pipelineFaqs.map(f => ({
+    question: f.qBn,
+    answer: f.aBn
+  }));
+
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-16">
       <SeoHead
-        title="Water Pipeline Cleaning Service in Dhaka | Sunviloz Clean Care"
-        description="Non-invasive water pipe descaling and hydro-pulse line flushing across Dhaka. Remove iron, rust and sludge without breaking walls. Call 01609999612."
+        title="Water Pipeline Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE"
+        description="Professional water pipeline cleaning service in Dhaka. Non-invasive hydro-pulse flushing to clear rust, iron, and foul tap odor without wall damage. 01609999612."
         canonicalUrl="https://sunvilozcleancare.com/services/pipeline-cleaning"
+        serviceSchema={{
+          name: 'Water Pipeline Cleaning Service in Dhaka',
+          serviceType: 'Water Pipeline Cleaning',
+          description: 'Non-destructive hydro-pulse pressurized pipeline descaling and flushing to clear iron sediments, rust scaling, and bio-slime from internal plumbing across Dhaka.'
+        }}
+        breadcrumbs={breadcrumbsList}
+        faqSchema={structuredFaqs}
       />
 
       <Breadcrumbs
@@ -153,7 +171,7 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
           <div className="lg:col-span-5">
             <div className="relative aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-md bg-[#F5FAFC] group">
               <OptimizedImage
-                src="https://images.unsplash.com/photo-1585704032915-c3400ca199e7"
+                src="https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg"
                 alt="Water Pipeline Cleaning Service in Dhaka"
                 width={800}
                 height={600}

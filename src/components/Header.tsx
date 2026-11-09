@@ -33,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   const { lang, setLang } = useLanguage();
   const { announcement, images } = useSiteConfig();
   const { headerConfig, navTree } = useHeaderNav();
-  const activeLogoUrl = headerConfig.logoUrl || images?.logo;
+  const activeLogoUrl = headerConfig.logoUrl || images?.logo || '/assets/aistudio/sunviloz-logo.png';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
@@ -219,7 +219,7 @@ export const Header: React.FC<HeaderProps> = ({
                 window.location.href = '/';
               }
             }}
-            className="flex items-center gap-2.5 text-left group focus-visible:outline-2 focus-visible:outline-[#0D9488] rounded-xl cursor-pointer"
+            className="flex items-center gap-1.5 sm:gap-2 text-left group focus-visible:outline-2 focus-visible:outline-[#0D9488] rounded-xl cursor-pointer"
             aria-label={`${headerConfig.brandName} ${headerConfig.brandSuffix} Home`}
           >
             {/* Custom Logo Image or Default Droplet */}
@@ -228,19 +228,23 @@ export const Header: React.FC<HeaderProps> = ({
                 src={activeLogoUrl}
                 alt={headerConfig.logoAlt || `${headerConfig.brandName} Logo`}
                 onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  const target = e.currentTarget as HTMLImageElement;
+                  if (!target.src.includes('sunviloz-logo.png')) {
+                    target.src = '/assets/aistudio/sunviloz-logo.png';
+                  }
                 }}
                 style={{
-                  width: `${headerConfig.logoWidth || 40}px`,
-                  height: `${headerConfig.logoHeight || 40}px`
+                  height: `${headerConfig.logoHeight || 38}px`,
+                  width: 'auto',
+                  maxWidth: `${headerConfig.logoWidth || 48}px`
                 }}
-                className="object-contain group-hover:scale-105 transition-transform bg-transparent"
+                className="object-contain object-left shrink-0 group-hover:scale-105 transition-transform bg-transparent"
               />
             ) : headerConfig.logoEnabled ? (
               <div 
                 style={{
-                  width: `${headerConfig.logoWidth || 40}px`,
-                  height: `${headerConfig.logoHeight || 40}px`
+                  width: `${headerConfig.logoWidth || 38}px`,
+                  height: `${headerConfig.logoHeight || 38}px`
                 }}
                 className="flex items-center justify-center text-[#0D9488] group-hover:scale-105 transition-transform shrink-0 bg-transparent" 
                 aria-hidden="true"
@@ -251,8 +255,8 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Brand Title and Tagline */}
             {headerConfig.brandVisible && (
-              <div>
-                <div className="flex items-center gap-1.5">
+              <div className="flex flex-col justify-center">
+                <div className="flex items-center gap-1.5 leading-tight">
                   <span className={`font-black tracking-tight text-[#123047] ${
                     headerConfig.brandFontSize === 'sm' ? 'text-lg sm:text-xl' :
                     headerConfig.brandFontSize === 'lg' ? 'text-2xl sm:text-3xl' :

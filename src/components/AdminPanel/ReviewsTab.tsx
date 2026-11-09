@@ -228,22 +228,34 @@ export const ReviewsTab: React.FC = () => {
               <span>Customer Reviews &amp; Moderation Engine</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white">
-              গ্রাহক রিভিউ ও রেটিং ব্যবস্থাপনা
+              গ্রাহক রিভিউ ও Google Reviews ইন্টিগ্রেশন
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
-              Google Account দিয়ে ভেরিফাইড গ্রাহক রিভিউসমূহ সরাসরি ওয়েবসাইটে প্রকাশিত হয়। অপ্রয়োজনীয় বা নীতিমালা ভঙ্গকারী রিভিউ এখান থেকে পার্মানেন্ট মুছে ফেলতে পারবেন।
+              ওয়েবসাইটে সরাসরি গ্রাহকদের Google Business Profile-এ রিভিউ দিতে উৎসাহিত করা হয়।
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={fetchReviews}
-            disabled={loading}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-colors shrink-0 self-start sm:self-auto cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>রিফ্রেশ করুন</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <a
+              href="https://www.google.com/maps/place/Sunviloz+Clean+Care/@23.8266213,90.4190328,15z/data=!4m8!3m7!1s0x4caea8c73c1a3949:0x3a92e0082947d375!8m2!3d23.8267734!4d90.4179331!9m1!1b1!16s%2Fg%2F11zdmdqbwt?entry=ttu"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3.5 py-2 bg-gradient-to-r from-[#0D9488] to-[#14B8A6] hover:from-[#0f766e] hover:to-[#0D9488] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-[#0D9488]/20 shrink-0"
+            >
+              <span>গুগল রিভিউ লিংক টেস্ট</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+
+            <button
+              type="button"
+              onClick={fetchReviews}
+              disabled={loading}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-colors shrink-0 self-start sm:self-auto cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <span>রিফ্রেশ করুন</span>
+            </button>
+          </div>
         </div>
 
         {/* Counter Tabs */}

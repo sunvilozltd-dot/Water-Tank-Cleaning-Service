@@ -48,12 +48,12 @@ export const DEFAULT_HERO_CONFIG: HeroConfig = {
   ctaQuoteTextBn: 'কোটেশন রিকোয়েস্ট করুন',
   ctaCallTextEn: 'Call 01609-999612',
   ctaCallTextBn: 'কল করুন 01609-999612',
-  bgImageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
+  bgImageUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
   // Hero Tri-Video Settings (Responsive Side-by-Side on Desktop, Stacked on Mobile)
   videoEnabled: true,
   videoUrl: '/videos/tank-cleaning-desktop.mp4',
   video2Url: '/videos/tank-cleaning-mobile.mp4',
-  video3Url: 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4',
+  video3Url: '',
   video1TitleEn: 'Rooftop Tank Cleaning (150-Bar Rotary Jet)',
   video1TitleBn: '১. ছাদের ট্যাংক ক্লিনিং (১৫০ বার রোটারি জেট)',
   video2TitleEn: 'Underground Reserve Tank & Sludge Extraction',
@@ -68,10 +68,10 @@ export const DEFAULT_HERO_CONFIG: HeroConfig = {
   video3SubtitleBn: 'দেয়াল না ভেঙে হাইড্রো-পালস পদ্ধতিতে পাইপলাইনের ভেতরের মরিচা ও শ্যাওলা পরিষ্কার',
   mobileVideoUrl: '/videos/tank-cleaning-desktop.mp4',
   mobileVideo2Url: '/videos/tank-cleaning-mobile.mp4',
-  mobileVideo3Url: 'https://spwatertankcleaner.com/wp-content/uploads/2025/08/how-to-clean-water-tank-_-hygyniec-water-tank-cleaning-_-Overhead-water-tank-cleaning.mp4',
+  mobileVideo3Url: '',
   posterImageUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
   posterImage2Url: '/assets/aistudio/hero-underground-poster.jpg',
-  posterImage3Url: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=75',
+  posterImage3Url: '/assets/aistudio/hero-underground-poster.jpg',
   overlayOpacity: 0.72,
   overlayColor: 'navy',
   visualHeadingBn: 'অত্যাধুনিক মেকানাইজড ওয়াটার ট্যাংক ক্লিনিং',
@@ -107,15 +107,14 @@ export const INITIAL_FULL_SITE_CONFIG: FullSiteConfig = {
     defaultMetaDescription: 'Professional rooftop & underground water tank cleaning, pipeline cleaning, and sanitization in Dhaka. Transparent pricing, modern equipment, hygienic service.',
     canonicalBaseUrl: 'https://sunvilozcleancare.com',
     indexingAllowed: true,
-    socialOgImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75'
+    socialOgImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png'
   },
   images: {
     heroPoster: '/assets/aistudio/hero-rooftop-poster.jpg',
-    heroBg: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-    aboutStoryImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=75',
-    popularTankImage: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=75',
-    popularUndergroundImage: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=75',
-    popularPipelineImage: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=75'
+    aboutStoryImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
+    popularTankImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    popularUndergroundImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    popularPipelineImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
   }
 };
 
@@ -157,7 +156,7 @@ export const sanitizeAndMergeConfig = (parsed: Partial<FullSiteConfig>): FullSit
       : parsed.seo.canonicalBaseUrl
   };
 
-  const isLegacyYt = (url?: string) => !url || url.includes('jrfRHWs3WSw') || url.includes('placeholder');
+  const isLegacyYt = (url?: string) => !url || url.includes('placeholder');
   const rawHero: Partial<HeroConfig> = parsed.hero || {};
   const sanitizedHero: HeroConfig = {
     ...INITIAL_FULL_SITE_CONFIG.hero,
@@ -183,6 +182,9 @@ export const sanitizeAndMergeConfig = (parsed: Partial<FullSiteConfig>): FullSit
     announcement: { ...INITIAL_FULL_SITE_CONFIG.announcement, ...(parsed.announcement || {}) },
     hero: {
       ...sanitizedHero,
+      ...(imageReg?.heroVideos?.video1Url ? { videoUrl: imageReg.heroVideos.video1Url } : {}),
+      ...(imageReg?.heroVideos?.video2Url ? { video2Url: imageReg.heroVideos.video2Url, mobileVideoUrl: imageReg.heroVideos.video2Url } : {}),
+      ...(imageReg?.heroVideos?.video3Url ? { video3Url: imageReg.heroVideos.video3Url } : {}),
       ...(imageReg?.siteImages?.heroPoster ? { posterImageUrl: imageReg.siteImages.heroPoster } : {}),
       ...(imageReg?.siteImages?.heroBg ? { bgImageUrl: imageReg.siteImages.heroBg } : {})
     },
@@ -299,13 +301,39 @@ export const saveSiteConfig = async (config: FullSiteConfig): Promise<{ success:
 
       // 2. Sync to homepage_sections (sec-hero) as persistent database store
       try {
+        const heroV1 = config.hero?.videoUrl || null;
+        const heroV2 = config.hero?.video2Url || config.hero?.mobileVideoUrl || null;
+        const heroV3 = config.hero?.video3Url || null;
+        const heroP1 = config.hero?.posterImageUrl || null;
+        const heroP2 = config.hero?.posterImage2Url || null;
+        const heroP3 = config.hero?.posterImage3Url || null;
+
         await supabase
           .from('homepage_sections')
           .update({
+            video_url: heroV1,
+            mobile_video_url: heroV2,
+            poster_image_url: heroP1,
             settings: {
               siteImages: config.images,
               hero: config.hero,
-              announcement: config.announcement
+              announcement: config.announcement,
+              video1Url: heroV1,
+              video2Url: heroV2,
+              video3Url: heroV3,
+              mobileVideoUrl: heroV2,
+              posterImage1Url: heroP1,
+              posterImage2Url: heroP2,
+              posterImage3Url: heroP3
+            },
+            content: {
+              video1Url: heroV1,
+              video2Url: heroV2,
+              video3Url: heroV3,
+              mobileVideoUrl: heroV2,
+              posterImage1Url: heroP1,
+              posterImage2Url: heroP2,
+              posterImage3Url: heroP3
             },
             updated_at: new Date().toISOString()
           })

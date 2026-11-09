@@ -22,9 +22,13 @@ export const GetQuotePage: React.FC<GetQuotePageProps> = ({ onNavigate }) => {
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-10">
       <SeoHead
-        title={lang === 'bn' ? 'ফ্রি কোটেশন ও প্রাইসিং | সানভিলোজ ক্লিন কেয়ার' : 'Get a Free Quote | Sunviloz Clean Care Dhaka'}
-        description="Calculate estimated water tank cleaning and pipeline descaling costs in Dhaka. Simple 4-step quotation form with instant WhatsApp booking."
+        title="Water Tank Cleaning Price in Dhaka | SUNVILOZ CLEAN CARE"
+        description="Check water tank cleaning price in Dhaka for rooftop overhead and underground reserve tanks. Transparent cost estimates starting from BDT 1,200. WhatsApp: 01609999612."
         canonicalUrl="https://sunvilozcleancare.com/get-quote"
+        breadcrumbs={[
+          { name: lang === 'bn' ? 'হোম' : 'Home', path: '/' },
+          { name: lang === 'bn' ? 'ফ্রি কোটেশন' : 'Get Quote', path: '/get-quote' }
+        ]}
       />
 
       <Breadcrumbs

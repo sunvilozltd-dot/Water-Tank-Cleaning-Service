@@ -14,9 +14,13 @@ export const PortfolioPage: React.FC<PortfolioPageProps> = ({ onNavigate }) => {
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-12">
       <SeoHead
-        title={lang === 'bn' ? 'কাজের ভিডিও ডকুমেন্টেশন | সানভিলোজ ক্লিন কেয়ার ঢাকা' : 'Our Work Videos - Sunviloz Clean Care Dhaka'}
-        description="Watch real cleaning project videos of rooftop and underground water tanks cleaned across Dhaka."
+        title="Water Tank Cleaning Project Videos in Dhaka | SUNVILOZ CLEAN CARE"
+        description="Watch real project video documentation of rooftop overhead and underground water tanks cleaned across Dhaka residential and commercial buildings. 01609999612."
         canonicalUrl="https://sunvilozcleancare.com/portfolio"
+        breadcrumbs={[
+          { name: lang === 'bn' ? 'হোম' : 'Home', path: '/' },
+          { name: lang === 'bn' ? 'কাজের ভিডিও ডকুমেন্টেশন' : 'Work Videos', path: '/portfolio' }
+        ]}
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'কাজের ভিডিও ডকুমেন্টেশন' : 'Work Videos', href: '/portfolio' }]} />
       <OurWorkVideosSection />

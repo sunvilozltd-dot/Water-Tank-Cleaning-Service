@@ -24,63 +24,42 @@ export interface ChangeServiceImageModalProps {
   onImageUpdated?: (serviceId: string, newImageUrl: string) => void;
 }
 
-// Curated high-resolution, realistic water-tank cleaning stock images
+// Curated authentic water-tank cleaning assets
 export const CURATED_WATER_TANK_IMAGES = [
   {
-    id: 'rooftop-tank-1',
-    titleBn: 'ছাদের পিভিসি ও আরসিসি ট্যাংক',
-    titleEn: 'Rooftop PVC & Concrete Tank',
-    url: 'https://images.unsplash.com/photo-1541888946425-d0fbb186156f?auto=format&fit=crop&w=1200&q=80',
-    description: 'Clean rooftop water storage tank under clear sky'
+    id: 'rooftop-tank-official',
+    titleBn: 'ছাদের ওভারহেড পানির ট্যাংক ক্লিনিং',
+    titleEn: 'Rooftop Overhead Water Tank Cleaning',
+    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    description: 'Clean rooftop water storage tank with high-pressure rotary jet'
   },
   {
-    id: 'underground-wash-1',
+    id: 'underground-wash-official',
     titleBn: 'আন্ডারগ্রাউন্ড রিজার্ভার মেকানাইজড ডিপ ক্লিন',
     titleEn: 'Underground Reservoir Deep Wash',
-    url: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=80',
-    description: 'Professional high-pressure industrial pressure cleaning'
+    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    description: 'Submersible sludge extraction & deep disinfection'
   },
   {
-    id: 'crystal-water-1',
-    titleBn: 'স্বচ্ছ ও বিশুদ্ধ পানি স্টোরেজ (Both Tanks)',
-    titleEn: 'Pure Crystal Stored Water',
-    url: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=1200&q=80',
-    description: 'Spotless hygienic drinking water reservoir'
+    id: 'pipeline-flush-official',
+    titleBn: 'পানির পাইপলাইন হাইড্রো-পালস ফ্লাশিং',
+    titleEn: 'Water Pipeline Hydro-Pulse Flushing',
+    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+    description: 'Non-invasive pipe descaling without breaking walls'
   },
   {
-    id: 'pressure-jet-1',
-    titleBn: 'হাই-প্রেসার ওয়াটার জেট ফ্লাশিং',
-    titleEn: 'High-Pressure Rotary Jet Wash',
-    url: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=80',
-    description: 'Industrial high-pressure descaling hose & rotary jet'
+    id: 'rooftop-poster-asset',
+    titleBn: 'ছাদের ট্যাংক রিয়েল জব পোস্টার',
+    titleEn: 'Rooftop Tank Real Job Poster',
+    url: '/assets/aistudio/hero-rooftop-poster.jpg',
+    description: 'Real verified cleaning operation by Sunviloz team'
   },
   {
-    id: 'clean-faucet-1',
-    titleBn: 'স্বচ্ছ পানির ট্যাপ ও পাইপলাইন',
-    titleEn: 'Pure Clear Tap Water Flow',
-    url: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=1200&q=80',
-    description: 'Crystal-clear domestic tap water discharge'
-  },
-  {
-    id: 'sanitized-tank-1',
-    titleBn: 'ফুড-গ্রেড জীবাণুমুক্ত ওয়াটার ট্যাংক',
-    titleEn: 'Sanitized Drinking Water Tank',
-    url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1200&q=80',
-    description: 'Hygienic spotless tank interior with sparkling water'
-  },
-  {
-    id: 'plumbing-lines-1',
-    titleBn: 'পাইপলাইন আয়রন ও মরিচা ক্লিন',
-    titleEn: 'Plumbing Pipeline Descaling',
-    url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=80',
-    description: 'Heavy distribution pipeline maintenance'
-  },
-  {
-    id: 'fresh-water-flow-1',
-    titleBn: 'বিশুদ্ধ পানির ঘূর্ণি ও ওয়েভ',
-    titleEn: 'Pure Flowing Fresh Water',
-    url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
-    description: 'Hygienic fresh drinking water supply'
+    id: 'underground-poster-asset',
+    titleBn: 'আন্ডারগ্রাউন্ড ট্যাংক রিয়েল জব পোস্টার',
+    titleEn: 'Underground Tank Real Job Poster',
+    url: '/assets/aistudio/hero-underground-poster.jpg',
+    description: 'Real verified subterranean reservoir desiltation'
   }
 ];
 
