@@ -11,12 +11,12 @@ export const OurWorkVideosSection: React.FC<OurWorkVideosSectionProps> = () => {
   const { lang } = useLanguage();
   const { featuredVideos } = useWorkVideos();
   const [activeVideoId, setActiveVideoId] = useState<string>(
-    featuredVideos.length > 0 && featuredVideos[0].youtubeId ? featuredVideos[0].youtubeId : 'ScMzIvxBSi4'
+    featuredVideos.length > 0 && featuredVideos[0].youtubeId ? featuredVideos[0].youtubeId : ''
   );
 
   const activeVideo = featuredVideos.find(v => v.youtubeId === activeVideoId) || featuredVideos[0];
 
-  if (!featuredVideos || featuredVideos.length === 0) {
+  if (!featuredVideos || featuredVideos.length === 0 || !activeVideo?.youtubeId) {
     return null;
   }
 

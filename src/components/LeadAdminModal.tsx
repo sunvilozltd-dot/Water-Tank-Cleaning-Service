@@ -26,9 +26,9 @@ interface LeadAdminModalProps {
 }
 
 const PRESET_IMAGES = [
-  { label: 'PVC Rooftop Tank', url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg' },
-  { label: 'RCC Underground Reserve', url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png' },
-  { label: 'Pipeline Flushing', url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg' }
+  { label: 'PVC Rooftop Tank', url: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg' },
+  { label: 'RCC Underground Reserve', url: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png' },
+  { label: 'Pipeline Flushing', url: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg' }
 ];
 
 export const LeadAdminModal: React.FC<LeadAdminModalProps> = ({ 
@@ -53,7 +53,7 @@ export const LeadAdminModal: React.FC<LeadAdminModalProps> = ({
     startingPrice: 'Starting From ৳ 1,500',
     startingPriceBn: 'শুরু ৳ ১,৫০০ থেকে',
     image: PRESET_IMAGES[0].url,
-    videoUrl: 'https://www.youtube-nocookie.com/embed/ScMzIvxBSi4?rel=0',
+    videoUrl: '',
     benefits: 'রোটারি জেট ওয়াশ, ফুড-গ্রেড স্যানিটাইজার, দ্রুত সার্ভিস',
     isPrimary: false
   });

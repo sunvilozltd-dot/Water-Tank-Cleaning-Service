@@ -53,7 +53,7 @@ export function cleanupStorage(): void {
  * NEVER destroys or replaces user-uploaded images.
  */
 export function safeSetItem(key: string, value: string): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return false;
 
   // Cache in memory for instant synchronous access
   IN_MEMORY_FALLBACK.set(key, value);
@@ -94,7 +94,7 @@ export function safeSetItem(key: string, value: string): boolean {
  * Safely retrieve an item from localStorage with in-memory fallback.
  */
 export function safeGetItem(key: string): string | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return null;
 
   try {
     const val = localStorage.getItem(key);

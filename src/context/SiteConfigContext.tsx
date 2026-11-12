@@ -89,28 +89,32 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     window.addEventListener(CENTRAL_IMAGES_EVENT, handleCentralImagesChange);
 
     // 3. Supabase Realtime subscription for cross-browser, cross-device instant sync
+    // Polite 2-second deferral allows critical LCP paint and font rendering to finish first
     let channel: any = null;
-    if (isSupabaseConfigured()) {
-      try {
-        channel = supabase
-          .channel('realtime:site_settings')
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'site_settings' },
-            (payload) => {
-              if (payload.new && (payload.new as any).config) {
-                const updated = sanitizeAndMergeConfig((payload.new as any).config);
-                setConfig(updated);
+    const realtimeTimer = setTimeout(() => {
+      if (isSupabaseConfigured() && typeof window !== 'undefined') {
+        try {
+          channel = supabase
+            .channel('realtime:site_settings')
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'site_settings' },
+              (payload) => {
+                if (payload.new && (payload.new as any).config) {
+                  const updated = sanitizeAndMergeConfig((payload.new as any).config);
+                  setConfig(updated);
+                }
               }
-            }
-          )
-          .subscribe();
-      } catch (err) {
-        console.warn('Realtime subscription notice for site_settings:', err);
+            )
+            .subscribe();
+        } catch (err) {
+          console.warn('Realtime subscription notice for site_settings:', err);
+        }
       }
-    }
+    }, 2000);
 
     return () => {
+      clearTimeout(realtimeTimer);
       window.removeEventListener(SITE_CONFIG_EVENT, handleConfigChange);
       window.removeEventListener(CENTRAL_IMAGES_EVENT, handleCentralImagesChange);
       if (channel) {
@@ -250,11 +254,12 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const updateSiteImages = (updates: Partial<NonNullable<FullSiteConfig['images']>>) => {
     const currentImages = config.images || {
-      heroPoster: '/assets/aistudio/hero-rooftop-poster.jpg',
-      heroBg: '/assets/aistudio/hero-rooftop-poster.jpg',
-      aboutStoryImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
-      popularTankImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
-      popularPipelineImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
+      heroPoster: 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg',
+      heroBg: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+      aboutStoryImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
+      popularTankImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+      popularUndergroundImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+      popularPipelineImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
     };
     const updatedImages = { ...currentImages, ...updates };
     const updated: FullSiteConfig = {
@@ -268,11 +273,12 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const sortedSections = [...config.sections].sort((a, b) => a.order - b.order);
 
   const imagesValue = config.images || {
-    heroPoster: '/assets/aistudio/hero-rooftop-poster.jpg',
-    heroBg: '/assets/aistudio/hero-rooftop-poster.jpg',
-    aboutStoryImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
-    popularTankImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
-    popularPipelineImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
+    heroPoster: 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg',
+    heroBg: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    aboutStoryImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
+    popularTankImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    popularUndergroundImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    popularPipelineImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
   };
 
   return (

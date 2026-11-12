@@ -46,7 +46,7 @@ export const SeoHead: React.FC<SeoProps> = ({
   const metaDesc = description || 
     'Professional water tank cleaning service in Dhaka. Overhead, underground reserve tank and water pipeline cleaning. Contact SUNVILOZ CLEAN CARE: 01609999612.';
   const canonicalUrl = customCanonicalUrl || `${BUSINESS_CONFIG.canonicalBaseUrl}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`;
-  const socialImage = ogImage || `${BUSINESS_CONFIG.canonicalBaseUrl}/assets/aistudio/hero-rooftop-poster.jpg`;
+  const socialImage = ogImage || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png';
 
   useEffect(() => {
     // 1. Update document title
@@ -144,6 +144,7 @@ export const SeoHead: React.FC<SeoProps> = ({
     }
 
     // 7. JSON-LD Schemas
+    const officialLogoUrl = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png';
     const localBusinessSchema = {
       '@context': 'https://schema.org',
       '@type': ['LocalBusiness', 'HomeAndConstructionBusiness'],
@@ -151,8 +152,8 @@ export const SeoHead: React.FC<SeoProps> = ({
       description: 'Professional water tank cleaning service in Dhaka, Gazipur, Savar and Narayanganj for rooftop overhead tanks, underground reserve tanks, and water pipeline flushing.',
       url: BUSINESS_CONFIG.canonicalBaseUrl,
       telephone: '+88' + BUSINESS_CONFIG.phone,
-      image: `${BUSINESS_CONFIG.canonicalBaseUrl}/assets/aistudio/sunviloz-logo.png`,
-      logo: `${BUSINESS_CONFIG.canonicalBaseUrl}/assets/aistudio/sunviloz-logo.png`,
+      image: officialLogoUrl,
+      logo: officialLogoUrl,
       sameAs: [
         BUSINESS_CONFIG.googleBusinessProfileUrl || 'https://www.google.com/maps/place/Sunviloz+Clean+Care/@23.8267734,90.4179331,17z/data=!4m8!3m7!1s0x4caea8c73c1a3949:0x3a92e0082947d375!8m2!3d23.8267734!4d90.4179331!9m1!1b1!16s%2Fg%2F11zdmdqbwt'
       ],

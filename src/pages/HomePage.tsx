@@ -53,12 +53,12 @@ export const HomePage: React.FC<HomePageProps> = ({
     <main className="min-h-screen bg-transparent text-white flex flex-col">
       {/* Semantic H1 for search engines and accessibility without altering hero visual design */}
       <h1 className="sr-only">
-        Water Tank Cleaning Service in Dhaka — SUNVILOZ CLEAN CARE
+        Professional Water Tank Cleaner & Water Tank Cleaning Service in Dhaka — SUNVILOZ CLEAN CARE
       </h1>
 
       <SeoHead
-        title="Water Tank Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE"
-        description="Professional water tank cleaning service in Dhaka. Overhead, underground reserve tank and water pipeline cleaning. Contact SUNVILOZ CLEAN CARE: 01609999612."
+        title="Water Tank Cleaner & Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE"
+        description="Professional water tank cleaner & water tank cleaning service in Dhaka. Overhead, underground reserve tank and water pipeline cleaning. Contact SUNVILOZ CLEAN CARE: 01609999612."
         canonicalUrl="https://sunvilozcleancare.com/"
         breadcrumbs={[{ name: 'Home', path: '/' }]}
         faqSchema={homeFaqs}

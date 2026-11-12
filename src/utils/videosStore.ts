@@ -179,24 +179,27 @@ export const useWorkVideos = (serviceSlug?: string) => {
     window.addEventListener(EVENT_NAME, handleUpdate);
 
     let channel: any = null;
-    if (isSupabaseConfigured()) {
-      try {
-        channel = supabase
-          .channel('realtime:work_videos')
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'work_videos' },
-            () => {
-              fetchVideosFromSupabase();
-            }
-          )
-          .subscribe();
-      } catch (err) {
-        console.warn('Realtime work_videos notice:', err);
+    const realtimeTimer = setTimeout(() => {
+      if (isSupabaseConfigured() && typeof window !== 'undefined') {
+        try {
+          channel = supabase
+            .channel('realtime:work_videos')
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'work_videos' },
+              () => {
+                fetchVideosFromSupabase();
+              }
+            )
+            .subscribe();
+        } catch (err) {
+          console.warn('Realtime work_videos notice:', err);
+        }
       }
-    }
+    }, 2500);
 
     return () => {
+      clearTimeout(realtimeTimer);
       window.removeEventListener(EVENT_NAME, handleUpdate);
       if (channel) {
         supabase.removeChannel(channel);

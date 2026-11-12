@@ -10,10 +10,11 @@ import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { 
   getStoredImageRegistry, 
   fetchCentralImageRegistry, 
-  CENTRAL_IMAGES_EVENT 
+  CENTRAL_IMAGES_EVENT,
+  isDemoOrStockUrl 
 } from '../services/imageSyncService';
 
-const STORAGE_KEY = 'sunviloz_authoritative_services_v8';
+const STORAGE_KEY = 'sunviloz_authoritative_services_v9';
 const EVENT_NAME = 'sunviloz_services_changed';
 
 export const INITIAL_SERVICES: ExtensibleServiceItem[] = AUTHORITATIVE_SERVICES;
@@ -23,7 +24,9 @@ export const INITIAL_SERVICES: ExtensibleServiceItem[] = AUTHORITATIVE_SERVICES;
  */
 const sanitizeStoredService = (s: ExtensibleServiceItem): ExtensibleServiceItem => {
   const reg = getStoredImageRegistry();
-  const overrideImg = reg?.serviceImages?.[s.id] || reg?.serviceImages?.[s.slug];
+  const rawOverride = reg?.serviceImages?.[s.id] || reg?.serviceImages?.[s.slug];
+  const overrideImg = rawOverride && !isDemoOrStockUrl(rawOverride) ? rawOverride : undefined;
+
   if (overrideImg) {
     return {
       ...s,
@@ -32,28 +35,38 @@ const sanitizeStoredService = (s: ExtensibleServiceItem): ExtensibleServiceItem 
     };
   }
 
+  const cleanExistingImg = (s.image && !isDemoOrStockUrl(s.image)) ? s.image : undefined;
+  const cleanExistingFeatured = (s.featured_image && !isDemoOrStockUrl(s.featured_image)) ? s.featured_image : undefined;
+
   if (s.id === 'srv-overhead-water-tank' || s.slug === 'overhead-water-tank-cleaning') {
+    const fallback = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg';
     return {
       ...s,
-      image: s.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
-      featured_image: s.featured_image || s.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
+      image: cleanExistingImg || fallback,
+      featured_image: cleanExistingFeatured || cleanExistingImg || fallback
     };
   }
   if (s.id === 'srv-underground-water-tank' || s.slug === 'underground-water-tank-cleaning') {
+    const fallback = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png';
     return {
       ...s,
-      image: s.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
-      featured_image: s.featured_image || s.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png'
+      image: cleanExistingImg || fallback,
+      featured_image: cleanExistingFeatured || cleanExistingImg || fallback
     };
   }
   if (s.id === 'srv-water-pipeline' || s.slug === 'water-pipeline-cleaning') {
+    const fallback = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg';
     return {
       ...s,
-      image: s.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
-      featured_image: s.featured_image || s.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
+      image: cleanExistingImg || fallback,
+      featured_image: cleanExistingFeatured || cleanExistingImg || fallback
     };
   }
-  return s;
+  return {
+    ...s,
+    image: cleanExistingImg || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    featured_image: cleanExistingFeatured || cleanExistingImg || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
+  };
 };
 
 /**
@@ -75,8 +88,8 @@ function mapRowToService(d: any): ExtensibleServiceItem {
     category: d.category || 'General Water Hygiene',
     iconName: d.icon_name || d.icon || 'Droplets',
     icon: d.icon || d.icon_name || 'Droplets',
-    image: d.image || d.featured_image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
-    featured_image: d.featured_image || d.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    image: d.image || d.featured_image || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    featured_image: d.featured_image || d.image || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     is_active: d.is_active !== false,
     display_order: Number(d.display_order ?? 1),
     show_on_homepage: d.show_on_homepage !== false,
@@ -187,7 +200,8 @@ export const fetchServicesFromSupabase = async (): Promise<ExtensibleServiceItem
     const registry = await fetchCentralImageRegistry();
     if (registry?.serviceImages && Object.keys(registry.serviceImages).length > 0) {
       list = list.map(item => {
-        const customUrl = registry.serviceImages[item.id] || registry.serviceImages[item.slug];
+        const rawUrl = registry.serviceImages[item.id] || registry.serviceImages[item.slug];
+        const customUrl = rawUrl && !isDemoOrStockUrl(rawUrl) ? rawUrl : undefined;
         if (customUrl) {
           return {
             ...item,
@@ -195,7 +209,7 @@ export const fetchServicesFromSupabase = async (): Promise<ExtensibleServiceItem
             featured_image: customUrl
           };
         }
-        return item;
+        return sanitizeStoredService(item);
       });
       if (typeof window !== 'undefined') {
         safeSetItem(STORAGE_KEY, JSON.stringify(list));
@@ -330,8 +344,8 @@ export const addNewService = async (serviceData: Partial<ExtensibleServiceItem>)
     category: serviceData.category || 'General Water Hygiene',
     iconName: serviceData.iconName || serviceData.icon || 'Droplets',
     icon: serviceData.icon || serviceData.iconName || 'Droplets',
-    image: serviceData.image || serviceData.featured_image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
-    featured_image: serviceData.featured_image || serviceData.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    image: serviceData.image || serviceData.featured_image || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    featured_image: serviceData.featured_image || serviceData.image || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     is_active: serviceData.is_active !== undefined ? serviceData.is_active : true,
     display_order: serviceData.display_order ?? (maxOrder + 1),
     show_on_homepage: serviceData.show_on_homepage !== undefined ? serviceData.show_on_homepage : true,
@@ -482,26 +496,29 @@ export const useServices = () => {
     window.addEventListener(EVENT_NAME, handleUpdate);
     window.addEventListener(CENTRAL_IMAGES_EVENT, handleUpdate);
 
-    // 3. Supabase Realtime subscription for cross-device updates
+    // 3. Supabase Realtime subscription for cross-device updates (Polite 2.5s deferral)
     let channel: any = null;
-    if (isSupabaseConfigured()) {
-      try {
-        channel = supabase
-          .channel('realtime:services')
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'services' },
-            () => {
-              fetchServicesFromSupabase();
-            }
-          )
-          .subscribe();
-      } catch (err) {
-        console.warn('Realtime services notice:', err);
+    const realtimeTimer = setTimeout(() => {
+      if (isSupabaseConfigured() && typeof window !== 'undefined') {
+        try {
+          channel = supabase
+            .channel('realtime:services')
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'services' },
+              () => {
+                fetchServicesFromSupabase();
+              }
+            )
+            .subscribe();
+        } catch (err) {
+          console.warn('Realtime services notice:', err);
+        }
       }
-    }
+    }, 2500);
 
     return () => {
+      clearTimeout(realtimeTimer);
       window.removeEventListener(EVENT_NAME, handleUpdate);
       window.removeEventListener(CENTRAL_IMAGES_EVENT, handleUpdate);
       if (channel) {

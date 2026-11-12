@@ -74,7 +74,7 @@ export const VideosTab: React.FC<VideosTabProps> = ({
             <div key={vid.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col justify-between shadow-sm hover:border-slate-700 transition-colors">
               <div className="aspect-video bg-slate-950 relative">
                 <img
-                  src={vid.thumbnailUrl || (vid.youtubeId ? `https://img.youtube.com/vi/${vid.youtubeId}/mqdefault.jpg` : '/assets/aistudio/hero-rooftop-poster.jpg')}
+                  src={vid.thumbnailUrl || (vid.youtubeId ? `https://img.youtube.com/vi/${vid.youtubeId}/mqdefault.jpg` : 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg')}
                   alt={vid.title}
                   className="w-full h-full object-cover"
                 />

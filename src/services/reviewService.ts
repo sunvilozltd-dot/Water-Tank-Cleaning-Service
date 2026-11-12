@@ -12,8 +12,49 @@ const REVIEWS_STORAGE_KEY = 'sunviloz_customer_reviews_master_v1';
 const GOOGLE_USER_SESSION_KEY = 'sunviloz_google_reviewer_session';
 export const REVIEWS_CHANGED_EVENT = 'sunviloz_customer_reviews_changed';
 
+const STORAGE_BUCKET = 'site-media';
+const STORAGE_FILE_PATH = 'config/customer_reviews.json';
+
 // Initial state starts clean with authentic reviews
 const INITIAL_REVIEWS: CustomerReview[] = [];
+
+/**
+ * Fetch authoritative reviews JSON from Supabase Storage
+ */
+async function fetchReviewsFromStorage(): Promise<CustomerReview[] | null> {
+  if (!isSupabaseConfigured()) return null;
+  try {
+    const { data, error } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .download(STORAGE_FILE_PATH);
+    if (error || !data) return null;
+    const text = await data.text();
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Save authoritative reviews JSON to Supabase Storage
+ */
+async function saveReviewsToStorage(reviews: CustomerReview[]): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  try {
+    const jsonStr = JSON.stringify(reviews, null, 2);
+    const { error } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(STORAGE_FILE_PATH, jsonStr, {
+        upsert: true,
+        contentType: 'application/json'
+      });
+    return !error;
+  } catch (err) {
+    console.warn('saveReviewsToStorage error:', err);
+    return false;
+  }
+}
 
 /**
  * Generates a valid standard RFC4122 v4 UUID for database compatibility.
@@ -78,6 +119,7 @@ export async function getPublicApprovedReviews(): Promise<PublicCustomerReview[]
   let reviews: CustomerReview[] = getCachedReviews();
 
   if (isSupabaseConfigured()) {
+    let loadedFromDb = false;
     try {
       const { data, error } = await supabase
         .from('customer_reviews')
@@ -87,6 +129,7 @@ export async function getPublicApprovedReviews(): Promise<PublicCustomerReview[]
         .order('created_at', { ascending: false });
 
       if (!error && Array.isArray(data)) {
+        loadedFromDb = true;
         const mapped: CustomerReview[] = data.map((item: any) => ({
           id: item.id,
           customerName: item.customer_name,
@@ -109,8 +152,16 @@ export async function getPublicApprovedReviews(): Promise<PublicCustomerReview[]
         reviews = [...mapped, ...nonSupabase];
         setCachedReviews(reviews);
       }
-    } catch (err) {
-      console.warn('Could not fetch reviews from Supabase, using local store:', err);
+    } catch {
+      // Fallback to storage
+    }
+
+    if (!loadedFromDb) {
+      const storageReviews = await fetchReviewsFromStorage();
+      if (storageReviews && Array.isArray(storageReviews)) {
+        reviews = storageReviews;
+        setCachedReviews(reviews);
+      }
     }
   }
 
@@ -141,6 +192,7 @@ export async function getAllReviewsForAdmin(): Promise<CustomerReview[]> {
   let reviews: CustomerReview[] = getCachedReviews();
 
   if (isSupabaseConfigured()) {
+    let loadedFromDb = false;
     try {
       const { data, error } = await supabase
         .from('customer_reviews')
@@ -148,6 +200,7 @@ export async function getAllReviewsForAdmin(): Promise<CustomerReview[]> {
         .order('created_at', { ascending: false });
 
       if (!error && Array.isArray(data)) {
+        loadedFromDb = true;
         const fromDb: CustomerReview[] = data.map((item: any) => ({
           id: item.id,
           customerName: item.customer_name,
@@ -171,8 +224,16 @@ export async function getAllReviewsForAdmin(): Promise<CustomerReview[]> {
         reviews = [...fromDb, ...nonDb];
         setCachedReviews(reviews);
       }
-    } catch (err) {
-      console.warn('Could not fetch all reviews from Supabase, using local store:', err);
+    } catch {
+      // Fallback to storage
+    }
+
+    if (!loadedFromDb) {
+      const storageReviews = await fetchReviewsFromStorage();
+      if (storageReviews && Array.isArray(storageReviews)) {
+        reviews = storageReviews;
+        setCachedReviews(reviews);
+      }
     }
   }
 
@@ -262,28 +323,47 @@ export async function submitCustomerReview(
   const reviewId = generateUUID();
   const now = new Date().toISOString();
 
+  // Strict Identity Verification: Require active Supabase Google OAuth session
+  let isRealGoogle = false;
+  let verifiedGoogleUserId: string | undefined = undefined;
+
+  if (isSupabaseConfigured()) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.email && user.email.toLowerCase() === cleanEmail) {
+        const provider = user.app_metadata?.provider || user.identities?.find((i: any) => i.provider === 'google')?.provider;
+        if (provider === 'google') {
+          isRealGoogle = true;
+          verifiedGoogleUserId = user.id;
+        }
+      }
+    } catch {
+      // Supabase auth check failed
+    }
+  }
+
   const newReview: CustomerReview = {
     id: reviewId,
     customerName: cleanName,
     customerEmail: cleanEmail,
-    googleUserId: payload.googleUserId,
+    googleUserId: verifiedGoogleUserId,
     serviceType: cleanService,
     rating: Math.round(payload.rating),
     description: cleanDesc,
     photoUrl: payload.photoUrl,
-    avatarUrl: payload.avatarUrl,
-    status: 'published', // Instantly published as requested!
-    isVerifiedGoogle: true,
+    avatarUrl: isRealGoogle ? payload.avatarUrl : undefined,
+    status: 'published', // Instantly published
+    isVerifiedGoogle: isRealGoogle,
     isSpam: false,
     createdAt: now,
     updatedAt: now,
     approvedAt: now
   };
 
-  // 1. Save directly to Supabase Central Database
+  // 1. Save directly to Supabase (attempt Postgres table if present)
   if (isSupabaseConfigured()) {
     try {
-      const { error } = await supabase
+      await supabase
         .from('customer_reviews')
         .insert({
           id: newReview.id,
@@ -296,32 +376,29 @@ export async function submitCustomerReview(
           photo_url: newReview.photoUrl || null,
           avatar_url: newReview.avatarUrl || null,
           status: 'published',
-          is_verified_google: true,
+          is_verified_google: isRealGoogle,
           is_spam: false,
           created_at: now,
           updated_at: now,
           approved_at: now
         });
+    } catch {
+      // Postgres table optional fallback
+    }
 
-      if (error) {
-        console.error('Supabase review insert error:', error.message);
-        return {
-          success: false,
-          message: 'ডাটাবেজে রিভিউ সংরক্ষণ করতে সমস্যা হয়েছে: ' + error.message
-        };
-      }
-    } catch (err: any) {
-      console.error('Could not insert review to Supabase:', err);
-      return {
-        success: false,
-        message: 'ডাটাবেজ সংযোগে ত্রুটি দেখা দিয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।'
-      };
+    // Authoritative Central Storage sync
+    try {
+      const currentList = (await fetchReviewsFromStorage()) || getCachedReviews();
+      const updatedList = [newReview, ...currentList.filter(r => r.id !== newReview.id)];
+      await saveReviewsToStorage(updatedList);
+    } catch (err) {
+      console.warn('Storage sync notice:', err);
     }
   }
 
-  // 2. On verified success, save to local cache for instant zero-latency feedback
+  // 2. Save to local cache for instant zero-latency feedback
   const existing = getCachedReviews();
-  setCachedReviews([newReview, ...existing]);
+  setCachedReviews([newReview, ...existing.filter(r => r.id !== newReview.id)]);
 
   return {
     success: true,
@@ -345,9 +422,10 @@ export async function approveReview(id: string): Promise<boolean> {
         .from('customer_reviews')
         .update({ status: 'published', approved_at: now, updated_at: now })
         .eq('id', id);
-    } catch (err) {
-      console.warn('Supabase approve error:', err);
+    } catch {
+      // Ignore
     }
+    await saveReviewsToStorage(updated);
   }
 
   return true;
@@ -377,9 +455,10 @@ export async function rejectReview(id: string, reason?: string): Promise<boolean
           updated_at: now 
         })
         .eq('id', id);
-    } catch (err) {
-      console.warn('Supabase reject error:', err);
+    } catch {
+      // Ignore
     }
+    await saveReviewsToStorage(updated);
   }
 
   return true;
@@ -396,19 +475,14 @@ export async function deleteReview(id: string): Promise<boolean> {
 
   if (isSupabaseConfigured()) {
     try {
-      const { error } = await supabase
+      await supabase
         .from('customer_reviews')
         .delete()
         .eq('id', id);
-
-      if (error) {
-        console.error('Supabase review delete error:', error.message);
-        return false;
-      }
-    } catch (err) {
-      console.error('Failed to delete review from Supabase:', err);
-      return false;
+    } catch {
+      // Ignore
     }
+    await saveReviewsToStorage(updated);
   }
 
   return true;
@@ -435,9 +509,10 @@ export async function markReviewAsSpam(id: string): Promise<boolean> {
         .from('customer_reviews')
         .update({ is_spam: true, status: 'rejected', rejection_reason: 'Flagged as spam', updated_at: now })
         .eq('id', id);
-    } catch (err) {
-      console.warn('Supabase spam flag error:', err);
+    } catch {
+      // Ignore
     }
+    await saveReviewsToStorage(updated);
   }
 
   return true;
@@ -494,7 +569,13 @@ export function getStoredGoogleReviewer(): GoogleReviewUser | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = sessionStorage.getItem(GOOGLE_USER_SESSION_KEY) || localStorage.getItem(GOOGLE_USER_SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.email || typeof parsed.email !== 'string' || !parsed.googleId || parsed.googleId.startsWith('g_')) {
+      clearGoogleReviewer();
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }

@@ -128,34 +128,145 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
   const readTime = lang === 'bn' && post.readTimeBn ? post.readTimeBn : post.readTime;
   const excerpt = lang === 'bn' && post.excerptBn ? post.excerptBn : post.excerpt;
 
-  // Render paragraphs with markdown-like highlights
+  // Helper to parse bold **text** and markdown links [text](url)
+  const renderInlineText = (text: string) => {
+    // Regex matching either **bold** or [label](url)
+    const tokenRegex = /(\*\*.*?\*\*|\[.*?\]\(.*?\))/g;
+    const parts = text.split(tokenRegex);
+
+    return parts.map((part, pIdx) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={pIdx} className="font-bold text-[#123047]">{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('[') && part.includes('](') && part.endsWith(')')) {
+        const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
+        if (match) {
+          const [, label, url] = match;
+          const isInternal = url.startsWith('/');
+          return (
+            <a
+              key={pIdx}
+              href={url}
+              onClick={(e) => {
+                if (isInternal) {
+                  e.preventDefault();
+                  handleNavigate(url);
+                }
+              }}
+              className="text-[#0D9488] font-semibold hover:text-[#0F766E] underline decoration-[#0D9488]/40 hover:decoration-[#0D9488] transition-colors"
+            >
+              {label}
+            </a>
+          );
+        }
+      }
+      return part;
+    });
+  };
+
+  // Render paragraphs with markdown-like highlights, headings, lists, tables, and images
   const renderFormattedContent = (rawText: string) => {
     const blocks = rawText.split('\n\n');
     return blocks.map((block, idx) => {
       const trimmed = block.trim();
 
-      // Heading 2 or 3
-      if (trimmed.startsWith('## ') || trimmed.startsWith('### ')) {
-        const cleanHeading = trimmed.replace(/^#{2,3}\s+/, '');
+      // Divider / Horizontal rule
+      if (trimmed === '---') {
+        return <hr key={idx} className="border-t border-[#E2E8F0] my-6" />;
+      }
+
+      // Markdown image: ![alt](url)
+      if (trimmed.startsWith('![') && trimmed.includes('](') && trimmed.endsWith(')')) {
+        const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
+        if (imgMatch) {
+          const [, imgAlt, imgUrl] = imgMatch;
+          return (
+            <figure key={idx} className="my-6 rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-sm bg-[#F5FAFC]">
+              <img
+                src={imgUrl}
+                alt={imgAlt || 'Article illustration'}
+                loading="lazy"
+                className="w-full h-auto object-cover max-h-[460px]"
+              />
+              {imgAlt && (
+                <figcaption className="p-3 bg-slate-50 text-xs text-[#64748B] text-center font-medium border-t border-[#E2E8F0]">
+                  {imgAlt}
+                </figcaption>
+              )}
+            </figure>
+          );
+        }
+      }
+
+      // Heading 2
+      if (trimmed.startsWith('## ')) {
+        const cleanHeading = trimmed.replace(/^##\s+/, '');
+        return (
+          <h2 key={idx} className="text-xl sm:text-2xl font-extrabold text-[#123047] mt-8 mb-4 tracking-tight flex items-center gap-2.5">
+            <span className="w-1.5 h-6 bg-[#0D9488] rounded-full shrink-0" aria-hidden="true" />
+            <span>{cleanHeading}</span>
+          </h2>
+        );
+      }
+
+      // Heading 3
+      if (trimmed.startsWith('### ')) {
+        const cleanHeading = trimmed.replace(/^###\s+/, '');
         return (
           <h3 key={idx} className="text-lg sm:text-xl font-bold text-[#123047] mt-6 mb-3 tracking-tight flex items-center gap-2">
-            <span className="w-1.5 h-5 bg-[#0D9488] rounded-full" aria-hidden="true" />
+            <span className="w-1.5 h-4 bg-[#38BDF8] rounded-full shrink-0" aria-hidden="true" />
             <span>{cleanHeading}</span>
           </h3>
         );
+      }
+
+      // Markdown table
+      if (trimmed.includes('|') && trimmed.includes('\n')) {
+        const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length >= 2 && lines[0].startsWith('|') && lines[1].includes('---')) {
+          const headerCells = lines[0].split('|').map(c => c.trim()).filter(Boolean);
+          const bodyRows = lines.slice(2).map(r => r.split('|').map(c => c.trim()).filter(Boolean));
+
+          return (
+            <div key={idx} className="my-6 overflow-x-auto rounded-xl border border-[#E2E8F0] shadow-2xs">
+              <table className="w-full text-left text-xs sm:text-sm border-collapse">
+                <thead className="bg-[#123047] text-white">
+                  <tr>
+                    {headerCells.map((cell, cIdx) => (
+                      <th key={cIdx} className="p-3 sm:p-3.5 font-bold border-b border-slate-700">
+                        {cell}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E2E8F0] bg-white">
+                  {bodyRows.map((row, rIdx) => (
+                    <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-white' : 'bg-[#F8FAFC]'}>
+                      {row.map((cell, cIdx) => (
+                        <td key={cIdx} className="p-3 sm:p-3.5 text-[#172B3A]">
+                          {renderInlineText(cell)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        }
       }
 
       // Bullet points
       if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
         const items = trimmed.split('\n').filter(Boolean);
         return (
-          <ul key={idx} className="space-y-2 my-4 pl-4 border-l-2 border-[#0D9488]/30">
+          <ul key={idx} className="space-y-2.5 my-4 pl-4 border-l-2 border-[#0D9488]/30">
             {items.map((item, itemIdx) => {
               const cleanItem = item.replace(/^[\*\-]\s+/, '');
               return (
                 <li key={itemIdx} className="text-sm sm:text-base text-[#172B3A] leading-relaxed flex items-start gap-2">
-                  <span className="text-[#0D9488] font-bold shrink-0">•</span>
-                  <span>{cleanItem}</span>
+                  <span className="text-[#0D9488] font-bold shrink-0 leading-tight">•</span>
+                  <span>{renderInlineText(cleanItem)}</span>
                 </li>
               );
             })}
@@ -171,11 +282,11 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
             {items.map((item, itemIdx) => {
               const cleanItem = item.replace(/^\d+\.\s+/, '');
               return (
-                <li key={itemIdx} className="text-sm sm:text-base text-[#172B3A] leading-relaxed flex items-start gap-3 bg-[#F5FAFC] p-3 rounded-xl border border-[#E2E8F0]">
+                <li key={itemIdx} className="text-sm sm:text-base text-[#172B3A] leading-relaxed flex items-start gap-3 bg-[#F5FAFC] p-3.5 rounded-xl border border-[#E2E8F0]">
                   <span className="w-6 h-6 rounded-lg bg-[#E8F5F3] text-[#0D9488] font-bold text-xs flex items-center justify-center shrink-0 border border-[#0D9488]/30">
                     {itemIdx + 1}
                   </span>
-                  <span>{cleanItem}</span>
+                  <span>{renderInlineText(cleanItem)}</span>
                 </li>
               );
             })}
@@ -186,7 +297,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
       // Standard paragraph
       return (
         <p key={idx} className="text-sm sm:text-base text-[#172B3A] leading-relaxed font-normal">
-          {trimmed}
+          {renderInlineText(trimmed)}
         </p>
       );
     });
@@ -300,14 +411,21 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
 
         {/* Hero Cover Image */}
         {post.imageUrl && (
-          <div className="rounded-3xl overflow-hidden aspect-video bg-[#F5FAFC] border border-[#E2E8F0] shadow-md relative">
-            <img
-              src={post.imageUrl}
-              alt={title}
-              className="w-full h-full object-cover"
-              loading="eager"
-            />
-          </div>
+          <figure className="rounded-3xl overflow-hidden bg-[#F5FAFC] border border-[#E2E8F0] shadow-md relative">
+            <div className="aspect-video w-full overflow-hidden">
+              <img
+                src={post.imageUrl}
+                alt={post.imageAlt || post.seo?.imageAlt || title}
+                className="w-full h-full object-cover"
+                loading="eager"
+              />
+            </div>
+            {(post.imageCaption || post.seo?.imageCaption) && (
+              <figcaption className="p-3 bg-slate-50 text-xs text-[#64748B] text-center font-medium border-t border-[#E2E8F0]">
+                {post.imageCaption || post.seo?.imageCaption}
+              </figcaption>
+            )}
+          </figure>
         )}
 
         {/* Lead Excerpt Highlight Box */}
@@ -322,6 +440,35 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
           {renderFormattedContent(content)}
         </section>
 
+        {/* Optional Article Image Gallery */}
+        {post.images && post.images.length > 0 && (
+          <section className="space-y-4 pt-2">
+            <h3 className="text-base sm:text-lg font-bold text-[#123047] flex items-center gap-2">
+              <Layers className="w-4 h-4 text-[#0D9488]" />
+              <span>{lang === 'bn' ? 'ক্লিনিং প্রজেক্ট ও কাজের ছবি' : 'Project & Cleaning Photos'}</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {post.images.map((img, iIdx) => (
+                <figure key={img.id || iIdx} className="rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-2xs bg-white">
+                  <div className="aspect-4/3 overflow-hidden bg-slate-100">
+                    <img
+                      src={img.url}
+                      alt={img.alt || title}
+                      loading="lazy"
+                      className="w-full h-full object-cover hover:scale-102 transition-transform duration-300"
+                    />
+                  </div>
+                  {(img.caption || img.alt) && (
+                    <figcaption className="p-3 bg-[#F8FAFC] text-xs text-[#64748B] border-t border-[#E2E8F0]">
+                      {img.caption || img.alt}
+                    </figcaption>
+                  )}
+                </figure>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Service Booking & Inquiry Banner */}
         <div className="bg-[#123047] rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-1.5 text-center md:text-left">
@@ -334,8 +481,8 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
               {lang === 'bn' 
-                ? '১৫০ বার হাই-প্রেসার রোটারি জেট ওয়াশ ও ফুড-গ্রেড স্যানিটাইজেশন পদ্ধতিতে সম্পূর্ণ জীবাণুমুক্ত সেবা নিন।'
-                : 'Experience chemical-free 150-bar rotary pressure washing and food-grade non-toxic sterilization.'}
+                ? 'মেকানাইজড রোটারি ওয়াটার জেট ওয়াশ ও নিরাপদ খাদ্য-মানসম্পন্ন স্যানিটাইজেশন পদ্ধতিতে সম্পূর্ণ পরিষ্কার সেবা নিন।'
+                : 'Experience mechanized rotary pressure washing and food-grade non-toxic sanitization.'}
             </p>
           </div>
 

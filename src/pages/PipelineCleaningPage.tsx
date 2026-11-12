@@ -171,7 +171,7 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
           <div className="lg:col-span-5">
             <div className="relative aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-md bg-[#F5FAFC] group">
               <OptimizedImage
-                src="https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg"
+                src="https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg"
                 alt="Water Pipeline Cleaning Service in Dhaka"
                 width={800}
                 height={600}

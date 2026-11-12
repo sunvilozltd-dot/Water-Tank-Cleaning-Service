@@ -33,7 +33,8 @@ export const Header: React.FC<HeaderProps> = ({
   const { lang, setLang } = useLanguage();
   const { announcement, images } = useSiteConfig();
   const { headerConfig, navTree } = useHeaderNav();
-  const activeLogoUrl = headerConfig.logoUrl || images?.logo || '/assets/aistudio/sunviloz-logo.png';
+  const activeLogoUrl = headerConfig.logoUrl || images?.logo || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png';
+  const [logoError, setLogoError] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
@@ -223,16 +224,15 @@ export const Header: React.FC<HeaderProps> = ({
             aria-label={`${headerConfig.brandName} ${headerConfig.brandSuffix} Home`}
           >
             {/* Custom Logo Image or Default Droplet */}
-            {headerConfig.logoEnabled && activeLogoUrl ? (
+            {headerConfig.logoEnabled && activeLogoUrl && !logoError ? (
               <img
                 src={activeLogoUrl}
                 alt={headerConfig.logoAlt || `${headerConfig.brandName} Logo`}
-                onError={(e) => {
-                  const target = e.currentTarget as HTMLImageElement;
-                  if (!target.src.includes('sunviloz-logo.png')) {
-                    target.src = '/assets/aistudio/sunviloz-logo.png';
-                  }
-                }}
+                width={headerConfig.logoWidth || 48}
+                height={headerConfig.logoHeight || 38}
+                loading="eager"
+                fetchPriority="high"
+                onError={() => setLogoError(true)}
                 style={{
                   height: `${headerConfig.logoHeight || 38}px`,
                   width: 'auto',

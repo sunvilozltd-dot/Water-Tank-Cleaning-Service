@@ -20,23 +20,23 @@ import { fetchCentralImageRegistry } from './services/imageSyncService';
 // Critical Homepage eagerly loaded for instant FCP / LCP
 import { HomePage } from './pages/HomePage';
 
-// Eagerly import public pages for authentic SSR/prerendering of full React DOM trees
-import { AboutPage } from './pages/AboutPage';
-import { ServicesPage } from './pages/ServicesPage';
-import { WaterTankCleaningPage } from './pages/WaterTankCleaningPage';
-import { PipelineCleaningPage } from './pages/PipelineCleaningPage';
-import { ContactPage } from './pages/ContactPage';
-import { ServiceAreaPage } from './pages/ServiceAreaPage';
-import { LocationDetailPage } from './pages/LocationDetailPage';
-import { BlogPage } from './pages/BlogPage';
-import { BlogPostDetailPage } from './pages/BlogPostDetailPage';
-import { PortfolioPage } from './pages/PortfolioPage';
-import { TermsPage } from './pages/TermsPage';
-import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
-import { FaqPage } from './pages/FaqPage';
-import { ServiceDetailPage } from './pages/ServiceDetailPage';
-import { GetQuotePage } from './pages/GetQuotePage';
-import { NotFoundPage } from './pages/NotFoundPage';
+// Route-based code splitting for secondary pages (prevents downloading heavy pages on homepage)
+const AboutPage = React.lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
+const ServicesPage = React.lazy(() => import('./pages/ServicesPage').then(m => ({ default: m.ServicesPage })));
+const WaterTankCleaningPage = React.lazy(() => import('./pages/WaterTankCleaningPage').then(m => ({ default: m.WaterTankCleaningPage })));
+const PipelineCleaningPage = React.lazy(() => import('./pages/PipelineCleaningPage').then(m => ({ default: m.PipelineCleaningPage })));
+const ContactPage = React.lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
+const ServiceAreaPage = React.lazy(() => import('./pages/ServiceAreaPage').then(m => ({ default: m.ServiceAreaPage })));
+const LocationDetailPage = React.lazy(() => import('./pages/LocationDetailPage').then(m => ({ default: m.LocationDetailPage })));
+const BlogPage = React.lazy(() => import('./pages/BlogPage').then(m => ({ default: m.BlogPage })));
+const BlogPostDetailPage = React.lazy(() => import('./pages/BlogPostDetailPage').then(m => ({ default: m.BlogPostDetailPage })));
+const PortfolioPage = React.lazy(() => import('./pages/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
+const TermsPage = React.lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
+const PrivacyPolicyPage = React.lazy(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
+const FaqPage = React.lazy(() => import('./pages/FaqPage').then(m => ({ default: m.FaqPage })));
+const ServiceDetailPage = React.lazy(() => import('./pages/ServiceDetailPage').then(m => ({ default: m.ServiceDetailPage })));
+const GetQuotePage = React.lazy(() => import('./pages/GetQuotePage').then(m => ({ default: m.GetQuotePage })));
+const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 // Code-split Admin pages (Prevents downloading heavy admin tabs/tables on public site)
 const AdminLoginPage = React.lazy(() => import('./pages/AdminLoginPage').then(m => ({ default: m.AdminLoginPage })));
@@ -55,11 +55,31 @@ const PageLoadingFallback: React.FC = () => (
   </div>
 );
 
-interface AppProps {
-  initialPath?: string;
+export interface SsrPageComponents {
+  AboutPage?: React.ComponentType<any>;
+  ServicesPage?: React.ComponentType<any>;
+  WaterTankCleaningPage?: React.ComponentType<any>;
+  PipelineCleaningPage?: React.ComponentType<any>;
+  ContactPage?: React.ComponentType<any>;
+  ServiceAreaPage?: React.ComponentType<any>;
+  LocationDetailPage?: React.ComponentType<any>;
+  BlogPage?: React.ComponentType<any>;
+  BlogPostDetailPage?: React.ComponentType<any>;
+  PortfolioPage?: React.ComponentType<any>;
+  TermsPage?: React.ComponentType<any>;
+  PrivacyPolicyPage?: React.ComponentType<any>;
+  FaqPage?: React.ComponentType<any>;
+  ServiceDetailPage?: React.ComponentType<any>;
+  GetQuotePage?: React.ComponentType<any>;
+  NotFoundPage?: React.ComponentType<any>;
 }
 
-function AppContent({ initialPath }: AppProps) {
+export interface AppProps {
+  initialPath?: string;
+  ssrComponents?: SsrPageComponents;
+}
+
+function AppContent({ initialPath, ssrComponents }: AppProps) {
   const { isAuthenticated } = useAdminAuth();
   const [currentPath, setCurrentPath] = useState<string>(() => {
     if (initialPath) return initialPath;
@@ -140,8 +160,8 @@ function AppContent({ initialPath }: AppProps) {
         setCurrentPath('/terms');
       } else if (currentPath.startsWith('/tips/')) {
         const tipSlug = currentPath.replace('/tips/', '');
-        window.history.replaceState(null, '', `/blog#${tipSlug}`);
-        setCurrentPath('/blog');
+        window.history.replaceState(null, '', `/blog/${tipSlug}`);
+        setCurrentPath(`/blog/${tipSlug}`);
       } else if (currentPath === '/services-faq' || currentPath === '/services-faq/') {
         window.history.replaceState(null, '', '/#homepage-all-faq');
         setCurrentPath('/');
@@ -206,25 +226,30 @@ function AppContent({ initialPath }: AppProps) {
   // Render Public Website Page
   const renderPage = () => {
     if (currentPath === '/about') {
-      return <AboutPage onOpenQuoteModal={() => handleOpenQuoteModal()} />;
+      const Page = ssrComponents?.AboutPage || AboutPage;
+      return <Page onOpenQuoteModal={() => handleOpenQuoteModal()} />;
     }
     if (currentPath === '/services') {
-      return <ServicesPage onOpenQuoteModal={() => handleOpenQuoteModal()} onNavigate={navigate} />;
+      const Page = ssrComponents?.ServicesPage || ServicesPage;
+      return <Page onOpenQuoteModal={() => handleOpenQuoteModal()} onNavigate={navigate} />;
     }
     if (currentPath === '/get-quote' || currentPath === '/quote') {
-      return <GetQuotePage onNavigate={navigate} />;
+      const Page = ssrComponents?.GetQuotePage || GetQuotePage;
+      return <Page onNavigate={navigate} />;
     }
     if (currentPath === '/water-tank-cleaning-service' || currentPath === '/services/water-tank-cleaning') {
+      const Page = ssrComponents?.WaterTankCleaningPage || WaterTankCleaningPage;
       return (
-        <WaterTankCleaningPage 
+        <Page 
           onOpenQuoteModal={() => handleOpenQuoteModal('Water Tank Cleaning Service')} 
           onNavigate={navigate}
         />
       );
     }
     if (currentPath === '/pipeline-cleaning-service' || currentPath === '/services/pipeline-cleaning') {
+      const Page = ssrComponents?.PipelineCleaningPage || PipelineCleaningPage;
       return (
-        <PipelineCleaningPage 
+        <Page 
           onOpenQuoteModal={() => handleOpenQuoteModal('Pipeline Cleaning Service')} 
           onNavigate={navigate}
         />
@@ -232,8 +257,9 @@ function AppContent({ initialPath }: AppProps) {
     }
     if (currentPath.endsWith('-service') && !currentPath.startsWith('/services/')) {
       const slug = currentPath.replace('/', '');
+      const Page = ssrComponents?.ServiceDetailPage || ServiceDetailPage;
       return (
-        <ServiceDetailPage
+        <Page
           slug={slug}
           onOpenQuoteModal={handleOpenQuoteModal}
           onNavigate={navigate}
@@ -242,8 +268,9 @@ function AppContent({ initialPath }: AppProps) {
     }
     if (currentPath.startsWith('/services/')) {
       const slug = currentPath.replace('/services/', '');
+      const Page = ssrComponents?.ServiceDetailPage || ServiceDetailPage;
       return (
-        <ServiceDetailPage
+        <Page
           slug={slug}
           onOpenQuoteModal={handleOpenQuoteModal}
           onNavigate={navigate}
@@ -251,23 +278,28 @@ function AppContent({ initialPath }: AppProps) {
       );
     }
     if (currentPath === '/pricing') {
-      return <GetQuotePage onNavigate={navigate} />;
+      const Page = ssrComponents?.GetQuotePage || GetQuotePage;
+      return <Page onNavigate={navigate} />;
     }
     if (currentPath === '/contact') {
-      return <ContactPage />;
+      const Page = ssrComponents?.ContactPage || ContactPage;
+      return <Page />;
     }
     if (currentPath === '/service-areas') {
-      return <ServiceAreaPage onNavigate={navigate} onOpenQuoteModal={handleOpenQuoteModal} />;
+      const Page = ssrComponents?.ServiceAreaPage || ServiceAreaPage;
+      return <Page onNavigate={navigate} onOpenQuoteModal={handleOpenQuoteModal} />;
     }
     if (currentPath.startsWith('/service-areas/')) {
       const slug = currentPath.replace('/service-areas/', '');
-      return <LocationDetailPage slug={slug} onOpenQuoteModal={() => handleOpenQuoteModal()} onNavigate={navigate} />;
+      const Page = ssrComponents?.LocationDetailPage || LocationDetailPage;
+      return <Page slug={slug} onOpenQuoteModal={() => handleOpenQuoteModal()} onNavigate={navigate} />;
     }
     if (currentPath.startsWith('/blog/') || currentPath.startsWith('/tips/')) {
       const slug = currentPath.replace(/^\/(blog|tips)\//, '').split('?')[0].split('#')[0];
       if (slug) {
+        const Page = ssrComponents?.BlogPostDetailPage || BlogPostDetailPage;
         return (
-          <BlogPostDetailPage
+          <Page
             slug={slug}
             onNavigate={navigate}
             onOpenQuoteModal={handleOpenQuoteModal}
@@ -276,27 +308,32 @@ function AppContent({ initialPath }: AppProps) {
       }
     }
     if (currentPath === '/blog' || currentPath === '/tips') {
+      const Page = ssrComponents?.BlogPage || BlogPage;
       return (
-        <BlogPage
+        <Page
           onNavigate={navigate}
           onOpenPostModal={(post) => setSelectedBlogPost(post)}
         />
       );
     }
     if (currentPath === '/portfolio') {
-      return <PortfolioPage onNavigate={navigate} />;
+      const Page = ssrComponents?.PortfolioPage || PortfolioPage;
+      return <Page onNavigate={navigate} />;
     }
     if (currentPath === '/terms') {
-      return <TermsPage onNavigate={navigate} />;
+      const Page = ssrComponents?.TermsPage || TermsPage;
+      return <Page onNavigate={navigate} />;
     }
     if (currentPath === '/privacy-policy') {
-      return <PrivacyPolicyPage onNavigate={navigate} />;
+      const Page = ssrComponents?.PrivacyPolicyPage || PrivacyPolicyPage;
+      return <Page onNavigate={navigate} />;
     }
     if (currentPath === '/faq') {
-      return <FaqPage />;
+      const Page = ssrComponents?.FaqPage || FaqPage;
+      return <Page />;
     }
 
-    // Home Page
+    // Home Page (Always eagerly loaded for instant FCP and LCP)
     if (currentPath === '/' || currentPath === '') {
       return (
         <HomePage
@@ -308,7 +345,8 @@ function AppContent({ initialPath }: AppProps) {
     }
 
     // Explicit 404 Not Found Page for all invalid URLs
-    return <NotFoundPage onNavigate={navigate} />;
+    const Page = ssrComponents?.NotFoundPage || NotFoundPage;
+    return <Page onNavigate={navigate} />;
   };
 
   return (
@@ -366,7 +404,7 @@ function AppContent({ initialPath }: AppProps) {
   );
 }
 
-export default function App({ initialPath }: AppProps = {}) {
+export default function App({ initialPath, ssrComponents }: AppProps = {}) {
   return (
     <LanguageProvider>
       <SiteConfigProvider>
@@ -375,7 +413,7 @@ export default function App({ initialPath }: AppProps = {}) {
             <ProjectVideosProvider>
               <TrackingProvider>
                 <AdminAuthProvider>
-                  <AppContent initialPath={initialPath} />
+                  <AppContent initialPath={initialPath} ssrComponents={ssrComponents} />
                 </AdminAuthProvider>
               </TrackingProvider>
             </ProjectVideosProvider>

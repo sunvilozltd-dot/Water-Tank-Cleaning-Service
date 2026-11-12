@@ -9,6 +9,7 @@ import { useSiteConfig } from '../context/SiteConfigContext';
 import { useServices } from '../utils/servicesStore';
 import { trackWhatsAppClick, trackEvent } from '../utils/tracking';
 import { OptimizedImage } from './OptimizedImage';
+import { isDemoOrStockUrl } from '../services/imageSyncService';
 
 interface PopularServicesSectionProps {
   onOpenQuoteModal: (serviceName?: string) => void;
@@ -100,13 +101,32 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({
             const title = lang === 'bn' ? (service.titleBn || service.title) : service.title;
             const titleEn = service.title;
 
-            const cardImage = 
-              service.image || 
-              service.featured_image || 
-              (service.slug.includes('overhead') ? (images?.popularTankImage || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg') :
-               service.slug.includes('underground') ? (images?.popularUndergroundImage || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png') :
-               service.slug.includes('pipeline') ? (images?.popularPipelineImage || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg') :
-               'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg');
+            const isSlugUnderground = service.slug.includes('underground') || service.id.includes('underground');
+            const isSlugPipeline = service.slug.includes('pipeline') || service.id.includes('pipeline');
+            const isSlugOverhead = service.slug.includes('overhead') || service.id.includes('overhead');
+
+            // Check for intentional removal: if an image is explicitly empty string, respect removal
+            const isExplicitlyRemoved = service.image === '' || service.featured_image === '';
+            const validServiceImg = (service.image && !isDemoOrStockUrl(service.image)) ? service.image : undefined;
+            const validFeaturedImg = (service.featured_image && !isDemoOrStockUrl(service.featured_image)) ? service.featured_image : undefined;
+
+            let cardImage: string | undefined = isExplicitlyRemoved ? '' : (validServiceImg || validFeaturedImg);
+
+            if (!cardImage && !isExplicitlyRemoved) {
+              if (isSlugUnderground) {
+                cardImage = (images?.popularUndergroundImage && !isDemoOrStockUrl(images.popularUndergroundImage))
+                  ? images.popularUndergroundImage
+                  : 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png';
+              } else if (isSlugPipeline) {
+                cardImage = (images?.popularPipelineImage && !isDemoOrStockUrl(images.popularPipelineImage))
+                  ? images.popularPipelineImage
+                  : 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg';
+              } else {
+                cardImage = (images?.popularTankImage && !isDemoOrStockUrl(images.popularTankImage))
+                  ? images.popularTankImage
+                  : 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg';
+              }
+            }
 
             return (
               <article 
@@ -126,10 +146,10 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({
                     <OptimizedImage
                       src={cardImage}
                       alt={title}
-                      width={800}
-                      height={500}
+                      width={640}
+                      height={400}
                       aspectRatio="16/10"
-                      priority={index === 0}
+                      priority={false}
                       className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-500"
                     />
                   </div>

@@ -9,9 +9,12 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { PublicCustomerReview } from '../types/review';
-import { getPublicApprovedReviews } from '../services/reviewService';
+import { getPublicApprovedReviews, REVIEWS_CHANGED_EVENT } from '../services/reviewService';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
+
+// Code-split heavy review submission modal (only downloaded when user clicks submit review)
+const CustomerReviewModal = React.lazy(() => import('./CustomerReviewModal').then(m => ({ default: m.CustomerReviewModal })));
 
 // Official Sunviloz Clean Care Google Business Profile Review URL
 const OFFICIAL_GOOGLE_REVIEW_URL =
@@ -25,30 +28,37 @@ export const ReviewsSection: React.FC = () => {
   const { business } = useSiteConfig();
   const [reviews, setReviews] = useState<PublicCustomerReview[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   const googleReviewLink = business?.googleReviewsUrl || OFFICIAL_GOOGLE_REVIEW_URL;
   const googleProfileLink = business?.googleBusinessProfileUrl || OFFICIAL_GOOGLE_MAPS_PROFILE_URL;
 
+  const fetchReviews = async () => {
+    try {
+      const data = await getPublicApprovedReviews();
+      setReviews(data || []);
+    } catch (err) {
+      console.warn('ReviewsSection notice:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let mounted = true;
-    const fetchReviews = async () => {
-      try {
-        const data = await getPublicApprovedReviews();
-        if (mounted) {
-          setReviews(data || []);
-        }
-      } catch (err) {
-        console.warn('ReviewsSection notice:', err);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
+    fetchReviews();
+
+    const handleChanged = () => {
+      fetchReviews();
     };
 
-    fetchReviews();
+    if (typeof window !== 'undefined') {
+      window.addEventListener(REVIEWS_CHANGED_EVENT, handleChanged);
+    }
+
     return () => {
-      mounted = false;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(REVIEWS_CHANGED_EVENT, handleChanged);
+      }
     };
   }, []);
 
@@ -192,68 +202,125 @@ export const ReviewsSection: React.FC = () => {
 
         </div>
 
-        {/* ================= REVIEWS FEED IF SYNCED ================= */}
-        {reviews.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto pt-4">
-            {reviews.map((rev) => (
-              <div
-                key={rev.id}
-                className="bg-white rounded-3xl p-6 border border-[#E2E8F0] shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-4"
+        {/* ================= REVIEWS FEED OR EMPTY STATE ================= */}
+        {loading ? (
+          <div className="py-8 text-center text-slate-400 space-y-2">
+            <div className="w-8 h-8 rounded-full border-2 border-[#0D9488]/30 border-t-[#0D9488] animate-spin mx-auto" />
+            <p className="text-xs text-[#64748B]">রিভিউ লোড হচ্ছে...</p>
+          </div>
+        ) : reviews.length === 0 ? (
+          /* Empty State Card matching screenshot */
+          <div className="bg-white rounded-3xl p-8 sm:p-12 border border-[#E2E8F0] shadow-sm max-w-xl mx-auto text-center space-y-4 animate-fadeIn">
+            {/* Star in soft amber squircle */}
+            <div className="w-14 h-14 rounded-2xl bg-[#FFF7ED] text-[#F59E0B] flex items-center justify-center mx-auto">
+              <Star className="w-7 h-7 fill-[#F59E0B] text-[#F59E0B]" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl sm:text-2xl font-bold text-[#123047] tracking-tight">
+                {lang === 'bn' ? 'এখনো কোনো গ্রাহক রিভিউ অনুমোদিত হয়নি' : 'No Customer Reviews Approved Yet'}
+              </h3>
+              <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed max-w-lg mx-auto">
+                {lang === 'bn'
+                  ? 'আমাদের সার্ভিস গ্রহণ করে থাকলে আপনিই প্রথম রিভিউ দিন! প্রতিটি রিভিউ গুগল আইডিতে যাচাই করে অ্যাডমিন অনুমোদনের পর প্রকাশিত হয়।'
+                  : 'If you have used our service, you be the first to leave a review! Every review is verified with Google ID and published after admin review.'}
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setIsReviewModalOpen(true)}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#0D9488] hover:bg-[#0f766e] text-white text-sm font-bold shadow-md shadow-[#0D9488]/20 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
               >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 text-[#0D9488] font-bold flex items-center justify-center shrink-0 overflow-hidden">
-                        {rev.avatarUrl ? (
-                          <img src={rev.avatarUrl} alt={rev.customerName} className="w-full h-full object-cover" />
-                        ) : (
-                          <span>{rev.customerName.charAt(0).toUpperCase()}</span>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-sm font-bold text-[#123047] truncate">
-                          {rev.customerName}
-                        </h4>
-                        <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                          <span>Google Reviewer</span>
+                <span>{lang === 'bn' ? '+ রিভিউ ফর্ম পূরণ করুন' : '+ Submit a Review'}</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto pt-4">
+              {reviews.map((rev) => (
+                <div
+                  key={rev.id}
+                  className="bg-white rounded-3xl p-6 border border-[#E2E8F0] shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-4"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 text-[#0D9488] font-bold flex items-center justify-center shrink-0 overflow-hidden">
+                          {rev.avatarUrl ? (
+                            <img src={rev.avatarUrl} alt={rev.customerName} className="w-full h-full object-cover" />
+                          ) : (
+                            <span>{rev.customerName.charAt(0).toUpperCase()}</span>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-bold text-[#123047] truncate">
+                            {rev.customerName}
+                          </h4>
+                          <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                            <span>Google Reviewer</span>
+                          </div>
                         </div>
                       </div>
+
+                      <span className="text-[11px] text-slate-400 shrink-0">
+                        {formatDate(rev.createdAt)}
+                      </span>
                     </div>
 
-                    <span className="text-[11px] text-slate-400 shrink-0">
-                      {formatDate(rev.createdAt)}
+                    <div className="flex items-center gap-1 text-[#F59E0B]">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star 
+                          key={s} 
+                          className={`w-4 h-4 ${
+                            rev.rating >= s ? 'fill-[#F59E0B] text-[#F59E0B]' : 'text-slate-200'
+                          }`} 
+                        />
+                      ))}
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                      "{rev.description}"
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                    <span className="font-medium text-[#0D9488]">{rev.serviceType}</span>
+                    <span className="flex items-center gap-1 text-slate-400">
+                      <span>Google Maps</span>
                     </span>
                   </div>
-
-                  <div className="flex items-center gap-1 text-[#F59E0B]">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star 
-                        key={s} 
-                        className={`w-4 h-4 ${
-                          rev.rating >= s ? 'fill-[#F59E0B] text-[#F59E0B]' : 'text-slate-200'
-                        }`} 
-                      />
-                    ))}
-                  </div>
-
-                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-                    "{rev.description}"
-                  </p>
                 </div>
+              ))}
+            </div>
 
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-                  <span className="font-medium text-[#0D9488]">{rev.serviceType}</span>
-                  <span className="flex items-center gap-1 text-slate-400">
-                    <span>Google Maps</span>
-                  </span>
-                </div>
-              </div>
-            ))}
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => setIsReviewModalOpen(true)}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#0D9488] hover:bg-[#0f766e] text-white text-sm font-bold shadow-md shadow-[#0D9488]/20 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <span>{lang === 'bn' ? '+ রিভিউ ফর্ম পূরণ করুন' : '+ Submit a Review'}</span>
+              </button>
+            </div>
           </div>
         )}
 
       </div>
+
+      {/* Customer Review Submission Modal (Loaded on demand) */}
+      {isReviewModalOpen && (
+        <React.Suspense fallback={null}>
+          <CustomerReviewModal
+            isOpen={isReviewModalOpen}
+            onClose={() => setIsReviewModalOpen(false)}
+            onReviewSubmitted={fetchReviews}
+          />
+        </React.Suspense>
+      )}
     </section>
   );
 };

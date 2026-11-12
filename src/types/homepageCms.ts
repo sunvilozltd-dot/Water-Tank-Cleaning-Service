@@ -113,3 +113,17 @@ export interface HomepageSection {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface HomepageRevisionMetadata {
+  revisionId: string;
+  version: number;
+  publishedAt: string;
+  publishedBy?: string;
+  source: 'database' | 'storage_config' | 'prerender_snapshot' | 'bundled';
+}
+
+export interface CachedHomepagePayload {
+  revision: HomepageRevisionMetadata;
+  sections: HomepageSection[];
+  cachedAt: number;
+}

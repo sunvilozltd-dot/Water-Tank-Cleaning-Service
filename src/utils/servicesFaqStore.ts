@@ -308,24 +308,27 @@ export const useServicesFaqs = () => {
     window.addEventListener(EVENT_NAME, handleUpdate);
 
     let channel: any = null;
-    if (isSupabaseConfigured()) {
-      try {
-        channel = supabase
-          .channel('realtime:services_faqs')
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'services_faqs' },
-            () => {
-              fetchServicesFaqsFromSupabase();
-            }
-          )
-          .subscribe();
-      } catch (err) {
-        console.warn('Realtime services_faqs notice:', err);
+    const realtimeTimer = setTimeout(() => {
+      if (isSupabaseConfigured() && typeof window !== 'undefined') {
+        try {
+          channel = supabase
+            .channel('realtime:services_faqs')
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'services_faqs' },
+              () => {
+                fetchServicesFaqsFromSupabase();
+              }
+            )
+            .subscribe();
+        } catch (err) {
+          console.warn('Realtime services_faqs notice:', err);
+        }
       }
-    }
+    }, 2500);
 
     return () => {
+      clearTimeout(realtimeTimer);
       window.removeEventListener(EVENT_NAME, handleUpdate);
       if (channel) {
         supabase.removeChannel(channel);

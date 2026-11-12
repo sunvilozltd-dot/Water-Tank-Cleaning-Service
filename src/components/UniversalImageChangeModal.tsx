@@ -36,7 +36,7 @@ export const CURATED_CLEANING_GALLERY = [
     titleBn: 'ছাদের ওভারহেড পিভিসি ও আরসিসি ট্যাংক',
     titleEn: 'Rooftop PVC & Concrete Overhead Tank',
     category: 'Rooftop Tanks',
-    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    url: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     description: 'Clean rooftop water storage tank on apartment roof'
   },
   {
@@ -44,7 +44,7 @@ export const CURATED_CLEANING_GALLERY = [
     titleBn: 'আন্ডারগ্রাউন্ড রিজার্ভার মেকানাইজড ডিপ ক্লিন',
     titleEn: 'Underground Reservoir Deep Sludge Extraction',
     category: 'Underground Reserve',
-    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    url: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
     description: 'Industrial pump sludge extraction and floor scoured'
   },
   {
@@ -52,7 +52,7 @@ export const CURATED_CLEANING_GALLERY = [
     titleBn: 'পানির পাইপলাইন আয়রন ও মরিচা ক্লিন',
     titleEn: 'Plumbing Pipeline Descaling & Hydro Flushing',
     category: 'Pipelines',
-    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+    url: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
     description: 'Internal water pipe hydro flushing'
   },
   {
@@ -60,7 +60,7 @@ export const CURATED_CLEANING_GALLERY = [
     titleBn: 'পেশাদার ক্লিনিং টিম ও গল্প',
     titleEn: 'Professional Team Story',
     category: 'Team & Equipment',
-    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
+    url: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
     description: 'Sunviloz trained team at real project site'
   },
   {
@@ -68,7 +68,7 @@ export const CURATED_CLEANING_GALLERY = [
     titleBn: 'ছাদের ট্যাংক রিয়েল জব পোস্টার',
     titleEn: 'Rooftop Tank Real Job Poster',
     category: 'Job Poster',
-    url: '/assets/aistudio/hero-rooftop-poster.jpg',
+    url: 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg',
     description: 'Real verified cleaning operation by Sunviloz team'
   },
   {
@@ -76,7 +76,7 @@ export const CURATED_CLEANING_GALLERY = [
     titleBn: 'আন্ডারগ্রাউন্ড ট্যাংক রিয়েল জব পোস্টার',
     titleEn: 'Underground Tank Real Job Poster',
     category: 'Job Poster',
-    url: '/assets/aistudio/hero-underground-poster.jpg',
+    url: 'https://img.youtube.com/vi/WY01Mrj5tzc/hqdefault.jpg',
     description: 'Real verified subterranean reservoir desiltation'
   }
 ];

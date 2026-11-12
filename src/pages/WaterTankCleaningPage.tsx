@@ -174,13 +174,13 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-16">
       <SeoHead
-        title="Professional Water Tank Cleaning in Dhaka | SUNVILOZ CLEAN CARE"
-        description="Specialized mechanized water tank deep cleaning in Dhaka for overhead and underground reserve tanks. Sludge extraction and safe disinfection. Call 01609999612."
+        title="Professional Water Tank Cleaner & Cleaning in Dhaka | SUNVILOZ CLEAN CARE"
+        description="Professional water tank cleaner & specialized mechanized tank cleaning in Dhaka for overhead and underground reserve tanks. Sludge extraction & disinfection. Call 01609999612."
         canonicalUrl="https://sunvilozcleancare.com/services/water-tank-cleaning"
         serviceSchema={{
-          name: 'Professional Water Tank Cleaning in Dhaka',
-          serviceType: 'Water Tank Cleaning',
-          description: 'Mechanized deep cleaning and food-grade sanitization for rooftop overhead tanks (PVC and concrete RCC) and underground reserve tanks across Dhaka metro areas.'
+          name: 'Professional Water Tank Cleaner & Cleaning in Dhaka',
+          serviceType: 'Water Tank Cleaner & Water Tank Cleaning Service',
+          description: 'Mechanized deep cleaning and food-grade sanitization by expert water tank cleaners for rooftop overhead tanks (PVC and concrete RCC) and underground reserve tanks across Dhaka metro areas.'
         }}
         breadcrumbs={breadcrumbsList}
         faqSchema={structuredFaqs}
@@ -209,13 +209,13 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#123047] tracking-tight leading-tight">
-              {lang === 'bn' ? 'ঢাকায় পেশাদার পানির ট্যাংক পরিষ্কার সার্ভিস' : 'Professional Water Tank Cleaning Service in Dhaka'}
+              {lang === 'bn' ? 'ঢাকায় পেশাদার পানির ট্যাংক পরিষ্কার সার্ভিস (Professional Water Tank Cleaner)' : 'Professional Water Tank Cleaner & Cleaning Service in Dhaka'}
             </h1>
 
             <p className="text-sm sm:text-base text-[#64748B] leading-relaxed max-w-2xl">
               {lang === 'bn'
-                ? 'বাসাবাড়ি, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের ছাদের ওভারহেড এবং ভূগর্ভস্থ আন্ডারগ্রাউন্ড পানির ট্যাংক পরিষ্কারে সানভিলোজ ক্লিন কেয়ারের আধুনিক মেকানিক্যাল পদ্ধতি ও খাদ্য-বান্ধব স্যানিটাইজিং সল্যুশন।'
-                : 'Deep cleaning, heavy sludge extraction, high-pressure jet washing, and food-safe sanitization for underground reservoirs and rooftop tanks across Dhaka metro areas.'}
+                ? 'বাসাবাড়ি, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের ছাদের ওভারহেড এবং ভূগর্ভস্থ আন্ডারগ্রাউন্ড পানির ট্যাংক পরিষ্কারে সানভিলোজ ক্লিন কেয়ারের পেশাদার ওয়াটার ট্যাংক ক্লিনার ও আধুনিক মেকানিক্যাল স্যানিটাইজিং সল্যুশন।'
+                : 'Expert water tank cleaner team providing deep cleaning, heavy sludge extraction, high-pressure jet washing, and food-safe sanitization for underground reservoirs and rooftop tanks across Dhaka metro areas.'}
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -255,8 +255,8 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
           <div className="lg:col-span-5">
             <div className="relative aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-md bg-[#F5FAFC] group">
               <OptimizedImage
-                src="https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg"
-                alt="Professional Water Tank Cleaning Service in Dhaka"
+                src="https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg"
+                alt="Professional Water Tank Cleaner & Cleaning Service in Dhaka"
                 width={800}
                 height={600}
                 aspectRatio="4/3"

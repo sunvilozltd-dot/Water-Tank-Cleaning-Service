@@ -2,10 +2,51 @@ import fs from 'fs';
 import path from 'path';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
-import App from '../src/App';
+import App, { SsrPageComponents } from '../src/App';
 import { BUSINESS_CONFIG, SERVICES_DATA } from '../src/data/config';
 import { LOCATIONS_DATA } from '../src/data/locationsData';
 import { DEFAULT_GOOGLE_CONFIG } from '../src/config/siteDomain';
+import { WATER_TANK_ARTICLES } from '../src/data/waterTankArticles';
+import { fetchCentralImageRegistry, DEFAULT_IMAGE_REGISTRY } from '../src/services/imageSyncService';
+import { getHomepageSectionsWithRevision } from '../src/services/homepageCmsService';
+import { PUBLISHED_HOMEPAGE_REVISION } from '../src/data/publishedHomepageSnapshot';
+
+// Synchronous page imports specifically for Node SSR prerendering (bypasses Suspense)
+import { AboutPage } from '../src/pages/AboutPage';
+import { ServicesPage } from '../src/pages/ServicesPage';
+import { WaterTankCleaningPage } from '../src/pages/WaterTankCleaningPage';
+import { PipelineCleaningPage } from '../src/pages/PipelineCleaningPage';
+import { ContactPage } from '../src/pages/ContactPage';
+import { ServiceAreaPage } from '../src/pages/ServiceAreaPage';
+import { LocationDetailPage } from '../src/pages/LocationDetailPage';
+import { BlogPage } from '../src/pages/BlogPage';
+import { BlogPostDetailPage } from '../src/pages/BlogPostDetailPage';
+import { PortfolioPage } from '../src/pages/PortfolioPage';
+import { TermsPage } from '../src/pages/TermsPage';
+import { PrivacyPolicyPage } from '../src/pages/PrivacyPolicyPage';
+import { FaqPage } from '../src/pages/FaqPage';
+import { ServiceDetailPage } from '../src/pages/ServiceDetailPage';
+import { GetQuotePage } from '../src/pages/GetQuotePage';
+import { NotFoundPage } from '../src/pages/NotFoundPage';
+
+const ssrComponents: SsrPageComponents = {
+  AboutPage,
+  ServicesPage,
+  WaterTankCleaningPage,
+  PipelineCleaningPage,
+  ContactPage,
+  ServiceAreaPage,
+  LocationDetailPage,
+  BlogPage,
+  BlogPostDetailPage,
+  PortfolioPage,
+  TermsPage,
+  PrivacyPolicyPage,
+  FaqPage,
+  ServiceDetailPage,
+  GetQuotePage,
+  NotFoundPage
+};
 
 interface PrerenderRoute {
   path: string;
@@ -18,6 +59,13 @@ interface PrerenderRoute {
   faqs?: { question: string; answer: string }[];
   breadcrumbs: { name: string; path: string }[];
   serviceType?: string;
+  articleMeta?: {
+    publishedAt: string;
+    imageUrl?: string;
+    category?: string;
+    readTime?: string;
+    content?: string;
+  };
   priority: number;
 }
 
@@ -25,19 +73,20 @@ const BASE_URL = 'https://sunvilozcleancare.com';
 const PHONE = BUSINESS_CONFIG.phone;
 const DISPLAY_PHONE = BUSINESS_CONFIG.displayPhone;
 const WHATSAPP_URL = BUSINESS_CONFIG.whatsappUrl;
-const LOGO_URL = `${BASE_URL}/assets/aistudio/sunviloz-logo.png`;
-const POSTER_URL = `${BASE_URL}/assets/aistudio/hero-rooftop-poster.jpg`;
+const LOGO_URL = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png';
+const POSTER_URL = 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg';
 const GOOGLE_PROFILE_URL = DEFAULT_GOOGLE_CONFIG.businessProfileUrl;
 
 const routes: PrerenderRoute[] = [
   // 1. Homepage
   {
     path: '/',
-    title: 'Water Tank Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE',
-    description: 'Professional water tank cleaning service in Dhaka. Overhead, underground reserve tank and water pipeline cleaning. Contact SUNVILOZ CLEAN CARE: 01609999612.',
-    h1: 'Water Tank Cleaning Service in Dhaka — পেশাদার পানির ট্যাংক ও পাইপলাইন ক্লিনিং সার্ভিস',
-    summary: 'ঢাকা, গাজীপুর, সাভার এবং নারায়ণগঞ্জে আবাসিক বাসা, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের ছাদের ওভারহেড ট্যাংক, ভূগর্ভস্থ রিজার্ভার এবং পানির পাইপলাইন আধুনিক মেকানাইজড রোটারি ওয়াটার জেটে পরিষ্কার ও খাদ্য-বান্ধব স্যানিটাইজিং সেবা।',
+    title: 'Water Tank Cleaner & Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE',
+    description: 'Professional water tank cleaner & water tank cleaning service in Dhaka. Overhead, underground reserve tank and water pipeline cleaning. Contact SUNVILOZ CLEAN CARE: 01609999612.',
+    h1: 'Water Tank Cleaner & Cleaning Service in Dhaka — পেশাদার পানির ট্যাংক ও পাইপলাইন ক্লিনিং সার্ভিস',
+    summary: 'ঢাকা, গাজীপুর, সাভার এবং নারায়ণগঞ্জে আবাসিক বাসা, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের ছাদের ওভারহেড ট্যাংক, ভূগর্ভস্থ রিজার্ভার এবং পানির পাইপলাইন আধুনিক মেকানাইজড রোটারি ওয়াটার জেটে পরিষ্কার ও খাদ্য-বান্ধব স্যানিটাইজিং সেবা। অভিজ্ঞ পেশাদার ওয়াটার ট্যাংক ক্লিনার (Professional Water Tank Cleaner in Dhaka) টিম।',
     features: [
+      'অভিজ্ঞ প্রফেশনাল ওয়াটার ট্যাংক ক্লিনার (Professional Water Tank Cleaner) দ্বারা কাজ পরিচালনা',
       'হাই-প্রেসার মেকানাইজড রোটারি ওয়াটার জেটে গভীর শ্যাওলা ও ময়লা নিস্কাশন',
       'সাবমারসিবল পাম্প ও ইন্ডাস্ট্রিয়াল স্লাজ সেচে তলদেশের বালু-কাদা অপসারণ',
       'দেয়াল বা টাইলস না ভেঙে হাইড্রো-পালস ওয়াটার পাইপলাইন ফ্লাশিং',
@@ -47,7 +96,7 @@ const routes: PrerenderRoute[] = [
     faqs: [
       {
         question: 'How often should water tanks be cleaned in Dhaka?',
-        answer: 'Due to municipal water sedimentation and heat, overhead and underground reserve water tanks in Dhaka should be deep cleaned every 4 to 6 months.'
+        answer: 'Due to municipal water sedimentation and heat, overhead and underground reserve water tanks in Dhaka should be deep cleaned every 4 to 6 months by a professional water tank cleaner.'
       },
       {
         question: 'How long does water tank cleaning take?',
@@ -77,11 +126,12 @@ const routes: PrerenderRoute[] = [
   // 2. Core Service: Water Tank Cleaning (Both / Main)
   {
     path: '/services/water-tank-cleaning',
-    title: 'Professional Water Tank Cleaning in Dhaka | SUNVILOZ CLEAN CARE',
-    description: 'Professional water tank cleaning service in Dhaka for rooftop overhead and underground reserve tanks. Safe mechanized cleaning, sludge extraction & food-grade sanitization. 01609999612.',
-    h1: 'ঢাকায় পেশাদার পানির ট্যাংক পরিষ্কার সার্ভিস (Water Tank Cleaning Service)',
-    summary: 'বাসাবাড়ি, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের ছাদের ওভারহেড (PVC / RCC) এবং ভূগর্ভস্থ আন্ডারগ্রাউন্ড পানির ট্যাংক পরিষ্কারে সানভিলোজ ক্লিন কেয়ারের মেকানাইজড স্লাজ নিষ্কাশন ও হাই-প্রেসার রোটারি জেট ওয়াশ প্রযুক্তি।',
+    title: 'Professional Water Tank Cleaner & Cleaning in Dhaka | SUNVILOZ CLEAN CARE',
+    description: 'Expert water tank cleaner in Dhaka for rooftop overhead & underground reserve tanks. Safe mechanized cleaning, sludge extraction & food-grade sanitization. 01609999612.',
+    h1: 'ঢাকায় পেশাদার পানির ট্যাংক পরিষ্কার সার্ভিস (Professional Water Tank Cleaner in Dhaka)',
+    summary: 'বাসাবাড়ি, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের ছাদের ওভারহেড (PVC / RCC) এবং ভূগর্ভস্থ আন্ডারগ্রাউন্ড পানির ট্যাংক পরিষ্কারে সানভিলোজ ক্লিন কেয়ারের মেকানাইজড স্লাজ নিষ্কাশন ও হাই-প্রেসার রোটারি জেট ওয়াশ প্রযুক্তি। আপনার এলাকায় সেরা ওয়াটার ট্যাংক ক্লিনার সার্ভিস।',
     features: [
+      'অভিজ্ঞ প্রফেশনাল ওয়াটার ট্যাংক ক্লিনার (Professional Water Tank Cleaner)',
       'কোনো ক্ষতিকর এসিড ছাড়াই হাই-প্রেসার ওয়াটার জেটে সুশৃঙ্খল পরিষ্কার',
       'তলদেশের ভারী কাদা ও দেয়ালের শক্ত শ্যাওলা কার্যকর দূরীকরণ',
       'ফুড-গ্রেড জীবাণুনাশক প্রয়োগে স্বাস্থ্যসম্মত পরিচ্ছন্ন পানি সংরক্ষণ',
@@ -90,7 +140,7 @@ const routes: PrerenderRoute[] = [
     faqs: [
       {
         question: 'পানির ট্যাংক কত দিন পরপর পরিষ্কার করা উচিত?',
-        answer: 'স্বাস্থ্যসম্মত ব্যবহারের জন্য প্রতি ৬ মাস অন্তর (বছরে অন্তত দুই বার) ছাদের ওভারহেড ট্যাংক এবং আন্ডারগ্রাউন্ড রিজার্ভার ডিপ ক্লিন করা বিশ্ব স্বাস্থ্য মানদণ্ড অনুযায়ী সুপারিশকৃত।'
+        answer: 'স্বাস্থ্যসম্মত ব্যবহারের জন্য প্রতি ৬ মাস অন্তর (বছরে অন্তত দুই বার) ছাদের ওভারহেড ট্যাংক এবং আন্ডারগ্রাউন্ড রিজার্ভার অভিজ্ঞ ওয়াটার ট্যাংক ক্লিনার দিয়ে ডিপ ক্লিন করা বিশ্ব স্বাস্থ্য মানদণ্ড অনুযায়ী সুপারিশকৃত।'
       },
       {
         question: 'পানির ট্যাংক পরিষ্কার করতে কত সময় লাগে?',
@@ -145,10 +195,10 @@ const routes: PrerenderRoute[] = [
   // 4. Overhead Tank Cleaning
   {
     path: '/services/overhead-tank-cleaning',
-    title: 'Overhead Water Tank Cleaning Dhaka | SUNVILOZ CLEAN CARE',
-    description: 'High-pressure mechanized rooftop overhead water tank cleaning in Dhaka. Algae scrubbing, safe disinfection for PVC & concrete RCC tanks. 01609999612.',
+    title: 'Overhead Water Tank Cleaner & Cleaning Dhaka | SUNVILOZ CLEAN CARE',
+    description: 'High-pressure mechanized rooftop overhead water tank cleaner in Dhaka. Algae scrubbing, safe disinfection for PVC & concrete RCC tanks. 01609999612.',
     h1: 'ওভারহেড ও ছাদের পানির ট্যাংক পরিষ্কার সার্ভিস (Overhead Tank Cleaning)',
-    summary: 'ছাদের পিভিসি ও আরসিসি কংক্রিট ওভারহেড ট্যাংক উচ্চচাপের রোটারি ওয়াটার জেটে শ্যাওলা, কাদা ও বায়ুবাহিত ধুলোবালি মুক্তকরণ।',
+    summary: 'ছাদের পিভিসি ও আরসিসি কংক্রিট ওভারহেড ট্যাংক উচ্চচাপের রোটারি ওয়াটার জেটে শ্যাওলা, কাদা ও বায়ুবাহিত ধুলোবালি মুক্তকরণ। দক্ষ ওভারহেড ওয়াটার ট্যাংক ক্লিনার টিম।',
     features: [
       'ছাদের রোদজনিত শ্যাওলা ও ব্যাকটেরিয়াল স্লাইম কার্যকর পরিষ্কার',
       'ট্যাংকের তলদেশের শক্ত বালু ও ময়লা নিষ্কাশন',
@@ -167,10 +217,10 @@ const routes: PrerenderRoute[] = [
   // 5. Underground Water Tank Cleaning
   {
     path: '/services/underground-water-tank-cleaning',
-    title: 'Reserve Tank Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE',
-    description: 'Industrial sludge extraction and mechanized deep washing for subterranean concrete water reserve tanks in Dhaka buildings. 01609999612.',
+    title: 'Underground Reserve Water Tank Cleaner Dhaka | SUNVILOZ CLEAN CARE',
+    description: 'Industrial sludge extraction & professional water tank cleaner for subterranean concrete reserve tanks in Dhaka buildings. 01609999612.',
     h1: 'আন্ডারগ্রাউন্ড ও রিজার্ভ পানির ট্যাংক পরিষ্কার সার্ভিস (Underground Tank Cleaning)',
-    summary: 'ভূগর্ভস্থ আরসিসি রিজার্ভারের তলদেশের ভারী ওয়াসা কাদা, স্লাজ ও দুর্গন্ধ সম্পূর্ণ ভ্যাকুমিং, রোটারি প্রেশার ওয়াশ ও জীবাণুমুক্তকরণ।',
+    summary: 'ভূগর্ভস্থ আরসিসি রিজার্ভারের তলদেশের ভারী ওয়াসা কাদা, স্লাজ ও দুর্গন্ধ সম্পূর্ণ ভ্যাকুমিং, রোটারি প্রেশার ওয়াশ ও জীবাণুমুক্তকরণ। অভিজ্ঞ আন্ডারগ্রাউন্ড ওয়াটার ট্যাংক ক্লিনার সার্ভিস।',
     features: [
       'হেভি স্লাজ পাম্পে গভীর কাদা ও নোংরা পানি দ্রুত নিস্কাশন',
       'কনফাইন্ড স্পেস নিরাপত্তা প্রটোকল ও ফ্রেশ এয়ার ব্লোয়ার ব্যবহার',
@@ -279,12 +329,14 @@ const routes: PrerenderRoute[] = [
 
 // Add all 15 location routes dynamically from LOCATIONS_DATA
 for (const loc of LOCATIONS_DATA) {
+  const baseTitle = loc.title || `Water Tank Cleaning Service in ${loc.areaName}`;
+  const cleanTitle = baseTitle.replace(/ \| Sunviloz Clean Care/i, '').replace(/ \| SUNVILOZ CLEAN CARE/i, '');
   routes.push({
     path: `/service-areas/${loc.slug}`,
-    title: loc.title || `Water Tank Cleaning Service in ${loc.areaName} | SUNVILOZ CLEAN CARE`,
-    description: loc.metaDesc || loc.intro || `Professional water tank cleaning service in ${loc.areaName}, Dhaka.`,
+    title: `${cleanTitle} & Water Tank Cleaner | SUNVILOZ CLEAN CARE`,
+    description: loc.metaDesc ? `${loc.metaDesc} Professional water tank cleaner in ${loc.areaName}, Dhaka. 01609999612.` : `Professional water tank cleaner & water tank cleaning service in ${loc.areaName}, Dhaka. Call 01609999612.`,
     h1: `${loc.titleBn || `${loc.areaName} এলাকায় পেশাদার পানির ট্যাংক পরিষ্কার সার্ভিস`}`,
-    summary: loc.introBn || loc.intro || `${loc.areaName} এলাকায় আমাদের দক্ষ টিম প্রতিদিন আন্ডারগ্রাউন্ড ও ওভারহেড ট্যাংক আধুনিক প্রযুক্তিতে পরিষ্কার করে।`,
+    summary: loc.introBn || loc.intro || `${loc.areaName} এলাকায় আমাদের দক্ষ ওয়াটার ট্যাংক ক্লিনার টিম প্রতিদিন আন্ডারগ্রাউন্ড ও ওভারহেড ট্যাংক আধুনিক প্রযুক্তিতে পরিষ্কার করে।`,
     features: [
       `${loc.areaName}-এর জন্য দ্রুত টিম ডিসপ্যাচ ও শিডিউলিং`,
       'উচ্চচাপের মেকানাইজড রোটারি ওয়াটার জেট ওয়াশ',
@@ -333,6 +385,44 @@ routes.push({
   priority: 0.85
 });
 
+// Blog index route
+routes.push({
+  path: '/blog',
+  title: 'পানির ট্যাংক পরিষ্কার ও রক্ষণাবেক্ষণ গাইড | Tips & Blog | SUNVILOZ CLEAN CARE',
+  description: 'পানির ট্যাংক ও পাইপলাইন পরিষ্কারের নিয়ম, সতর্কতা, খরচ ও স্বাস্থ্যবিধি সম্পর্কিত প্রয়োজনীয় তথ্য ও পরামর্শ। SUNVILOZ CLEAN CARE: 01609999612.',
+  h1: 'পানির ট্যাংক ও পাইপলাইন পরিষ্কারের দরকারি পরামর্শ ও গাইড',
+  summary: 'বাসা ও অ্যাপার্টমেন্টের রিজার্ভার ও ওভারহেড ট্যাংক স্বাস্থ্যসম্মত রাখতে অভিজ্ঞ টেকনিশিয়ানদের পরামর্শ ও ঢাকা শহরের জন্য বাস্তবমুখী সমাধান।',
+  breadcrumbs: [
+    { name: 'Home', path: '/' },
+    { name: 'Tips & Guides', path: '/blog' }
+  ],
+  priority: 0.8
+});
+
+// Add all 10 authoritative water tank SEO articles dynamically
+for (const article of WATER_TANK_ARTICLES) {
+  routes.push({
+    path: `/blog/${article.slug}`,
+    title: `${article.title} | SUNVILOZ CLEAN CARE`,
+    description: article.excerpt,
+    h1: article.title,
+    summary: article.excerpt,
+    breadcrumbs: [
+      { name: 'Home', path: '/' },
+      { name: 'Tips & Guides', path: '/blog' },
+      { name: article.title, path: `/blog/${article.slug}` }
+    ],
+    articleMeta: {
+      publishedAt: article.publishedAt,
+      imageUrl: article.imageUrl,
+      category: article.category,
+      readTime: article.readTime,
+      content: article.content
+    },
+    priority: 0.75
+  });
+}
+
 function renderCrawlableBody(route: PrerenderRoute): string {
   const isHome = route.path === '/';
   
@@ -340,7 +430,7 @@ function renderCrawlableBody(route: PrerenderRoute): string {
     <header style="padding: 1rem 1.5rem; border-bottom: 1px solid #E2E8F0; background: #123047;">
       <nav style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <a href="/" style="color: #38BDF8; font-weight: 900; text-decoration: none; font-size: 1.35rem; display: flex; align-items: center; gap: 0.5rem;">
-          <img src="/assets/aistudio/sunviloz-logo.png" alt="SUNVILOZ CLEAN CARE Logo" style="height: 38px; width: auto;" />
+          <img src="${LOGO_URL}" alt="SUNVILOZ CLEAN CARE Logo" style="height: 38px; width: auto;" />
           <span>SUNVILOZ CLEAN CARE</span>
         </a>
         <div style="display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap;">
@@ -382,6 +472,20 @@ function renderCrawlableBody(route: PrerenderRoute): string {
           </a>
         </div>
       </div>
+
+      ${route.articleMeta?.content ? `
+        <article style="background: #FFFFFF; padding: 2rem; border-radius: 1rem; border: 1px solid #E2E8F0; margin-bottom: 3rem; line-height: 1.8; color: #334155;">
+          ${route.articleMeta.imageUrl ? `
+            <img src="${route.articleMeta.imageUrl}" alt="${route.h1}" style="width: 100%; max-height: 420px; object-fit: cover; border-radius: 0.75rem; margin-bottom: 1.75rem;" />
+          ` : ''}
+          <div style="font-size: 1rem; line-height: 1.8;">
+            ${route.articleMeta.content
+              .replace(/## (.*)/g, '<h2 style="color: #123047; font-size: 1.4rem; font-weight: 800; margin-top: 1.75rem; margin-bottom: 0.75rem;">$1</h2>')
+              .replace(/### (.*)/g, '<h3 style="color: #123047; font-size: 1.2rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.5rem;">$1</h3>')
+              .replace(/\n\n/g, '<br/><br/>')}
+          </div>
+        </article>
+      ` : ''}
 
       ${route.features && route.features.length > 0 ? `
         <section style="margin-bottom: 3rem; background: #FFFFFF; padding: 2rem; border-radius: 1rem; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
@@ -481,6 +585,17 @@ function generatePrerenderedHtml(baseTemplate: string, route: PrerenderRoute): s
     `<meta property="og:url" content="${canonicalUrl}" />`
   );
 
+  const resolvedSocialImage = route.articleMeta?.imageUrl
+    ? (route.articleMeta.imageUrl.startsWith('http://') || route.articleMeta.imageUrl.startsWith('https://')
+        ? route.articleMeta.imageUrl
+        : `${BASE_URL}${route.articleMeta.imageUrl.startsWith('/') ? route.articleMeta.imageUrl : `/${route.articleMeta.imageUrl}`}`)
+    : POSTER_URL;
+
+  html = html.replace(
+    /<meta\s+property="og:image"\s+content=".*?"\s*\/?>/i,
+    `<meta property="og:image" content="${resolvedSocialImage}" />`
+  );
+
   // 5. Twitter Card replacements
   html = html.replace(
     /<meta\s+name="twitter:title"\s+content=".*?"\s*\/?>/i,
@@ -489,6 +604,10 @@ function generatePrerenderedHtml(baseTemplate: string, route: PrerenderRoute): s
   html = html.replace(
     /<meta\s+name="twitter:description"\s+content=".*?"\s*\/?>/i,
     `<meta name="twitter:description" content="${route.description.replace(/"/g, '&quot;')}" />`
+  );
+  html = html.replace(
+    /<meta\s+name="twitter:image"\s+content=".*?"\s*\/?>/i,
+    `<meta name="twitter:image" content="${resolvedSocialImage}" />`
   );
 
   // 6. JSON-LD structured schemas
@@ -500,7 +619,7 @@ function generatePrerenderedHtml(baseTemplate: string, route: PrerenderRoute): s
     telephone: '+88' + PHONE,
     image: LOGO_URL,
     logo: LOGO_URL,
-    description: 'Professional water tank cleaning service in Dhaka, Gazipur, Savar and Narayanganj for rooftop overhead tanks, underground reserve tanks, and water pipeline flushing.',
+    description: 'Professional water tank cleaner & water tank cleaning service in Dhaka, Gazipur, Savar and Narayanganj for rooftop overhead tanks, underground reserve tanks, and water pipeline flushing.',
     sameAs: [GOOGLE_PROFILE_URL],
     hasMap: GOOGLE_PROFILE_URL,
     areaServed: [
@@ -575,6 +694,35 @@ function generatePrerenderedHtml(baseTemplate: string, route: PrerenderRoute): s
     });
   }
 
+  if (route.articleMeta) {
+    schemas.push({
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: route.h1,
+      description: route.description,
+      image: [resolvedSocialImage],
+      author: {
+        '@type': 'Organization',
+        name: 'SUNVILOZ CLEAN CARE',
+        url: BASE_URL
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'SUNVILOZ CLEAN CARE',
+        logo: {
+          '@type': 'ImageObject',
+          url: LOGO_URL
+        }
+      },
+      datePublished: route.articleMeta.publishedAt,
+      dateModified: route.articleMeta.publishedAt,
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id': canonicalUrl
+      }
+    });
+  }
+
   // Replace default local business script with consolidated page schemas
   const schemasMarkup = schemas.map(s => `\n    <script type="application/ld+json">\n    ${JSON.stringify(s, null, 2).replace(/\n/g, '\n    ')}\n    </script>`).join('\n');
   
@@ -586,7 +734,7 @@ function generatePrerenderedHtml(baseTemplate: string, route: PrerenderRoute): s
   // 7. Inject genuine React-rendered HTML inside <div id="root">
   let renderedRootHtml = '';
   try {
-    renderedRootHtml = renderToString(React.createElement(App, { initialPath: route.path }));
+    renderedRootHtml = renderToString(React.createElement(App, { initialPath: route.path, ssrComponents }));
   } catch (renderError) {
     console.warn(`[SEO Prerender] Warning: React renderToString failed for route ${route.path}, using crawlable fallback:`, renderError);
     renderedRootHtml = renderCrawlableBody(route);
@@ -597,8 +745,30 @@ function generatePrerenderedHtml(baseTemplate: string, route: PrerenderRoute): s
     `<div id="root">${renderedRootHtml}</div>`
   );
 
+  // 8. Inject authoritative published homepage sections snapshot script and image registry for zero-flash hydration
+  const snapshotScripts: string[] = [];
+  if (authoritativeHomepageSections && authoritativeHomepageSections.length > 0) {
+    snapshotScripts.push(`window.__INITIAL_HOMEPAGE_SECTIONS__ = ${JSON.stringify(authoritativeHomepageSections)}; window.__HOMEPAGE_REVISION__ = ${JSON.stringify(authoritativeHomepageRevision)};`);
+  }
+  if (authoritativeImageRegistry) {
+    snapshotScripts.push(`window.__INITIAL_IMAGE_REGISTRY__ = ${JSON.stringify(authoritativeImageRegistry)};`);
+  }
+
+  if (snapshotScripts.length > 0) {
+    const snapshotTag = `<script id="__SUNVILOZ_HOMEPAGE_SNAPSHOT__">${snapshotScripts.join(' ')}</script>`;
+    if (html.includes('</head>')) {
+      html = html.replace('</head>', `  ${snapshotTag}\n</head>`);
+    } else {
+      html = html.replace(/<script\s+type="module"/i, `${snapshotTag}\n    <script type="module"`);
+    }
+  }
+
   return html;
 }
+
+let authoritativeHomepageSections: any[] = [];
+let authoritativeHomepageRevision: any = PUBLISHED_HOMEPAGE_REVISION;
+let authoritativeImageRegistry: any = DEFAULT_IMAGE_REGISTRY;
 
 async function runPrerender() {
   const distDir = path.resolve(process.cwd(), 'dist');
@@ -610,6 +780,72 @@ async function runPrerender() {
   }
 
   const baseTemplate = fs.readFileSync(templatePath, 'utf-8');
+  try {
+    console.log('[SEO Prerender] Pre-fetching authoritative image registry from Supabase...');
+    const liveRegistry = await fetchCentralImageRegistry();
+    const serviceImgCount = Object.keys(liveRegistry?.serviceImages || {}).length;
+    const siteImgCount = Object.keys(liveRegistry?.siteImages || {}).length;
+    if (liveRegistry && (serviceImgCount > 0 || siteImgCount > 0)) {
+      authoritativeImageRegistry = liveRegistry;
+      console.log(`[SEO Prerender] ✓ Live image registry verified: Revision ${liveRegistry.version || 'authoritative'} (${serviceImgCount} service images, ${siteImgCount} site images).`);
+    } else {
+      const isProductionBuild = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1' || process.env.STRICT_PRERENDER === 'true';
+      const msg = '[SEO Prerender Error] Authoritative image registry could not be verified from Supabase.';
+      console.error(msg);
+      if (isProductionBuild) {
+        throw new Error(`${msg} Aborting production build to prevent deploying unverified images.`);
+      }
+    }
+  } catch (syncErr: any) {
+    console.error('[SEO Prerender Error] Failed to fetch authoritative image registry:', syncErr?.message || syncErr);
+    const isProductionBuild = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1' || process.env.STRICT_PRERENDER === 'true';
+    if (isProductionBuild) {
+      process.exit(1);
+    }
+  }
+
+  // Expose image registry to Node global environment for SSR
+  (global as any).__INITIAL_IMAGE_REGISTRY__ = authoritativeImageRegistry;
+  (global as any).window = (global as any).window || {};
+  (global as any).window.__INITIAL_IMAGE_REGISTRY__ = authoritativeImageRegistry;
+
+  try {
+    console.log('[SEO Prerender] Pre-fetching authoritative homepage sections and revision from Supabase...');
+    const result = await getHomepageSectionsWithRevision();
+    
+    const isProductionBuild = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1' || process.env.STRICT_PRERENDER === 'true';
+
+    // Explicit build-time validation: do not silently publish bundled fallback content
+    if (result.revision.source === 'database') {
+      console.log(`[SEO Prerender] ✓ Live Supabase Database verified: Revision ${result.revision.revisionId} (v${result.revision.version})`);
+    } else if (result.revision.source === 'storage_config') {
+      console.log(`[SEO Prerender] ✓ Live Supabase Storage config verified: Revision ${result.revision.revisionId} (v${result.revision.version})`);
+    } else {
+      const msg = `[SEO Prerender Alert] ATTENTION: Live Supabase content could not be reached during build. Source: ${result.revision.source}.`;
+      console.warn(msg);
+      if (isProductionBuild) {
+        throw new Error(`${msg} Aborting production build: live database or storage config verification is mandatory.`);
+      }
+    }
+
+    authoritativeHomepageSections = result.sections;
+    authoritativeHomepageRevision = {
+      ...result.revision,
+      source: result.revision.source === 'bundled' ? 'bundled_fallback' : 'prerender_snapshot'
+    };
+    // Expose on Node global for server rendering
+    (global as any).__INITIAL_HOMEPAGE_SECTIONS__ = authoritativeHomepageSections;
+    (global as any).__HOMEPAGE_REVISION__ = authoritativeHomepageRevision;
+    (global as any).window.__INITIAL_HOMEPAGE_SECTIONS__ = authoritativeHomepageSections;
+    (global as any).window.__HOMEPAGE_REVISION__ = authoritativeHomepageRevision;
+  } catch (secErr: any) {
+    console.error('[SEO Prerender Error] Failed during authoritative content pre-fetch:', secErr?.message || secErr);
+    const isProductionBuild = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1' || process.env.STRICT_PRERENDER === 'true';
+    if (isProductionBuild) {
+      process.exit(1);
+    }
+  }
+
   console.log(`[SEO Prerender] Starting build-time prerendering for ${routes.length} public routes...`);
 
   let count = 0;

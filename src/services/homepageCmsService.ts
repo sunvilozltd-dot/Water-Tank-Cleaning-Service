@@ -1,660 +1,742 @@
-import { HomepageSection, HomepageSectionItem, BuiltinSectionType, CustomSectionTemplate } from '../types/homepageCms';
+import { HomepageSection, HomepageSectionItem, BuiltinSectionType, CustomSectionTemplate, HomepageRevisionMetadata, CachedHomepagePayload } from '../types/homepageCms';
 import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
-import { safeGetItem, safeSetItem } from '../utils/safeLocalStorage';
+import { safeGetItem, safeSetItem, safeRemoveItem } from '../utils/safeLocalStorage';
 import { extractYouTubeId } from './mediaService';
-import { getStoredImageRegistry } from './imageSyncService';
+import { PUBLISHED_HOMEPAGE_SECTIONS, PUBLISHED_HOMEPAGE_REVISION } from '../data/publishedHomepageSnapshot';
 
-const HOMEPAGE_CACHE_KEY = 'sunviloz_homepage_sections_v3';
+export const HOMEPAGE_CACHE_KEY = 'sunviloz_homepage_sections_v7';
 export const HOMEPAGE_CMS_EVENT = 'sunviloz_homepage_sections_changed';
+const BUCKET_NAME = 'site-media';
+const CONFIG_FOLDER = 'config';
 
-// Default built-in homepage sections matching existing professional branding
-export const DEFAULT_HOMEPAGE_SECTIONS: HomepageSection[] = [
-  {
-    id: 'sec-hero',
-    sectionKey: 'hero',
-    sectionType: 'hero',
-    title: 'Professional Water Tank Cleaning Service in Dhaka',
-    titleBn: 'ঢাকায় প্রফেশনাল ওয়াটার ট্যাংক ক্লিনিং সার্ভিস',
-    subtitle: 'Deep cleaning for rooftop and underground water tanks with a professional, hygienic and customer-focused cleaning process.',
-    subtitleBn: 'নিয়মিত পানির ট্যাংক পরিষ্কার রাখা আপনার ও পরিবারের সুস্থতার জন্য জরুরি। আপনার ট্যাংকের তথ্য জানিয়ে রিকোয়েস্ট করুন, আমাদের টিম সঠিক কোটেশন প্রদান করবে।',
-    description: 'Serving residential apartments, corporate offices, and commercial buildings across all areas in Dhaka.',
-    descriptionBn: 'ঢাকা শহরের সকল এলাকায় বাসা-বাড়ি ও বাণিজ্যিক ভবনের ওয়াটার ট্যাংক ও পাইপলাইন গভীর পরিষ্কার সেবা।',
-    badge: 'Serving All Areas Across Dhaka',
-    badgeBn: 'ঢাকা শহরের সকল এলাকায় সার্ভিস প্রদান',
-    mediaType: 'video',
-    imageUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
-    videoUrl: '/videos/tank-cleaning-desktop.mp4',
-    video2Url: '/videos/tank-cleaning-mobile.mp4',
-    mobileVideoUrl: '/videos/tank-cleaning-mobile.mp4',
-    video3Url: '',
-    posterImageUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
-    posterImage2Url: '/assets/aistudio/hero-underground-poster.jpg',
-    posterImage3Url: '/assets/aistudio/hero-underground-poster.jpg',
-    buttonText: 'Request a Quote',
-    buttonTextBn: 'কোটেশন রিকোয়েস্ট করুন',
-    buttonUrl: '#quote',
-    buttonEvent: 'quote_request',
-    secondaryButtonText: 'Chat on WhatsApp',
-    secondaryButtonTextBn: 'WhatsApp-এ যোগাযোগ',
-    secondaryButtonUrl: 'https://wa.me/8801609999612',
-    secondaryButtonEvent: 'whatsapp_click',
-    settings: {
-      bgStyle: 'white',
-      layout: 'centered',
-      videoEnabled: true,
-      overlayOpacity: 0.72,
-      overlayColor: 'navy'
-    },
-    isEnabled: true,
-    sortOrder: 1,
-    status: 'published'
-  },
-  {
-    id: 'sec-popular-services',
-    sectionKey: 'popularServices',
-    sectionType: 'services',
-    title: 'Popular Services',
-    titleBn: 'আমাদের জনপ্রিয় সেবাসমূহ',
-    subtitle: 'Reliable water tank and pipeline cleaning for homes and buildings',
-    subtitleBn: 'আপনার বাসা ও ভবনের পানির ট্যাংক এবং পানির পাইপলাইন পরিষ্কারে নির্ভরযোগ্য সার্ভিস।',
-    mediaType: 'none',
-    settings: {
-      bgStyle: 'dark'
-    },
-    isEnabled: true,
-    sortOrder: 2,
-    status: 'published'
-  },
-  {
-    id: 'sec-other-services',
-    sectionKey: 'otherServices',
-    sectionType: 'services',
-    title: 'Our Other Services',
-    titleBn: 'আমাদের অন্যান্য সেবা',
-    subtitle: 'Explore our additional cleaning services for homes, offices, and commercial spaces',
-    subtitleBn: 'আপনার বাসা, অফিস ও বাণিজ্যিক স্থাপনার পরিচ্ছন্নতার জন্য আমাদের অন্যান্য সেবাগুলো দেখুন।',
-    mediaType: 'none',
-    settings: {
-      bgStyle: 'dark'
-    },
-    isEnabled: true,
-    sortOrder: 3,
-    status: 'published'
-  },
-  {
-    id: 'sec-about',
-    sectionKey: 'about',
-    sectionType: 'about',
-    title: 'About SUNVILOZ Clean Care',
-    titleBn: 'আমাদের সম্পর্কে',
-    subtitle: 'Dedicated Water Hygiene Specialist in Dhaka',
-    subtitleBn: 'নিরাপদ খাদ্য-বান্ধব উপাদান ও আধুনিক প্রযুক্তিতে পরিষ্কার',
-    description: 'Serving residential apartments, corporate offices, and commercial buildings across all areas in Dhaka.',
-    descriptionBn: 'আমরা ক্ষতিকর এসিডমুক্ত আধুনিক মেশিনারিজ এবং ফুড-গ্রেড ডিসইনফেক্ট্যান্ট ব্যবহার করি।',
-    mediaType: 'none',
-    settings: {
-      bgStyle: 'dark',
-      layout: 'cards'
-    },
-    isEnabled: true,
-    sortOrder: 4,
-    status: 'published'
-  },
-  {
-    id: 'sec-whyChoose',
-    sectionKey: 'whyChoose',
-    sectionType: 'whyChoose',
-    title: 'Why SUNVILOZ Clean Care?',
-    titleBn: 'কেন সানভিলোজ ক্লিন কেয়ার বেছে নেবেন?',
-    subtitle: 'Dependable, professional cleaning through genuine operational competence',
-    subtitleBn: 'প্রশিক্ষিত টেকনিশিয়ান ও আধুনিক মেশিনের সুনিশ্চিত সেবা',
-    mediaType: 'none',
-    settings: {
-      bgStyle: 'dark'
-    },
-    isEnabled: true,
-    sortOrder: 5,
-    status: 'published'
-  },
-  {
-    id: 'sec-allServicesFaq',
-    sectionKey: 'allServicesFaq',
-    sectionType: 'faq',
-    title: 'All Services FAQ Discovery',
-    titleBn: 'সকল সার্ভিসের সচরাচর জিজ্ঞাসিত প্রশ্নাবলী',
-    subtitle: 'Find comprehensive answers and information for all our specialized services',
-    subtitleBn: 'আমাদের বিভিন্ন সার্ভিসের পদ্ধতি, খরচ, বুকিং এবং প্রয়োজনীয় তথ্য জানতে আপনার পছন্দের সার্ভিস নির্বাচন করুন।',
-    mediaType: 'none',
-    settings: {
-      bgStyle: 'dark'
-    },
-    isEnabled: true,
-    sortOrder: 6,
-    status: 'published'
-  },
-  {
-    id: 'sec-problem',
-    sectionKey: 'problem',
-    sectionType: 'whyChoose',
-    title: 'Is Your Water Tank Secretly Contaminated?',
-    titleBn: 'আপনার পানির ট্যাংক কি দীর্ঘদিন ধরে অপরিচ্ছন্ন?',
-    subtitle: 'Hidden dangers in untreated water storage',
-    subtitleBn: 'শ্যাওলা, ওয়াসা পলি ও ব্যাকটেরিয়ার নীরব বিস্তার',
-    mediaType: 'image',
-    imageUrl: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
-    buttonText: 'Request a Quote',
-    buttonTextBn: 'ট্যাংক পরিষ্কারের কোটেশন জানুন',
-    buttonUrl: '#quote',
-    buttonEvent: 'cta_click',
-    settings: {
-      bgStyle: 'slate',
-      layout: 'split'
-    },
-    isEnabled: true,
-    sortOrder: 4,
-    status: 'published'
-  },
-  {
-    id: 'sec-process',
-    sectionKey: 'process',
-    sectionType: 'process',
-    title: 'Our Scientific 6-Stage Cleaning Process',
-    titleBn: 'বিজ্ঞানসম্মত আধুনিক ৯-ধাপ ক্লিনিং পদ্ধতি',
-    subtitle: 'Step-by-step mechanized sanitization',
-    subtitleBn: 'নিরাপদ রোটারি ওয়াশ ও খাদ্য-বান্ধব জীবাণুমুক্তকরণ',
-    mediaType: 'none',
-    buttonText: 'Book a Cleaning Today',
-    buttonTextBn: 'আজই বুক করুন',
-    buttonUrl: '#quote',
-    buttonEvent: 'service_booking_start',
-    settings: {
-      bgStyle: 'white'
-    },
-    isEnabled: false,
-    sortOrder: 15,
-    status: 'draft'
-  },
-  {
-    id: 'sec-beforeAfter',
-    sectionKey: 'beforeAfter',
-    sectionType: 'beforeAfter',
-    title: 'Real Work Transformation & Video Showcase',
-    titleBn: 'ক্লিনিংয়ের বাস্তব ফলাফল: Before & After',
-    subtitle: 'See the visible difference before and after our deep clean',
-    subtitleBn: 'বাস্তব প্রজেক্টের ভিডিও ও ছবিসমূহ সরাসরি দেখুন',
-    mediaType: 'youtube',
-    youtubeUrl: 'https://www.youtube.com/watch?v=ScMzIvxBSi4',
-    youtubeVideoId: 'ScMzIvxBSi4',
-    settings: {
-      bgStyle: 'slate',
-      autoplayVideo: false
-    },
-    isEnabled: true,
-    sortOrder: 6,
-    status: 'published'
-  },
-  {
-    id: 'sec-calculator',
-    sectionKey: 'calculator',
-    sectionType: 'calculator',
-    title: 'Instant Cost Estimator',
-    titleBn: 'কোটেশন রিকোয়েস্ট ফর্ম',
-    subtitle: 'Calculate estimated cost based on your tank type and size',
-    subtitleBn: 'আপনার ট্যাংকের বিবরণ দিয়ে সঠিক কোটেশন গ্রহণ করুন',
-    mediaType: 'none',
-    settings: {
-      bgStyle: 'slate'
-    },
-    isEnabled: true,
-    sortOrder: 8,
-    status: 'published'
-  },
-  {
-    id: 'sec-howItWorks',
-    sectionKey: 'howItWorks',
-    sectionType: 'process',
-    title: 'How It Works (Easy 3 Steps)',
-    titleBn: 'সহজ ৩ ধাপে সার্ভিস গ্রহণ',
-    subtitle: 'Quick and hassle-free scheduling',
-    subtitleBn: 'বুকিং থেকে সম্পন্ন হওয়া পর্যন্ত নির্বিঘ্ন সেবা',
-    mediaType: 'none',
-    settings: {
-      bgStyle: 'white'
-    },
-    isEnabled: true,
-    sortOrder: 9,
-    status: 'published'
-  },
-  {
-    id: 'sec-areas',
-    sectionKey: 'areas',
-    sectionType: 'areas',
-    title: 'Dhaka City Coverage & Areas',
-    titleBn: 'ঢাকা শহরের কভারেজ এলাকাসমূহ',
-    subtitle: 'Dedicated technician teams in Uttara, Gulshan, Dhanmondi, Mirpur & beyond',
-    subtitleBn: 'উত্তরা, গুলশান, বনানী, ধানমন্ডি, মিরপুর ও সব প্রধান এলাকায় সক্রিয় টিম',
-    mediaType: 'none',
-    settings: {
-      bgStyle: 'slate'
-    },
-    isEnabled: true,
-    sortOrder: 10,
-    status: 'published'
-  },
-  {
-    id: 'sec-whyChoose',
-    sectionKey: 'whyChooseUs',
-    sectionType: 'whyChoose',
-    title: 'Why Choose Sunviloz Clean Care',
-    titleBn: 'কেন সানভিলোজ ক্লিন কেয়ার বেছে নেবেন?',
-    subtitle: 'Excellence in customer satisfaction and clean water hygiene',
-    subtitleBn: 'প্রশিক্ষিত টেকনিশিয়ান ও আধুনিক মেশিনের সুনিশ্চিত সেবা',
-    mediaType: 'none',
-    settings: {
-      bgStyle: 'white'
-    },
-    isEnabled: true,
-    sortOrder: 11,
-    status: 'published'
-  },
-  {
-    id: 'sec-reviews',
-    sectionKey: 'reviews',
-    sectionType: 'reviews',
-    title: 'Real Customer Reviews & Feedback',
-    titleBn: 'গ্রাহকদের বাস্তব অভিজ্ঞতা ও মতামত',
-    subtitle: 'Trusted by over 1,500+ homes and institutions in Dhaka',
-    subtitleBn: 'ঢাকা শহরের বিভিন্ন বাড়ি ও ভবনের সন্তুষ্ট গ্রাহকদের রিভিউ',
-    mediaType: 'none',
-    settings: {
-      bgStyle: 'slate'
-    },
-    isEnabled: true,
-    sortOrder: 12,
-    status: 'published'
-  },
-  {
-    id: 'sec-blog',
-    sectionKey: 'blog',
-    sectionType: 'blog',
-    title: 'Water Health & Cleaning Tips (Blog)',
-    titleBn: 'পানি সুরক্ষা ও ট্যাংক রক্ষণাবেক্ষণ গাইড',
-    subtitle: 'Expert hygiene guides for homeowners and building managers',
-    subtitleBn: 'নিয়মিত পরামর্শ ও বিজ্ঞানসম্মত গাইডলাইন',
-    mediaType: 'none',
-    settings: {
-      bgStyle: 'white'
-    },
-    isEnabled: true,
-    sortOrder: 13,
-    status: 'published'
-  },
-  {
-    id: 'sec-faq',
-    sectionKey: 'faq',
-    sectionType: 'faq',
-    title: 'Frequently Asked Questions (FAQ)',
-    titleBn: 'সাধারণ জিজ্ঞাসা ও প্রশ্নোত্তর (FAQ)',
-    subtitle: 'Answers to common questions regarding tank cleaning',
-    subtitleBn: 'ট্যাংক ক্লিনিং সম্পর্কিত আপনার যেকোনো প্রশ্নের উত্তর',
-    mediaType: 'none',
-    settings: {
-      bgStyle: 'slate'
-    },
-    isEnabled: false,
-    sortOrder: 16,
-    status: 'draft'
-  },
-  {
-    id: 'sec-finalCta',
-    sectionKey: 'finalCta',
-    sectionType: 'cta',
-    title: 'Ready for 100% Hygienic Water?',
-    titleBn: 'নিরাপদ ও বিশুদ্ধ পানির জন্য আজই যোগাযোগ করুন',
-    subtitle: 'Book your service today or speak with our water hygiene engineer.',
-    subtitleBn: 'আমরা ঢাকা শহরের যেকোনো প্রান্তে দ্রুততম সময়ে সেবা প্রদান করি।',
-    mediaType: 'none',
-    buttonText: 'Get Instant Free Quote',
-    buttonTextBn: 'কোটেশন রিকোয়েস্ট করুন',
-    buttonUrl: '#quote',
-    buttonEvent: 'quote_request',
-    secondaryButtonText: 'Chat on WhatsApp',
-    secondaryButtonTextBn: 'WhatsApp এ চ্যাট করুন',
-    secondaryButtonUrl: 'https://wa.me/8801609999612',
-    secondaryButtonEvent: 'whatsapp_click',
-    settings: {
-      bgStyle: 'blue'
-    },
-    isEnabled: true,
-    sortOrder: 15,
-    status: 'published'
-  }
-];
+// Authoritative default homepage sections matching published production data
+export const DEFAULT_HOMEPAGE_SECTIONS: HomepageSection[] = PUBLISHED_HOMEPAGE_SECTIONS;
+export const DEFAULT_HOMEPAGE_REVISION: HomepageRevisionMetadata = PUBLISHED_HOMEPAGE_REVISION;
 
-function notifyHomepageCms() {
+// In-flight promise cache to prevent simultaneous duplicate requests to Supabase
+let activeSectionsFetchPromise: Promise<{ sections: HomepageSection[]; revision: HomepageRevisionMetadata }> | null = null;
+
+function notifyHomepageCms(revision?: HomepageRevisionMetadata, sections?: HomepageSection[]) {
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(HOMEPAGE_CMS_EVENT));
+    window.dispatchEvent(new CustomEvent(HOMEPAGE_CMS_EVENT, {
+      detail: { revision, sections }
+    }));
   }
 }
 
 /**
- * Fetch all Homepage Sections from Supabase or Cache
+ * Check if a URL refers to an obsolete demo or placeholder asset.
+ * Genuine production assets from Supabase or YouTube are permitted.
  */
-export async function getHomepageSections(): Promise<HomepageSection[]> {
-  let sections: HomepageSection[] = DEFAULT_HOMEPAGE_SECTIONS;
+export function isDemoMedia(url?: string | null): boolean {
+  if (!url || typeof url !== 'string' || !url.trim()) return false;
+  const lower = url.toLowerCase();
+  return (
+    lower.includes('unsplash.com') ||
+    lower.includes('/assets/aistudio/') ||
+    lower.includes('placeholder') ||
+    lower.includes('spwatertankcleaner.com') ||
+    lower.includes('/videos/tank-cleaning') ||
+    lower.includes('scmzivxbsi4')
+  );
+}
 
-  if (typeof window !== 'undefined') {
-    try {
-      const raw = safeGetItem(HOMEPAGE_CACHE_KEY);
-      if (raw) {
-        sections = JSON.parse(raw);
-      }
-    } catch {
-      // Ignore
+/**
+ * Sanitize a homepage section:
+ * Removes any references to demo images, Unsplash, /assets/aistudio/, legacy placeholder videos.
+ * Strictly preserves administrator-configured media without substituting hardcoded video or poster fallbacks.
+ * If media is missing, preserves undefined/empty state so the UI displays neutral container states.
+ */
+export function sanitizeHomepageSection(d: any): HomepageSection {
+  const isHero = d.section_key === 'hero' || d.sectionKey === 'hero' || d.id === 'sec-hero' || d.id === 'hero';
+
+  let videoUrl = d.video_url || d.videoUrl || d.settings?.video1Url || d.content?.video1Url;
+  let mobileVideoUrl = d.mobile_video_url || d.mobileVideoUrl || d.settings?.video2Url || d.content?.video2Url;
+  let video2Url = d.settings?.video2Url || d.content?.video2Url || d.video2Url || d.mobile_video_url;
+  let video3Url = d.settings?.video3Url || d.content?.video3Url || d.video3Url;
+  let posterImageUrl = d.poster_image_url || d.posterImageUrl || d.settings?.posterImage1Url;
+  let posterImage2Url = d.settings?.posterImage2Url || d.content?.posterImage2Url || d.posterImage2Url;
+  let posterImage3Url = d.settings?.posterImage3Url || d.content?.posterImage3Url || d.posterImage3Url;
+  let imageUrl = d.image_url || d.imageUrl;
+
+  // Normalise empty or demo media without substituting any artificial fallback
+  if (isDemoMedia(videoUrl) || !videoUrl || (typeof videoUrl === 'string' && !videoUrl.trim())) videoUrl = undefined;
+  if (isDemoMedia(video2Url) || !video2Url || (typeof video2Url === 'string' && !video2Url.trim())) video2Url = undefined;
+  if (isDemoMedia(mobileVideoUrl) || !mobileVideoUrl || (typeof mobileVideoUrl === 'string' && !mobileVideoUrl.trim())) mobileVideoUrl = undefined;
+  if (isDemoMedia(video3Url) || !video3Url || (typeof video3Url === 'string' && !video3Url.trim())) video3Url = undefined;
+  if (isDemoMedia(posterImageUrl) || !posterImageUrl || (typeof posterImageUrl === 'string' && !posterImageUrl.trim())) posterImageUrl = undefined;
+  if (isDemoMedia(posterImage2Url) || !posterImage2Url || (typeof posterImage2Url === 'string' && !posterImage2Url.trim())) posterImage2Url = undefined;
+  if (isDemoMedia(posterImage3Url) || !posterImage3Url || (typeof posterImage3Url === 'string' && !posterImage3Url.trim())) posterImage3Url = undefined;
+  if (isDemoMedia(imageUrl) || !imageUrl || (typeof imageUrl === 'string' && !imageUrl.trim())) imageUrl = undefined;
+
+  // Deep-clean settings and content
+  const cleanSettings = { ...(d.settings || {}) };
+  const cleanContent = { ...(d.content || {}) };
+
+  if (isHero) {
+    if (cleanSettings.hero) {
+      cleanSettings.hero = {
+        ...cleanSettings.hero,
+        videoUrl,
+        video2Url,
+        mobileVideoUrl,
+        video3Url,
+        mobileVideo2Url: video2Url,
+        mobileVideo3Url: video3Url,
+        posterImageUrl,
+        posterImage2Url,
+        posterImage3Url,
+        bgImageUrl: posterImageUrl
+      };
+    }
+    if (cleanSettings.siteImages) {
+      cleanSettings.siteImages = {
+        ...cleanSettings.siteImages,
+        heroBg: posterImageUrl,
+        heroPoster: posterImageUrl
+      };
+    }
+    cleanContent.video1Url = videoUrl;
+    cleanContent.video2Url = video2Url;
+    cleanContent.video3Url = video3Url;
+    cleanContent.mobileVideoUrl = mobileVideoUrl;
+    cleanContent.posterImage1Url = posterImageUrl;
+    cleanContent.posterImage2Url = posterImage2Url;
+    cleanContent.posterImage3Url = posterImage3Url;
+    if (cleanContent.siteImages) {
+      cleanContent.siteImages = {
+        ...cleanContent.siteImages,
+        heroBg: posterImageUrl,
+        heroPoster: posterImageUrl
+      };
     }
   }
 
-  if (isSupabaseConfigured()) {
-    try {
-      const { data, error } = await supabase
-        .from('homepage_sections')
-        .select('*')
-        .order('sort_order', { ascending: true });
+  // Recursive string sanitizer for settings and content: purges demo strings to undefined
+  const purgeDemoStrings = (obj: any): any => {
+    if (!obj || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(purgeDemoStrings);
+    const result: Record<string, any> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (typeof v === 'string') {
+        if (isDemoMedia(v)) {
+          result[k] = undefined;
+        } else {
+          result[k] = v;
+        }
+      } else if (typeof v === 'object' && v !== null) {
+        result[k] = purgeDemoStrings(v);
+      } else {
+        result[k] = v;
+      }
+    }
+    return result;
+  };
 
-      if (!error && data && data.length > 0) {
-        sections = data.map((d: any) => {
-          const isHero = d.section_key === 'hero' || d.id === 'sec-hero';
-          const isLegacyYt = (url?: string | null) => 
-            !url || url.includes('youtube.com/watch?v=placeholder');
+  const ytId1 = videoUrl ? extractYouTubeId(videoUrl) : null;
 
-          const imageReg = getStoredImageRegistry();
-          let videoUrl = d.video_url || d.settings?.video1Url || d.content?.video1Url || imageReg?.heroVideos?.video1Url || d.settings?.hero?.videoUrl;
-          let mobileVideoUrl = d.mobile_video_url || d.settings?.video2Url || d.content?.video2Url || imageReg?.heroVideos?.video2Url || d.settings?.hero?.video2Url;
-          let video2Url = d.settings?.video2Url || d.content?.video2Url || d.mobile_video_url || imageReg?.heroVideos?.video2Url || d.settings?.hero?.video2Url;
-          let video3Url = d.settings?.video3Url || d.content?.video3Url || imageReg?.heroVideos?.video3Url || d.settings?.hero?.video3Url;
-          let posterImageUrl = d.poster_image_url || d.settings?.posterImage1Url || imageReg?.heroVideos?.poster1Url || d.settings?.hero?.posterImageUrl;
-          let posterImage2Url = d.settings?.posterImage2Url || d.content?.posterImage2Url || imageReg?.heroVideos?.poster2Url || d.settings?.hero?.posterImage2Url;
-          let posterImage3Url = d.settings?.posterImage3Url || d.content?.posterImage3Url || imageReg?.heroVideos?.poster3Url || d.settings?.hero?.posterImage3Url;
-          let mediaType = (d.media_type as BuiltinSectionType) ? (d.media_type as any) : 'video';
+  return {
+    id: d.id,
+    sectionKey: d.section_key || d.sectionKey,
+    sectionType: (d.section_type || d.sectionType) as BuiltinSectionType,
+    title: d.title,
+    titleBn: d.title_bn || d.titleBn,
+    subtitle: d.subtitle,
+    subtitleBn: d.subtitle_bn || d.subtitleBn,
+    description: d.description,
+    descriptionBn: d.description_bn || d.descriptionBn,
+    badge: d.badge,
+    badgeBn: d.badge_bn || d.badgeBn,
+    mediaType: isHero ? (ytId1 ? 'youtube' : (videoUrl ? 'video' : 'none')) : (ytId1 ? 'youtube' : (d.media_type || d.mediaType || 'none')),
+    imageUrl,
+    videoUrl,
+    mobileVideoUrl,
+    video2Url,
+    video3Url,
+    posterImageUrl,
+    posterImage2Url,
+    posterImage3Url,
+    youtubeUrl: ytId1 ? videoUrl : (d.youtube_url || d.youtubeUrl || null),
+    youtubeVideoId: ytId1 || d.youtube_video_id || d.youtubeVideoId || null,
+    buttonText: d.button_text || d.buttonText,
+    buttonTextBn: d.button_text_bn || d.buttonTextBn,
+    buttonUrl: d.button_url || d.buttonUrl,
+    buttonIcon: d.button_icon || d.buttonIcon,
+    buttonEvent: d.button_event || d.buttonEvent,
+    secondaryButtonText: d.secondary_button_text || d.secondaryButtonText,
+    secondaryButtonTextBn: d.secondary_button_text_bn || d.secondaryButtonTextBn,
+    secondaryButtonUrl: d.secondary_button_url || d.secondaryButtonUrl,
+    secondaryButtonEvent: d.secondary_button_event || d.secondaryButtonEvent,
+    content: purgeDemoStrings(cleanContent),
+    settings: purgeDemoStrings(cleanSettings),
+    isEnabled: Boolean(d.is_enabled ?? d.isEnabled ?? true),
+    sortOrder: Number(d.sort_order ?? d.sortOrder ?? 1),
+    status: d.status || 'published',
+    createdAt: d.created_at || d.createdAt,
+    updatedAt: d.updated_at || d.updatedAt
+  };
+}
 
-          if (isHero) {
-            if (isLegacyYt(videoUrl)) {
-              videoUrl = '/videos/tank-cleaning-desktop.mp4';
-              mediaType = 'video';
-            }
-            if (!video2Url || isLegacyYt(video2Url)) {
-              video2Url = (mobileVideoUrl && !isLegacyYt(mobileVideoUrl)) ? mobileVideoUrl : '/videos/tank-cleaning-mobile.mp4';
-            }
-            if (isLegacyYt(mobileVideoUrl)) {
-              mobileVideoUrl = video2Url;
-            }
-            if (!video3Url || isLegacyYt(video3Url)) {
-              video3Url = '';
-            }
-            if (!posterImageUrl) {
-              posterImageUrl = '/assets/aistudio/hero-rooftop-poster.jpg';
-            }
-            if (!posterImage2Url) {
-              posterImage2Url = '/assets/aistudio/hero-underground-poster.jpg';
-            }
-            if (!posterImage3Url) {
-              posterImage3Url = '/assets/aistudio/hero-underground-poster.jpg';
-            }
-          }
+/**
+ * Retrieve cached homepage payload with validated revision.
+ * Automatically purges stale or corrupted cache entries.
+ */
+export function getStoredHomepagePayload(): CachedHomepagePayload | null {
+  if (typeof window === 'undefined') return null;
 
-          const ytId1 = extractYouTubeId(videoUrl);
+  try {
+    const raw = safeGetItem(HOMEPAGE_CACHE_KEY);
+    if (!raw) return null;
 
-          return {
-            id: d.id,
-            sectionKey: d.section_key,
-            sectionType: d.section_type as BuiltinSectionType,
-            title: d.title,
-            titleBn: d.title_bn,
-            subtitle: d.subtitle,
-            subtitleBn: d.subtitle_bn,
-            description: d.description,
-            descriptionBn: d.description_bn,
-            badge: d.badge,
-            badgeBn: d.badge_bn,
-            mediaType: ytId1 ? 'youtube' : mediaType,
-            imageUrl: d.image_url,
-            videoUrl,
-            mobileVideoUrl,
-            video2Url,
-            video3Url,
-            posterImageUrl,
-            posterImage2Url,
-            posterImage3Url,
-            youtubeUrl: ytId1 ? videoUrl : (isHero && isLegacyYt(d.youtube_url) ? null : d.youtube_url),
-            youtubeVideoId: ytId1 || (isHero && isLegacyYt(d.youtube_video_id) ? null : d.youtube_video_id),
-            buttonText: d.button_text,
-            buttonTextBn: d.button_text_bn,
-            buttonUrl: d.button_url,
-            buttonIcon: d.button_icon,
-            buttonEvent: d.button_event,
-            secondaryButtonText: d.secondary_button_text,
-            secondaryButtonTextBn: d.secondary_button_text_bn,
-            secondaryButtonUrl: d.secondary_button_url,
-            secondaryButtonEvent: d.secondary_button_event,
-            content: d.content || {},
-            settings: d.settings || {},
-            isEnabled: Boolean(d.is_enabled),
-            sortOrder: Number(d.sort_order),
-            status: d.status || 'published',
-            createdAt: d.created_at,
-            updatedAt: d.updated_at
-          };
-        });
+    // Reject any cache containing legacy demo or unsplash artifacts
+    if (
+      raw.includes('/assets/aistudio/') ||
+      raw.includes('images.unsplash.com') ||
+      raw.includes('spwatertankcleaner.com') ||
+      raw.includes('/videos/tank-cleaning') ||
+      raw.includes('ScMzIvxBSi4')
+    ) {
+      safeRemoveItem(HOMEPAGE_CACHE_KEY);
+      return null;
+    }
 
-        if (typeof window !== 'undefined') {
-          safeSetItem(HOMEPAGE_CACHE_KEY, JSON.stringify(sections));
+    const parsed = JSON.parse(raw);
+
+    // Format: Versioned payload with structured revision
+    if (
+      parsed && 
+      parsed.revision && 
+      typeof parsed.revision.version === 'number' &&
+      Array.isArray(parsed.sections)
+    ) {
+      return {
+        revision: parsed.revision,
+        sections: parsed.sections.map(sanitizeHomepageSection),
+        cachedAt: Number(parsed.cachedAt || Date.now())
+      };
+    }
+  } catch {
+    safeRemoveItem(HOMEPAGE_CACHE_KEY);
+  }
+
+  return null;
+}
+
+/**
+ * Fetch authoritative Homepage Sections and persistent, monotonic Revision Metadata.
+ * Implements in-flight request deduplication to prevent duplicate Supabase network requests.
+ * Crucially: NEVER increments revision on read. Revision changes only after successful admin publishing.
+ */
+export async function getHomepageSectionsWithRevision(): Promise<{
+  sections: HomepageSection[];
+  revision: HomepageRevisionMetadata;
+}> {
+  // If a fetch is already in flight, await and share the existing promise
+  if (activeSectionsFetchPromise) {
+    return activeSectionsFetchPromise;
+  }
+
+  activeSectionsFetchPromise = (async () => {
+    let sections: HomepageSection[] = DEFAULT_HOMEPAGE_SECTIONS;
+    let revision: HomepageRevisionMetadata = DEFAULT_HOMEPAGE_REVISION;
+
+    // Check SSR / window hydration snapshot
+    if (typeof window !== 'undefined') {
+      const windowSnapshot = (window as any).__INITIAL_HOMEPAGE_SECTIONS__;
+      const windowRev = (window as any).__HOMEPAGE_REVISION__;
+      if (Array.isArray(windowSnapshot) && windowSnapshot.length > 0) {
+        sections = windowSnapshot.map(sanitizeHomepageSection);
+        if (windowRev && typeof windowRev.version === 'number') {
+          revision = windowRev;
+        }
+      } else {
+        const cachedPayload = getStoredHomepagePayload();
+        if (cachedPayload && cachedPayload.sections.length > 0) {
+          sections = cachedPayload.sections;
+          revision = cachedPayload.revision;
         }
       }
-    } catch (err) {
-      console.warn('Could not query homepage_sections from Supabase:', err);
     }
-  }
 
-  return sections.sort((a, b) => a.sortOrder - b.sortOrder);
+    // Fetch authoritative data from Supabase Database
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase
+          .from('homepage_sections')
+          .select('*')
+          .order('sort_order', { ascending: true });
+
+        if (!error && data && data.length > 0) {
+          const freshSections = data.map(sanitizeHomepageSection).sort((a, b) => a.sortOrder - b.sortOrder);
+
+          // Extract database-backed persistent revision from sec-hero row
+          const heroRow = data.find(r => r.id === 'sec-hero' || r.section_key === 'hero') || data[0];
+          const storedRev = heroRow?.content?.revision || heroRow?.settings?.revision;
+
+          let resolvedRevision: HomepageRevisionMetadata;
+
+          if (storedRev && typeof storedRev.version === 'number' && storedRev.revisionId) {
+            resolvedRevision = {
+              revisionId: storedRev.revisionId,
+              version: storedRev.version,
+              publishedAt: storedRev.publishedAt || heroRow.updated_at || new Date().toISOString(),
+              publishedBy: storedRev.publishedBy || 'administrator',
+              source: 'database'
+            };
+          } else {
+            // Stable baseline revision derived from database timestamp (NEVER increments on read!)
+            const latestTimestamp = new Date(heroRow?.updated_at || 0).getTime() || 1794503818912;
+            resolvedRevision = {
+              revisionId: `rev_${latestTimestamp}`,
+              version: 12, // STABLE MONOTONIC BASELINE (constant on reads)
+              publishedAt: new Date(latestTimestamp).toISOString(),
+              publishedBy: 'supabase_database',
+              source: 'database'
+            };
+          }
+
+          if (typeof window !== 'undefined') {
+            const cachePayload: CachedHomepagePayload = {
+              revision: resolvedRevision,
+              sections: freshSections,
+              cachedAt: Date.now()
+            };
+            safeSetItem(HOMEPAGE_CACHE_KEY, JSON.stringify(cachePayload));
+          }
+
+          return { sections: freshSections, revision: resolvedRevision };
+        }
+      } catch (err) {
+        console.warn('[HomepageCmsService] Supabase database query notice:', err);
+      }
+
+      // Fallback: Query published JSON snapshot from Supabase Storage config folder
+      try {
+        const { data: pubData } = supabase.storage
+          .from(BUCKET_NAME)
+          .getPublicUrl(`${CONFIG_FOLDER}/homepage_sections_published.json`);
+
+        if (pubData?.publicUrl) {
+          const res = await fetch(`${pubData.publicUrl}?t=${Date.now()}`, {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+          });
+
+          if (res.ok) {
+            const remoteJson = await res.json();
+            let remoteSections: any[] = [];
+            let remoteRev: HomepageRevisionMetadata = revision;
+
+            if (Array.isArray(remoteJson)) {
+              remoteSections = remoteJson;
+            } else if (remoteJson && Array.isArray(remoteJson.sections)) {
+              remoteSections = remoteJson.sections;
+              if (remoteJson.revision && typeof remoteJson.revision.version === 'number') {
+                remoteRev = {
+                  ...remoteJson.revision,
+                  source: 'storage_config'
+                };
+              }
+            }
+
+            if (remoteSections.length > 0) {
+              const freshSections = remoteSections.map(sanitizeHomepageSection).sort((a, b) => a.sortOrder - b.sortOrder);
+              if (typeof window !== 'undefined') {
+                safeSetItem(HOMEPAGE_CACHE_KEY, JSON.stringify({
+                  revision: remoteRev,
+                  sections: freshSections,
+                  cachedAt: Date.now()
+                }));
+              }
+              return { sections: freshSections, revision: remoteRev };
+            }
+          }
+        }
+      } catch (storageErr) {
+        console.warn('[HomepageCmsService] Supabase storage published json query notice:', storageErr);
+      }
+    }
+
+    return { sections, revision };
+  })().finally(() => {
+    activeSectionsFetchPromise = null;
+  });
+
+  return activeSectionsFetchPromise;
 }
 
 /**
- * Save single or updated section to Supabase
+ * Fetch all Homepage Sections (convenience wrapper returning sections array)
+ */
+export async function getHomepageSections(): Promise<HomepageSection[]> {
+  const result = await getHomepageSectionsWithRevision();
+  return result.sections;
+}
+
+/**
+ * Save single or updated section to Supabase.
+ * Strictly guarantees that:
+ * 1. Database operation is executed FIRST.
+ * 2. If database operation fails, NO local cache update is made and false is returned.
+ * 3. On success, a new persistent monotonic revision (version + 1) is created and stored in Supabase.
+ * 4. Local cache is updated with the new revision and published events are broadcasted.
  */
 export async function saveHomepageSection(section: HomepageSection): Promise<boolean> {
   const isHero = section.sectionKey === 'hero' || section.id === 'hero' || section.id === 'sec-hero';
   const targetId = isHero ? 'sec-hero' : section.id;
 
-  const current = await getHomepageSections();
-  const exists = current.some(s => s.id === targetId || (isHero && s.sectionKey === 'hero'));
-  const updatedSection: HomepageSection = {
-    ...section,
-    id: targetId,
-    sectionKey: isHero ? 'hero' : section.sectionKey,
-    updatedAt: new Date().toISOString()
-  };
-
-  const updatedList = exists
-    ? current.map(s => (s.id === targetId || (isHero && s.sectionKey === 'hero')) ? updatedSection : s)
-    : [...current, updatedSection];
-
-  if (typeof window !== 'undefined') {
-    safeSetItem(HOMEPAGE_CACHE_KEY, JSON.stringify(updatedList));
+  if (!isSupabaseConfigured()) {
+    console.warn('[HomepageCmsService] Supabase is not configured. Operation aborted.');
+    return false;
   }
-  notifyHomepageCms();
 
-  if (isSupabaseConfigured()) {
-    try {
-      const v1 = updatedSection.videoUrl || null;
-      const v2 = updatedSection.video2Url || updatedSection.mobileVideoUrl || null;
-      const v3 = updatedSection.video3Url || null;
-      const p1 = updatedSection.posterImageUrl || null;
-      const p2 = updatedSection.posterImage2Url || null;
-      const p3 = updatedSection.posterImage3Url || null;
+  try {
+    const currentData = await getHomepageSectionsWithRevision();
+    const currentSections = currentData.sections;
+    const currentVersion = currentData.revision.version || 11;
 
-      const ytId1 = extractYouTubeId(v1);
+    // Calculate persistent, monotonic incremented version
+    const nextVersion = currentVersion + 1;
+    const publishedTimestamp = new Date().toISOString();
+    const newRevision: HomepageRevisionMetadata = {
+      revisionId: `rev_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      version: nextVersion,
+      publishedAt: publishedTimestamp,
+      publishedBy: 'administrator',
+      source: 'database'
+    };
 
-      const sectionSettings = {
-        ...(updatedSection.settings || {}),
-        video1Url: v1,
-        video2Url: v2,
-        video3Url: v3,
-        mobileVideoUrl: v2,
-        posterImage1Url: p1,
-        posterImage2Url: p2,
-        posterImage3Url: p3,
-      };
+    const exists = currentSections.some(s => s.id === targetId || (isHero && s.sectionKey === 'hero'));
+    const updatedSection: HomepageSection = {
+      ...section,
+      id: targetId,
+      sectionKey: isHero ? 'hero' : section.sectionKey,
+      updatedAt: publishedTimestamp
+    };
 
-      const sectionContent = {
-        ...(updatedSection.content || {}),
-        video1Url: v1,
-        video2Url: v2,
-        video3Url: v3,
-        mobileVideoUrl: v2,
-        posterImage1Url: p1,
-        posterImage2Url: p2,
-        posterImage3Url: p3,
-      };
+    const v1 = updatedSection.videoUrl || null;
+    const v2 = updatedSection.video2Url || updatedSection.mobileVideoUrl || null;
+    const v3 = updatedSection.video3Url || null;
+    const p1 = updatedSection.posterImageUrl || null;
+    const p2 = updatedSection.posterImage2Url || null;
+    const p3 = updatedSection.posterImage3Url || null;
 
-      const payload = {
-        id: targetId,
-        section_key: updatedSection.sectionKey,
-        section_type: updatedSection.sectionType,
-        title: updatedSection.title || null,
-        title_bn: updatedSection.titleBn || null,
-        subtitle: updatedSection.subtitle || null,
-        subtitle_bn: updatedSection.subtitleBn || null,
-        description: updatedSection.description || null,
-        description_bn: updatedSection.descriptionBn || null,
-        badge: updatedSection.badge || null,
-        badge_bn: updatedSection.badgeBn || null,
-        media_type: ytId1 ? 'youtube' : (updatedSection.mediaType || 'none'),
-        image_url: updatedSection.imageUrl || null,
-        video_url: v1,
-        mobile_video_url: v2,
-        poster_image_url: p1,
-        youtube_url: ytId1 ? v1 : (updatedSection.youtubeUrl || null),
-        youtube_video_id: ytId1 || updatedSection.youtubeVideoId || null,
-        button_text: updatedSection.buttonText || null,
-        button_text_bn: updatedSection.buttonTextBn || null,
-        button_url: updatedSection.buttonUrl || null,
-        button_icon: updatedSection.buttonIcon || null,
-        button_event: updatedSection.buttonEvent || null,
-        secondary_button_text: updatedSection.secondaryButtonText || null,
-        secondary_button_text_bn: updatedSection.secondaryButtonTextBn || null,
-        secondary_button_url: updatedSection.secondaryButtonUrl || null,
-        secondary_button_event: updatedSection.secondaryButtonEvent || null,
-        content: sectionContent,
-        settings: sectionSettings,
-        is_enabled: updatedSection.isEnabled,
-        sort_order: updatedSection.sortOrder,
-        status: updatedSection.status || 'published',
-        updated_at: updatedSection.updatedAt
-      };
+    const ytId1 = v1 ? extractYouTubeId(v1) : null;
 
-      // Perform update targeting targetId (avoids RLS 42501 on insert)
-      const { error: updateError } = await supabase
+    const sectionSettings = {
+      ...(updatedSection.settings || {}),
+      video1Url: v1,
+      video2Url: v2,
+      video3Url: v3,
+      mobileVideoUrl: v2,
+      posterImage1Url: p1,
+      posterImage2Url: p2,
+      posterImage3Url: p3,
+      revision: newRevision
+    };
+
+    const sectionContent = {
+      ...(updatedSection.content || {}),
+      video1Url: v1,
+      video2Url: v2,
+      video3Url: v3,
+      mobileVideoUrl: v2,
+      posterImage1Url: p1,
+      posterImage2Url: p2,
+      posterImage3Url: p3,
+      revision: newRevision
+    };
+
+    const payload = {
+      id: targetId,
+      section_key: updatedSection.sectionKey,
+      section_type: updatedSection.sectionType,
+      title: updatedSection.title || null,
+      title_bn: updatedSection.titleBn || null,
+      subtitle: updatedSection.subtitle || null,
+      subtitle_bn: updatedSection.subtitleBn || null,
+      description: updatedSection.description || null,
+      description_bn: updatedSection.descriptionBn || null,
+      badge: updatedSection.badge || null,
+      badge_bn: updatedSection.badgeBn || null,
+      media_type: ytId1 ? 'youtube' : (v1 ? 'video' : (updatedSection.mediaType || 'none')),
+      image_url: updatedSection.imageUrl || null,
+      video_url: v1,
+      mobile_video_url: v2,
+      poster_image_url: p1,
+      youtube_url: ytId1 ? v1 : (updatedSection.youtubeUrl || null),
+      youtube_video_id: ytId1 || updatedSection.youtubeVideoId || null,
+      button_text: updatedSection.buttonText || null,
+      button_text_bn: updatedSection.buttonTextBn || null,
+      button_url: updatedSection.buttonUrl || null,
+      button_icon: updatedSection.buttonIcon || null,
+      button_event: updatedSection.buttonEvent || null,
+      secondary_button_text: updatedSection.secondaryButtonText || null,
+      secondary_button_text_bn: updatedSection.secondaryButtonTextBn || null,
+      secondary_button_url: updatedSection.secondaryButtonUrl || null,
+      secondary_button_event: updatedSection.secondaryButtonEvent || null,
+      content: sectionContent,
+      settings: sectionSettings,
+      is_enabled: updatedSection.isEnabled,
+      sort_order: updatedSection.sortOrder,
+      status: updatedSection.status || 'published',
+      updated_at: updatedSection.updatedAt
+    };
+
+    // Step 1: Execute Supabase Database update with .select() to verify affected rows
+    const { data: updateData, error: updateError } = await supabase
+      .from('homepage_sections')
+      .update(payload)
+      .eq('id', targetId)
+      .select();
+
+    let writeSucceeded = false;
+    let savedRow: any = null;
+
+    if (!updateError && Array.isArray(updateData) && updateData.length > 0) {
+      writeSucceeded = true;
+      savedRow = updateData[0];
+    } else {
+      console.warn(`[HomepageCmsService] Row ${targetId} not updated directly, performing safe upsert...`);
+      const { data: upsertData, error: upsertError } = await supabase
         .from('homepage_sections')
-        .update(payload)
-        .eq('id', targetId);
+        .upsert(payload, { onConflict: 'id' })
+        .select();
 
-      if (updateError) {
-        console.warn('Supabase update notice, attempting upsert:', updateError.message);
-        const { error: upsertError } = await supabase
+      if (!upsertError && Array.isArray(upsertData) && upsertData.length > 0) {
+        writeSucceeded = true;
+        savedRow = upsertData[0];
+      } else {
+        console.error('[HomepageCmsService] Database saveHomepageSection failed on both update and upsert:', upsertError?.message || updateError?.message);
+        return false;
+      }
+    }
+
+    if (!writeSucceeded || !savedRow) {
+      console.error('[HomepageCmsService] Database write verification failed: zero rows affected.');
+      return false;
+    }
+
+    // Step 2: Strict Read-back verification: confirm media references match submitted values
+    if (isHero) {
+      const savedV1 = savedRow.video_url || savedRow.content?.video1Url || savedRow.settings?.video1Url;
+      const savedPoster = savedRow.poster_image_url || savedRow.content?.poster1Url || savedRow.settings?.poster1Url;
+      const expectedImg = updatedSection.imageUrl || null;
+      const savedImg = savedRow.image_url || savedRow.content?.image || savedRow.settings?.image;
+
+      let mismatchReason = '';
+      if (v1 && savedV1 && savedV1 !== v1) {
+        mismatchReason = `Hero video mismatch: expected ${v1}, database holds ${savedV1}`;
+      } else if (p1 && savedPoster && savedPoster !== p1) {
+        mismatchReason = `Hero poster mismatch: expected ${p1}, database holds ${savedPoster}`;
+      } else if (expectedImg && savedImg && savedImg !== expectedImg) {
+        mismatchReason = `Hero image mismatch: expected ${expectedImg}, database holds ${savedImg}`;
+      }
+
+      if (mismatchReason) {
+        console.error(`[HomepageCmsService] Strict media verification failed: ${mismatchReason}`);
+        // Attempt immediate reconciliation by re-updating with explicit overrides
+        const { data: fixData, error: fixErr } = await supabase
           .from('homepage_sections')
-          .upsert(payload, { onConflict: 'id' });
-        if (upsertError) {
-          console.error('Supabase saveHomepageSection error:', upsertError);
+          .update({
+            video_url: v1,
+            poster_image_url: p1,
+            image_url: expectedImg,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', targetId)
+          .select();
+
+        const fixedV1 = fixData?.[0]?.video_url;
+        if (fixErr || (v1 && fixedV1 && fixedV1 !== v1)) {
+          console.error('[HomepageCmsService] Media reconciliation failed. Aborting partial publication.');
           return false;
         }
       }
+    }
 
-      return true;
-    } catch (err) {
-      console.error('Failed to save homepage section:', err);
+    const updatedList = exists
+      ? currentSections.map(s => (s.id === targetId || (isHero && s.sectionKey === 'hero')) ? updatedSection : s)
+      : [...currentSections, updatedSection];
+
+    const sanitizedList = updatedList.map(sanitizeHomepageSection).sort((a, b) => a.sortOrder - b.sortOrder);
+
+    // Step 3: Persist published snapshot & revision metadata to Supabase Storage config folder
+    const storagePayload = {
+      revision: newRevision,
+      sections: sanitizedList,
+      publishedAt: newRevision.publishedAt
+    };
+    const payloadString = JSON.stringify(storagePayload, null, 2);
+
+    const { error: storeSecErr } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(`${CONFIG_FOLDER}/homepage_sections_published.json`, new Blob([payloadString], { type: 'application/json' }), {
+        cacheControl: '0',
+        upsert: true,
+        contentType: 'application/json'
+      });
+
+    if (storeSecErr) {
+      console.error('[HomepageCmsService] Storage published snapshot upload failed:', storeSecErr.message);
       return false;
     }
-  }
 
-  return true;
+    const { error: storeRevErr } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(`${CONFIG_FOLDER}/homepage_revision.json`, new Blob([JSON.stringify(newRevision, null, 2)], { type: 'application/json' }), {
+        cacheControl: '0',
+        upsert: true,
+        contentType: 'application/json'
+      });
+
+    if (storeRevErr) {
+      console.error('[HomepageCmsService] Storage revision upload failed:', storeRevErr.message);
+      return false;
+    }
+
+    // Step 3: Update local cache with validated monotonic revision
+    if (typeof window !== 'undefined') {
+      const cachePayload: CachedHomepagePayload = {
+        revision: newRevision,
+        sections: sanitizedList,
+        cachedAt: Date.now()
+      };
+      safeSetItem(HOMEPAGE_CACHE_KEY, JSON.stringify(cachePayload));
+    }
+
+    // Step 4: Broadcast update event
+    notifyHomepageCms(newRevision, sanitizedList);
+
+    return true;
+  } catch (err) {
+    console.error('[HomepageCmsService] Failed to save homepage section:', err);
+    return false;
+  }
 }
 
 /**
- * Reorder sections and save new sort order in Supabase
+ * Reorder sections and save new sort order in Supabase.
+ * Generates an incremented monotonic revision only upon confirmed database commit.
  */
 export async function reorderHomepageSections(sections: HomepageSection[]): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  const publishedTimestamp = new Date().toISOString();
   const normalized = sections.map((sec, idx) => ({
     ...sec,
     sortOrder: idx + 1,
-    updatedAt: new Date().toISOString()
+    updatedAt: publishedTimestamp
   }));
 
-  if (typeof window !== 'undefined') {
-    safeSetItem(HOMEPAGE_CACHE_KEY, JSON.stringify(normalized));
-  }
-  notifyHomepageCms();
+  try {
+    const currentData = await getHomepageSectionsWithRevision();
+    const nextVersion = (currentData.revision.version || 11) + 1;
+    const newRevision: HomepageRevisionMetadata = {
+      revisionId: `rev_${Date.now()}_reorder`,
+      version: nextVersion,
+      publishedAt: publishedTimestamp,
+      publishedBy: 'administrator',
+      source: 'database'
+    };
 
-  if (isSupabaseConfigured()) {
-    try {
-      const updates = normalized.map(sec => ({
-        id: sec.id,
-        section_key: sec.sectionKey,
-        section_type: sec.sectionType,
-        sort_order: sec.sortOrder,
-        is_enabled: sec.isEnabled,
-        status: sec.status,
-        updated_at: sec.updatedAt
-      }));
+    const updates = normalized.map(sec => ({
+      id: sec.id,
+      section_key: sec.sectionKey,
+      section_type: sec.sectionType,
+      sort_order: sec.sortOrder,
+      is_enabled: sec.isEnabled,
+      status: sec.status,
+      updated_at: sec.updatedAt
+    }));
 
-      const { error } = await supabase
-        .from('homepage_sections')
-        .upsert(updates, { onConflict: 'id' });
+    const { error } = await supabase
+      .from('homepage_sections')
+      .upsert(updates, { onConflict: 'id' });
 
-      if (error) {
-        console.error('Supabase reorderHomepageSections error:', error);
-        return false;
-      }
-      return true;
-    } catch (err) {
-      console.error('Failed to reorder sections in Supabase:', err);
+    if (error) {
+      console.error('[HomepageCmsService] Supabase reorderHomepageSections error:', error);
       return false;
     }
-  }
 
-  return true;
+    const sanitizedList = normalized.map(sanitizeHomepageSection).sort((a, b) => a.sortOrder - b.sortOrder);
+
+    // Persist to storage
+    try {
+      const storagePayload = {
+        revision: newRevision,
+        sections: sanitizedList,
+        publishedAt: newRevision.publishedAt
+      };
+      await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(`${CONFIG_FOLDER}/homepage_sections_published.json`, new Blob([JSON.stringify(storagePayload, null, 2)], { type: 'application/json' }), {
+          cacheControl: '0',
+          upsert: true,
+          contentType: 'application/json'
+        });
+    } catch {}
+
+    // Update local cache
+    if (typeof window !== 'undefined') {
+      safeSetItem(HOMEPAGE_CACHE_KEY, JSON.stringify({
+        revision: newRevision,
+        sections: sanitizedList,
+        cachedAt: Date.now()
+      }));
+    }
+
+    notifyHomepageCms(newRevision, sanitizedList);
+    return true;
+  } catch (err) {
+    console.error('[HomepageCmsService] Failed to reorder sections in Supabase:', err);
+    return false;
+  }
 }
 
 /**
- * Delete a section from Supabase
+ * Delete a section from Supabase and generate an incremented revision upon confirmation.
  */
 export async function deleteHomepageSection(id: string): Promise<boolean> {
-  const current = await getHomepageSections();
-  const filtered = current.filter(s => s.id !== id);
+  if (!isSupabaseConfigured()) return false;
 
-  if (typeof window !== 'undefined') {
-    safeSetItem(HOMEPAGE_CACHE_KEY, JSON.stringify(filtered));
-  }
-  notifyHomepageCms();
+  try {
+    const currentData = await getHomepageSectionsWithRevision();
+    const filtered = currentData.sections.filter(s => s.id !== id);
 
-  if (isSupabaseConfigured()) {
-    try {
-      const { error } = await supabase
-        .from('homepage_sections')
-        .delete()
-        .eq('id', id);
+    const { error } = await supabase
+      .from('homepage_sections')
+      .delete()
+      .eq('id', id);
 
-      if (error) {
-        console.error('Supabase deleteHomepageSection error:', error);
-        return false;
-      }
-      return true;
-    } catch (err) {
-      console.error('Failed to delete section in Supabase:', err);
+    if (error) {
+      console.error('[HomepageCmsService] Supabase deleteHomepageSection error:', error);
       return false;
     }
-  }
 
-  return true;
+    const nextVersion = (currentData.revision.version || 11) + 1;
+    const newRevision: HomepageRevisionMetadata = {
+      revisionId: `rev_${Date.now()}_delete`,
+      version: nextVersion,
+      publishedAt: new Date().toISOString(),
+      publishedBy: 'administrator',
+      source: 'database'
+    };
+
+    if (typeof window !== 'undefined') {
+      safeSetItem(HOMEPAGE_CACHE_KEY, JSON.stringify({
+        revision: newRevision,
+        sections: filtered,
+        cachedAt: Date.now()
+      }));
+    }
+
+    notifyHomepageCms(newRevision, filtered);
+    return true;
+  } catch (err) {
+    console.error('[HomepageCmsService] Failed to delete section in Supabase:', err);
+    return false;
+  }
 }
 
 /**
@@ -682,7 +764,7 @@ export async function duplicateHomepageSection(section: HomepageSection): Promis
 }
 
 /**
- * Add a new Custom Section with a safe predefined template
+ * Add a new Custom Section with a clean template (zero demo/sample video IDs)
  */
 export async function createCustomSection(
   template: CustomSectionTemplate,
@@ -704,10 +786,10 @@ export async function createCustomSection(
     subtitleBn: 'বিশেষায়িত ওয়াটার ট্যাংক ও স্বাস্থ্যসেবা',
     description: 'Customized solutions for residential and commercial water reservoirs in Dhaka.',
     descriptionBn: 'ঢাকা শহরের বাসাবাড়ি ও ভবনের পানি সুরক্ষায় কাস্টমাইজড সমাধান।',
-    mediaType: template === 'video' ? 'youtube' : template.includes('image') ? 'image' : 'none',
-    imageUrl: template.includes('image') ? 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg' : undefined,
-    youtubeUrl: template === 'video' ? 'https://www.youtube.com/watch?v=ScMzIvxBSi4' : undefined,
-    youtubeVideoId: template === 'video' ? 'ScMzIvxBSi4' : undefined,
+    mediaType: template === 'video' ? 'video' : template.includes('image') ? 'image' : 'none',
+    imageUrl: undefined,
+    youtubeUrl: undefined,
+    youtubeVideoId: undefined,
     buttonText: 'Book Service',
     buttonTextBn: 'বুকিং করুন',
     buttonUrl: '#quote',

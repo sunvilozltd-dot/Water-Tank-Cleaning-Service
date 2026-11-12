@@ -159,6 +159,7 @@ export const BlogTab: React.FC<BlogTabProps> = ({
       {isModalOpen && (
         <BlogPostModal
           post={selectedPost}
+          allPosts={posts}
           onClose={() => setIsModalOpen(false)}
           onSave={(saved) => {
             onSavePost(saved);

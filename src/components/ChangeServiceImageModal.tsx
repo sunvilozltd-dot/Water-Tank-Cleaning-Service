@@ -30,35 +30,35 @@ export const CURATED_WATER_TANK_IMAGES = [
     id: 'rooftop-tank-official',
     titleBn: 'ছাদের ওভারহেড পানির ট্যাংক ক্লিনিং',
     titleEn: 'Rooftop Overhead Water Tank Cleaning',
-    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    url: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     description: 'Clean rooftop water storage tank with high-pressure rotary jet'
   },
   {
     id: 'underground-wash-official',
     titleBn: 'আন্ডারগ্রাউন্ড রিজার্ভার মেকানাইজড ডিপ ক্লিন',
     titleEn: 'Underground Reservoir Deep Wash',
-    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    url: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
     description: 'Submersible sludge extraction & deep disinfection'
   },
   {
     id: 'pipeline-flush-official',
     titleBn: 'পানির পাইপলাইন হাইড্রো-পালস ফ্লাশিং',
     titleEn: 'Water Pipeline Hydro-Pulse Flushing',
-    url: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+    url: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
     description: 'Non-invasive pipe descaling without breaking walls'
   },
   {
     id: 'rooftop-poster-asset',
     titleBn: 'ছাদের ট্যাংক রিয়েল জব পোস্টার',
     titleEn: 'Rooftop Tank Real Job Poster',
-    url: '/assets/aistudio/hero-rooftop-poster.jpg',
+    url: 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg',
     description: 'Real verified cleaning operation by Sunviloz team'
   },
   {
     id: 'underground-poster-asset',
     titleBn: 'আন্ডারগ্রাউন্ড ট্যাংক রিয়েল জব পোস্টার',
     titleEn: 'Underground Tank Real Job Poster',
-    url: '/assets/aistudio/hero-underground-poster.jpg',
+    url: 'https://img.youtube.com/vi/WY01Mrj5tzc/hqdefault.jpg',
     description: 'Real verified subterranean reservoir desiltation'
   }
 ];
@@ -163,11 +163,17 @@ export const ChangeServiceImageModal: React.FC<ChangeServiceImageModalProps> = (
 
     try {
       setUploadLoading(true);
-      // 1. Update service locally & trigger local broadcast
-      await updateService(service.id, { image: imageUrl, featured_image: imageUrl });
+      setErrorMessage('');
 
-      // 2. Persist to Supabase Storage & Database for global cross-device synchronization
-      await persistImageChange('service', service.slug || service.id, imageUrl, service.id);
+      // 1. Persist to Supabase Storage & Database for global cross-device synchronization first
+      const persistRes = await persistImageChange('service', service.slug || service.id, imageUrl, service.id);
+
+      if (!persistRes.success) {
+        console.warn('Remote image persistence notice:', persistRes.error);
+      }
+
+      // 2. Update service locally & trigger local broadcast
+      await updateService(service.id, { image: imageUrl, featured_image: imageUrl });
 
       setSaveSuccess(true);
       if (onImageUpdated) {
@@ -178,9 +184,9 @@ export const ChangeServiceImageModal: React.FC<ChangeServiceImageModalProps> = (
         setSaveSuccess(false);
         onClose();
       }, 500);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save service image:', err);
-      setErrorMessage(lang === 'bn' ? 'ছবি সংরক্ষণ করতে সমস্যা হয়েছে' : 'Failed to save image');
+      setErrorMessage(lang === 'bn' ? `ছবি সংরক্ষণ করতে সমস্যা হয়েছে: ${err?.message || ''}` : `Failed to save image: ${err?.message || ''}`);
     } finally {
       setUploadLoading(false);
     }

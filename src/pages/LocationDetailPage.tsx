@@ -61,8 +61,8 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
         canonicalUrl={`https://sunvilozcleancare.com/service-areas/${location.slug}`}
         serviceSchema={{
           name: `Water Tank Cleaning Service in ${location.areaName}`,
-          serviceType: 'Water Tank Cleaning Service',
-          description: location.intro || `Professional rooftop overhead and underground water tank cleaning service in ${location.areaName}, Dhaka.`
+          serviceType: 'Water Tank Cleaner & Cleaning Service',
+          description: location.intro || `Professional rooftop overhead and underground water tank cleaner and cleaning service in ${location.areaName}, Dhaka.`
         }}
         breadcrumbs={breadcrumbsList}
         faqSchema={structuredFaqs}
@@ -136,10 +136,10 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
 
       {/* 2. Water Condition & Sediment Profile for this Area */}
       {location.waterConditionNote && (
-        <section className="bg-white border border-[#E2E8F0] rounded-2xl p-6 sm:p-8 shadow-sm">
+        <section className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-8 shadow-sm">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[#E8F5F3] text-[#0D9488] border border-[#0D9488]/30 flex items-center justify-center shrink-0">
-              <Droplets className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-2xl bg-[#E8F5F3] text-[#0D9488] border border-[#0D9488]/30 flex items-center justify-center shrink-0">
+              <Droplets className="w-6 h-6" />
             </div>
             <div className="space-y-2">
               <h2 className="text-lg sm:text-xl font-bold text-[#123047]">
@@ -153,7 +153,162 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
         </section>
       )}
 
-      {/* 3. Coverage Details & Pricing Structure Grid */}
+      {/* 3. Core Specialized Services in this Locality */}
+      <section className="space-y-6">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#0D9488] bg-[#E8F5F3] px-3.5 py-1 rounded-full border border-[#0D9488]/30">
+            {lang === 'bn' ? `${location.areaNameBn}-এ আমাদের বিশেষায়িত সেবা` : `Services Available in ${location.areaName}`}
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#123047] tracking-tight">
+            {lang === 'bn' ? 'ওভারহেড, আন্ডারগ্রাউন্ড ও পাইপলাইন পরিচ্ছন্নতা' : 'Overhead, Reserve & Pipeline Cleaning'}
+          </h2>
+          <p className="text-xs sm:text-sm text-[#64748B]">
+            {lang === 'bn'
+              ? 'বাসা, অ্যাপার্টমেন্ট ভবন ও বাণিজ্যিক প্রাঙ্গণে আধুনিক যন্ত্রপাতির সমন্বয়ে নিরাপদ সার্ভিস।'
+              : 'Mechanized, non-acid cleaning for residential apartments and commercial properties.'}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card 1: Overhead Tank */}
+          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-[#E8F5F3] text-[#0D9488] flex items-center justify-center font-bold">
+                <Droplets className="w-5 h-5" />
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-[#123047]">
+                {lang === 'bn' ? 'ছাদের ওভারহেড ট্যাংক ক্লিনিং' : 'Overhead Water Tank Cleaning'}
+              </h3>
+              <p className="text-xs text-[#64748B] leading-relaxed">
+                {lang === 'bn'
+                  ? 'তীব্র রোদে ছাদের পিভিসি বা আরসিসি ট্যাংকে দ্রুত শ্যাওলা ও বায়োফিল্ম জন্ম নেয়। আমরা ১৫০ বার রোটারি ওয়াটার জেটে ট্যাংকের দেয়াল মসৃণ রেখে সম্পূর্ণ শ্যাওলা ও তলদেশের পলি পরিষ্কার করি।'
+                  : 'Rooftop tanks suffer from heat-induced algae bloom and municipal silt. High-pressure rotary jet washing eliminates algae and biofilms without scratching interior tank walls.'}
+              </p>
+            </div>
+            <ul className="text-xs text-[#64748B] space-y-1.5 pt-2 border-t border-slate-100">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                <span>{lang === 'bn' ? 'ফুড-গ্রেড নন-টক্সিক জীবাণুনাশক' : 'Food-grade safe disinfection'}</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                <span>{lang === 'bn' ? 'ক্ষতিকর এসিডমুক্ত পদ্ধতি' : 'Zero harsh acids or pungent fumes'}</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Card 2: Underground Reserve */}
+          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-[#E8F5F3] text-[#0D9488] flex items-center justify-center font-bold">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-[#123047]">
+                {lang === 'bn' ? 'আন্ডারগ্রাউন্ড রিজার্ভার ডিপ ক্লিন' : 'Underground Reserve Deep Clean'}
+              </h3>
+              <p className="text-xs text-[#64748B] leading-relaxed">
+                {lang === 'bn'
+                  ? 'ওয়াসার লাইন ও গভীর নলকূপের ভারী কাদা, বালু ও আয়রন মাটির নিচের ট্যাংকের নিচে জমা হয়। আমাদের শক্তিশালী সাবমারসিবল স্লাজ পাম্পের সাহায্যে তলদেশের থিক কাদা সম্পূর্ণ টেনে বের করা হয়।'
+                  : 'Deep underground concrete reservoirs collect dense municipal mud and borehole silt. High-capacity submersible slurry pumps safely evacuate thick sediment layers.'}
+              </p>
+            </div>
+            <ul className="text-xs text-[#64748B] space-y-1.5 pt-2 border-t border-slate-100">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                <span>{lang === 'bn' ? 'ওয়াটারপ্রুফিং অক্ষত রাখা হয়' : 'Protects waterproofing membrane'}</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                <span>{lang === 'bn' ? 'অক্সিজেন ও সেফটি প্রোটোকল মেনে কাজ' : 'Strict confined-space safety'}</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Card 3: Pipeline Cleaning */}
+          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-[#E8F5F3] text-[#0D9488] flex items-center justify-center font-bold">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-[#123047]">
+                {lang === 'bn' ? 'পানির পাইপলাইন ফ্লাশিং' : 'Water Pipeline Descaling'}
+              </h3>
+              <p className="text-xs text-[#64748B] leading-relaxed">
+                {lang === 'bn'
+                  ? 'ট্যাংক পরিষ্কার হলেও যদি পাইপে মরিচা বা আয়রন জমে থাকে, তবে কল দিয়ে লালচে পানি বের হয়। হাইড্রো-পালস প্রযুক্তিতে দেয়াল বা টাইলস না ভেঙে পাইপের অভ্যন্তরীণ জট পরিষ্কার করা হয়।'
+                  : 'Eliminates tap discoloration, iron scale, and pipe odors using non-invasive hydro-pulse pressurized flushing without cracking tiles or breaking walls.'}
+              </p>
+            </div>
+            <ul className="text-xs text-[#64748B] space-y-1.5 pt-2 border-t border-slate-100">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                <span>{lang === 'bn' ? 'স্বাভাবিক পানির প্রেসার পুনরুদ্ধার' : 'Restores shower & tap flow'}</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                <span>{lang === 'bn' ? 'দেয়াল ভাঙার কোনো প্রয়োজন নেই' : 'Non-destructive technology'}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Practical Considerations & Local Guidance */}
+      <section className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
+        <div className="flex items-center gap-2.5">
+          <Clock className="w-5 h-5 text-[#0D9488]" />
+          <h2 className="text-lg sm:text-xl font-bold text-[#123047]">
+            {lang === 'bn' ? `${location.areaNameBn} এলাকার জন্য গুরুত্বপূর্ণ ব্যবহারিক পরামর্শ` : `Practical Maintenance Guidelines for ${location.areaName}`}
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 text-xs text-[#64748B]">
+          <div className="p-4 rounded-2xl bg-[#F5FAFC] border border-[#E2E8F0] space-y-1.5">
+            <strong className="block font-bold text-[#123047]">১. কত দিন পর পর পরিষ্কার করবেন?</strong>
+            <span>ঢাকা শহরের পানি সরবরাহ এবং তলানি জমার কারণে প্রতি ৪ থেকে ৬ মাস পর পর ছাদ ও রিজার্ভার ডিপ ক্লিন করা স্বাস্থ্যসম্মত।</span>
+          </div>
+          <div className="p-4 rounded-2xl bg-[#F5FAFC] border border-[#E2E8F0] space-y-1.5">
+            <strong className="block font-bold text-[#123047]">২. পানি সংরক্ষণে সাশ্রয়ী কৌশল</strong>
+            <span>আমাদের টিম পৌঁছানোর আগের দিন স্বাভাবিক ব্যবহারে পানির স্তর কিছুটা কমিয়ে রাখলে পানির অপচয় সর্বনিম্ন থাকে।</span>
+          </div>
+          <div className="p-4 rounded-2xl bg-[#F5FAFC] border border-[#E2E8F0] space-y-1.5">
+            <strong className="block font-bold text-[#123047]">৩. কাজ শেষের সাথে সাথেই ব্যবহার</strong>
+            <span>আমরা কোনো তীব্র এসিড ব্যবহার করি না। খাদ্য-মানসম্পন্ন জীবাণুনাশক ব্যবহারের পর ফ্রেশ ওয়াশ করা হয়, ফলে সরাসরি ব্যবহার নিরাপদ।</span>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Systematic 6-Step Mechanized Workflow */}
+      <section className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-10 shadow-sm space-y-6">
+        <div className="text-center max-w-2xl mx-auto space-y-1.5">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#0D9488]">
+            {lang === 'bn' ? 'বিজ্ঞানসম্মত কার্যপদ্ধতি' : 'Standardized Workflow'}
+          </span>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-[#123047]">
+            {lang === 'bn' ? 'আমাদের সুশৃঙ্খল ৬-ধাপের মেকানাইজড ক্লিনিং' : 'Our 6-Step Hygienic Cleaning Process'}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+          {[
+            { step: '০১', titleBn: 'পানি নিষ্কাশন ও ডেস্লাজিং', descBn: 'ট্যাংক খালি করে তলদেশের নোংরা পানি ড্রেন আউট করা হয়।' },
+            { step: '০২', titleBn: 'ভারী কাদা ও স্লাজ উত্তোলন', descBn: 'সাবমারসিবল স্লাজ পাম্প দিয়ে গভীর কাদার স্তর ভ্যাকুয়াম করা হয়।' },
+            { step: '০৩', titleBn: '১৫০ বার হাই-প্রেসার জেট ওয়াশ', descBn: 'ট্যাংকের দেয়াল ও কোণা থেকে শ্যাওলা নিখুঁতভাবে পরিষ্কার করা হয়।' },
+            { step: '০৪', titleBn: 'ফুড-গ্রেড স্যানিটাইজার স্প্রে', descBn: 'খাদ্য-মানসম্পন্ন জীবাণুনাশক দিয়ে ব্যাকটেরিয়া ও ছত্রাক ধ্বংস করা হয়।' },
+            { step: '০৫', titleBn: 'বিশুদ্ধ পানি দিয়ে ফ্রেশ ফ্লাশিং', descBn: 'কোনো অবশিষ্টাংশ না রেখে পরিষ্কার পানিতে সম্পূর্ণ ট্যাংক ধোয়া হয়।' },
+            { step: '০৬', titleBn: 'চূড়ান্ত পরিদর্শন ও হ্যান্ডওভার', descBn: 'ভবন কর্তৃপক্ষকে কাজ দেখিয়ে সন্তোষজনকভাবে সম্পন্ন করা হয়।' }
+          ].map((item, idx) => (
+            <div key={idx} className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5">
+              <span className="text-xs font-mono font-bold text-[#0D9488] bg-white px-2 py-0.5 rounded border border-[#0D9488]/20">
+                ধাপ {item.step}
+              </span>
+              <h4 className="text-sm font-bold text-[#123047]">{item.titleBn}</h4>
+              <p className="text-xs text-[#64748B] leading-relaxed">{item.descBn}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 6. Coverage Details & Pricing Structure Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Coverage Details */}
         {location.coverageDetails && location.coverageDetails.length > 0 && (

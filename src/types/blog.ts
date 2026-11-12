@@ -1,3 +1,13 @@
+export interface ArticleImage {
+  id: string;
+  url: string;
+  storagePath?: string;
+  alt: string;
+  caption?: string;
+  position?: 'inline' | 'below-subheading' | 'gallery';
+  order: number;
+}
+
 export interface BlogPost {
   id: string;
   slug: string;
@@ -10,6 +20,9 @@ export interface BlogPost {
   content: string;
   contentBn?: string;
   imageUrl?: string;
+  imageAlt?: string;
+  imageCaption?: string;
+  images?: ArticleImage[];
   author: string;
   publishedAt: string;
   readTime: string;
@@ -21,5 +34,8 @@ export interface BlogPost {
     metaDescription?: string;
     keywords?: string[];
     canonicalUrl?: string;
+    imageAlt?: string;
+    imageCaption?: string;
+    images?: ArticleImage[];
   };
 }

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Video } from 'lucide-react';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { useHomepageCms } from '../context/HomepageCmsContext';
 import { extractYouTubeId } from '../services/mediaService';
+import { isDemoMedia } from '../services/homepageCmsService';
 
 interface HeroProps {
   onOpenQuoteModal?: () => void;
@@ -14,64 +15,94 @@ export const Hero: React.FC<HeroProps> = () => {
 
   const cmsHeroSection = sections.find(s => s.sectionKey === 'hero');
 
-  // Helper to ensure empty or placeholder video URLs fallback safely
-  const sanitizeHeroVideo = (url: string | undefined, fallback: string): string => {
-    if (!url || typeof url !== 'string' || !url.trim() || url.includes('placeholder')) {
-      return fallback;
-    }
-    return url.trim();
-  };
-
   // Video 1 source & poster (Rooftop Tank Cleaning)
-  const video1Url = sanitizeHeroVideo(
-    cmsHeroSection?.videoUrl || hero.videoUrl,
-    '/videos/tank-cleaning-desktop.mp4'
-  );
-  const video1Poster = cmsHeroSection?.posterImageUrl || hero.posterImageUrl || '/assets/aistudio/hero-rooftop-poster.jpg';
+  // Strictly display administrator-configured media only; 0 hardcoded fallback URLs
+  const rawVideo1 = cmsHeroSection?.videoUrl || hero.videoUrl;
+  const video1Url = (!rawVideo1 || isDemoMedia(rawVideo1)) ? undefined : rawVideo1.trim();
+  const rawPoster1 = cmsHeroSection?.posterImageUrl || hero.posterImageUrl;
+  const video1Poster = (!rawPoster1 || isDemoMedia(rawPoster1)) ? undefined : rawPoster1.trim();
 
   // Video 2 source & poster (Underground Reservoir & Sludge Extraction)
-  const video2Url = sanitizeHeroVideo(
-    cmsHeroSection?.video2Url || cmsHeroSection?.mobileVideoUrl || hero.video2Url || hero.mobileVideoUrl,
-    '/videos/tank-cleaning-mobile.mp4'
-  );
-  const video2Poster = cmsHeroSection?.posterImage2Url || hero.posterImage2Url || '/assets/aistudio/hero-underground-poster.jpg';
+  const rawVideo2 = cmsHeroSection?.video2Url || cmsHeroSection?.mobileVideoUrl || hero.video2Url || hero.mobileVideoUrl;
+  const video2Url = (!rawVideo2 || isDemoMedia(rawVideo2)) ? undefined : rawVideo2.trim();
+  const rawPoster2 = cmsHeroSection?.posterImage2Url || hero.posterImage2Url;
+  const video2Poster = (!rawPoster2 || isDemoMedia(rawPoster2)) ? undefined : rawPoster2.trim();
 
-  const video3Url = sanitizeHeroVideo(
-    cmsHeroSection?.video3Url || hero.video3Url,
-    ''
-  );
-  const video3Poster = cmsHeroSection?.posterImage3Url || hero.posterImage3Url || '/assets/aistudio/hero-underground-poster.jpg';
+  // Video 3 source & poster (Water Pipeline Cleaning)
+  const rawVideo3 = cmsHeroSection?.video3Url || hero.video3Url;
+  const video3Url = (!rawVideo3 || isDemoMedia(rawVideo3)) ? undefined : rawVideo3.trim();
+  const rawPoster3 = cmsHeroSection?.posterImage3Url || hero.posterImage3Url;
+  const video3Poster = (!rawPoster3 || isDemoMedia(rawPoster3)) ? undefined : rawPoster3.trim();
 
   // Video 1 Refs & State
   const video1Ref = useRef<HTMLVideoElement>(null);
   const [isPlaying1, setIsPlaying1] = useState(true);
   const [isMuted1, setIsMuted1] = useState(true);
   const [hasError1, setHasError1] = useState(false);
+  const [posterError1, setPosterError1] = useState(false);
 
   // Video 2 Refs & State
   const video2Ref = useRef<HTMLVideoElement>(null);
+  const video2ContainerRef = useRef<HTMLDivElement>(null);
+  const [video2InView, setVideo2InView] = useState(false);
   const [isPlaying2, setIsPlaying2] = useState(true);
   const [isMuted2, setIsMuted2] = useState(true);
   const [hasError2, setHasError2] = useState(false);
+  const [posterError2, setPosterError2] = useState(false);
 
   // Video 3 Refs & State
   const video3Ref = useRef<HTMLVideoElement>(null);
+  const video3ContainerRef = useRef<HTMLDivElement>(null);
+  const [video3InView, setVideo3InView] = useState(false);
   const [isPlaying3, setIsPlaying3] = useState(true);
   const [isMuted3, setIsMuted3] = useState(true);
   const [hasError3, setHasError3] = useState(false);
+  const [posterError3, setPosterError3] = useState(false);
 
-  // Auto-play all 3 videos reliably on mount
+  // IntersectionObserver to load below-the-fold or secondary hero players politely
   useEffect(() => {
-    if (video1Ref.current) {
+    if (typeof window === 'undefined') return;
+
+    // On larger desktop screens (>=1024px), videos are side-by-side, activate promptly
+    if (window.innerWidth >= 1024) {
+      setVideo2InView(true);
+      setVideo3InView(true);
+      return;
+    }
+
+    if (!('IntersectionObserver' in window)) {
+      setVideo2InView(true);
+      setVideo3InView(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          if (entry.target === video2ContainerRef.current) setVideo2InView(true);
+          if (entry.target === video3ContainerRef.current) setVideo3InView(true);
+        }
+      });
+    }, { rootMargin: '300px' });
+
+    if (video2ContainerRef.current) observer.observe(video2ContainerRef.current);
+    if (video3ContainerRef.current) observer.observe(video3ContainerRef.current);
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Auto-play videos when refs become available
+  useEffect(() => {
+    if (video1Ref.current && video1Url) {
       video1Ref.current.play().then(() => setIsPlaying1(true)).catch(() => setIsPlaying1(false));
     }
-    if (video2Ref.current) {
+    if (video2Ref.current && video2InView && video2Url) {
       video2Ref.current.play().then(() => setIsPlaying2(true)).catch(() => setIsPlaying2(false));
     }
-    if (video3Ref.current) {
+    if (video3Ref.current && video3InView && video3Url) {
       video3Ref.current.play().then(() => setIsPlaying3(true)).catch(() => setIsPlaying3(false));
     }
-  }, [video1Url, video2Url, video3Url]);
+  }, [video1Url, video2Url, video3Url, video2InView, video3InView]);
 
   // Video 1 Controls
   const togglePlay1 = (e: React.MouseEvent) => {
@@ -133,9 +164,13 @@ export const Hero: React.FC<HeroProps> = () => {
     setIsMuted3(video3Ref.current.muted);
   };
 
-  const ytId1 = extractYouTubeId(video1Url);
-  const ytId2 = extractYouTubeId(video2Url);
-  const ytId3 = extractYouTubeId(video3Url);
+  const ytId1 = video1Url ? extractYouTubeId(video1Url) : null;
+  const ytId2 = video2Url ? extractYouTubeId(video2Url) : null;
+  const ytId3 = video3Url ? extractYouTubeId(video3Url) : null;
+
+  const hasVideo1 = Boolean(ytId1 || video1Url);
+  const hasVideo2 = Boolean(ytId2 || video2Url);
+  const hasVideo3 = Boolean(ytId3 || video3Url);
 
   return (
     <section 
@@ -145,230 +180,336 @@ export const Hero: React.FC<HeroProps> = () => {
       <div className="max-w-7xl mx-auto">
         {/*
           Responsive Tri-Video Layout:
-          1. Desktop (>= 1024px):
-             - 3 videos side-by-side in 3 equal columns (lg:grid-cols-3)
-             - Equal width and equal height (aspect-video)
-             - Small gap between them
-             - All 3 videos visible and playing simultaneously (no slider, no carousel)
-
-          2. Tablet (768px - 1023px):
-             - md:grid-cols-2
-             - Video 1 and Video 2 side-by-side in row 1
-             - Video 3 in row 2 centered (md:col-span-2 md:w-1/2 md:mx-auto) with identical width & height
-             - No video cut off or hidden
-
-          3. Mobile (< 768px):
-             - grid-cols-1: Video 1, Video 2, Video 3 stacked vertically in sequential order
-             - 100% full width, aspect-video, zero horizontal scrolling, zero cropping
-
-          4. Strict Content Discipline:
-             - NO Headline or Heading
-             - NO Title or Subtitle
-             - NO Description or Paragraph
-             - NO Call Now / WhatsApp / CTA Button
-             - NO Badge or Label
-             - NO Text Overlay or Promotional Content
+          1. Desktop (>= 1024px): 3 equal columns (lg:grid-cols-3)
+          2. Tablet (768px - 1023px): md:grid-cols-2 with Video 3 centered in row 2
+          3. Mobile (< 768px): grid-cols-1 stacked vertically
+          Strict zero-demo discipline: Only administrator-configured media is shown.
+          If media is unconfigured or unavailable, container dimensions (aspect-video)
+          are preserved with a neutral background, guaranteeing CLS = 0.
         */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 lg:gap-4 items-center">
           
           {/* ================= VIDEO 1 ================= */}
           <div 
-            className="w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-black relative shadow-lg group cursor-pointer"
-            onClick={togglePlay1}
+            className="w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-[#0F2333] border border-slate-800/80 relative shadow-lg group cursor-pointer"
+            onClick={hasVideo1 ? togglePlay1 : undefined}
           >
-            {ytId1 ? (
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${ytId1}?autoplay=1&mute=1&controls=1&loop=1&playlist=${ytId1}&playsinline=1&rel=0`}
-                title="Cleaning Service Video 1"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                className="w-full h-full border-0 object-contain"
-              />
+            {hasVideo1 ? (
+              ytId1 ? (
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${ytId1}?autoplay=1&mute=1&controls=1&loop=1&playlist=${ytId1}&playsinline=1&rel=0`}
+                  title="Cleaning Service Video 1"
+                  loading="eager"
+                  width="560"
+                  height="315"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  className="w-full h-full border-0 object-contain bg-black"
+                />
+              ) : (
+                <>
+                  <video
+                    ref={video1Ref}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    poster={!posterError1 ? video1Poster : undefined}
+                    onError={() => setHasError1(true)}
+                    className="w-full h-full object-contain bg-black"
+                  >
+                    <source src={video1Url} type="video/mp4" />
+                  </video>
+
+                  {/* Poster fallback when video load fails */}
+                  {hasError1 && (
+                    !posterError1 && video1Poster ? (
+                      <img 
+                        src={video1Poster} 
+                        alt="Cleaning Service Video 1" 
+                        width="560"
+                        height="315"
+                        onError={() => setPosterError1(true)}
+                        className="absolute inset-0 w-full h-full object-contain bg-black" 
+                      />
+                    ) : (
+                      <div className="absolute inset-0 w-full h-full bg-[#0F2333] flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+                        <Video className="w-8 h-8 mb-2 text-slate-500 opacity-60" />
+                        <span className="text-xs font-medium text-slate-300">ভিডিও বর্তমানে অনুপলব্ধ / Video unavailable</span>
+                      </div>
+                    )
+                  )}
+
+                  {/* Floating Media Controls */}
+                  <div 
+                    className="absolute bottom-2 right-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm p-1 rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      onClick={togglePlay1}
+                      aria-label={isPlaying1 ? 'Pause Video 1' : 'Play Video 1'}
+                      className="w-7 h-7 flex items-center justify-center rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
+                    >
+                      {isPlaying1 ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-white" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={toggleMute1}
+                      aria-label={isMuted1 ? 'Unmute Video 1' : 'Mute Video 1'}
+                      className="w-7 h-7 flex items-center justify-center rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
+                    >
+                      {isMuted1 ? <VolumeX className="w-3.5 h-3.5 text-white/80" /> : <Volume2 className="w-3.5 h-3.5 text-[#38BDF8]" />}
+                    </button>
+                  </div>
+                </>
+              )
             ) : (
-              <>
-                <video
-                  ref={video1Ref}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  poster={video1Poster}
-                  onError={() => setHasError1(true)}
-                  className="w-full h-full object-contain bg-black"
-                >
-                  <source src={video1Url} type="video/mp4" />
-                </video>
-
-                {/* Poster fallback when video load fails */}
-                {hasError1 && video1Poster && (
-                  <img 
-                    src={video1Poster} 
-                    alt="Cleaning Service Video 1" 
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = '/assets/aistudio/hero-rooftop-poster.jpg';
-                    }}
-                    className="absolute inset-0 w-full h-full object-contain bg-black" 
-                  />
-                )}
-
-                {/* Subtle Floating Media Controls (Play/Pause & Mute/Unmute) */}
-                <div 
-                  className="absolute bottom-2 right-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm p-1 rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    type="button"
-                    onClick={togglePlay1}
-                    aria-label={isPlaying1 ? 'Pause Video 1' : 'Play Video 1'}
-                    className="w-7 h-7 flex items-center justify-center rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
-                  >
-                    {isPlaying1 ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-white" />}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={toggleMute1}
-                    aria-label={isMuted1 ? 'Unmute Video 1' : 'Mute Video 1'}
-                    className="w-7 h-7 flex items-center justify-center rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
-                  >
-                    {isMuted1 ? <VolumeX className="w-3.5 h-3.5 text-white/80" /> : <Volume2 className="w-3.5 h-3.5 text-[#38BDF8]" />}
-                  </button>
+              /* Neutral empty state when slot 1 has no video configured */
+              <div className="w-full h-full bg-[#0F2333] flex flex-col items-center justify-center text-slate-400 p-4 text-center select-none">
+                <div className="w-10 h-10 rounded-full bg-slate-800/80 flex items-center justify-center mb-2 text-slate-400">
+                  <Video className="w-5 h-5 opacity-60" />
                 </div>
-              </>
+                <span className="text-xs font-semibold text-slate-300">ভিডিও স্লট ১</span>
+                <span className="text-[11px] text-slate-500 mt-0.5">অ্যাডমিন প্যানেল থেকে কনফিগার করুন</span>
+              </div>
             )}
           </div>
 
           {/* ================= VIDEO 2 ================= */}
           <div 
-            className="w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-black relative shadow-lg group cursor-pointer"
-            onClick={togglePlay2}
+            ref={video2ContainerRef}
+            className="w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-[#0F2333] border border-slate-800/80 relative shadow-lg group cursor-pointer"
+            onClick={(e) => {
+              if (!video2InView) setVideo2InView(true);
+              if (hasVideo2) togglePlay2(e);
+            }}
           >
-            {ytId2 ? (
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${ytId2}?autoplay=1&mute=1&controls=1&loop=1&playlist=${ytId2}&playsinline=1&rel=0`}
-                title="Cleaning Service Video 2"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                className="w-full h-full border-0 object-contain"
-              />
-            ) : (
-              <>
-                <video
-                  ref={video2Ref}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  poster={video2Poster}
-                  onError={() => setHasError2(true)}
-                  className="w-full h-full object-contain bg-black"
-                >
-                  <source src={video2Url} type="video/mp4" />
-                </video>
-
-                {/* Poster fallback when video load fails */}
-                {hasError2 && video2Poster && (
-                  <img 
-                    src={video2Poster} 
-                    alt="Cleaning Service Video 2" 
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = '/assets/aistudio/hero-underground-poster.jpg';
-                    }}
-                    className="absolute inset-0 w-full h-full object-contain bg-black" 
+            {hasVideo2 ? (
+              ytId2 ? (
+                video2InView ? (
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${ytId2}?autoplay=1&mute=1&controls=1&loop=1&playlist=${ytId2}&playsinline=1&rel=0`}
+                    title="Cleaning Service Video 2"
+                    loading="lazy"
+                    width="560"
+                    height="315"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    className="w-full h-full border-0 object-contain bg-black"
                   />
-                )}
- 
-                {/* Subtle Floating Media Controls (Play/Pause & Mute/Unmute) */}
-                <div 
-                  className="absolute bottom-2 right-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm p-1 rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    type="button"
-                    onClick={togglePlay2}
-                    aria-label={isPlaying2 ? 'Pause Video 2' : 'Play Video 2'}
-                    className="w-7 h-7 flex items-center justify-center rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
+                ) : (
+                  <div className="relative w-full h-full bg-[#0F2333] flex items-center justify-center">
+                    {!posterError2 && video2Poster ? (
+                      <img
+                        src={video2Poster}
+                        alt="Cleaning Service Video 2"
+                        loading="lazy"
+                        decoding="async"
+                        width="560"
+                        height="315"
+                        onError={() => setPosterError2(true)}
+                        className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-[#0F2333] flex items-center justify-center">
+                        <Video className="w-8 h-8 text-slate-500 opacity-60" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <Play className="w-6 h-6 fill-white ml-0.5" />
+                      </div>
+                    </div>
+                  </div>
+                )
+              ) : (
+                <>
+                  <video
+                    ref={video2Ref}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    poster={!posterError2 ? video2Poster : undefined}
+                    onError={() => setHasError2(true)}
+                    className="w-full h-full object-contain bg-black"
                   >
-                    {isPlaying2 ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-white" />}
-                  </button>
- 
-                  <button
-                    type="button"
-                    onClick={toggleMute2}
-                    aria-label={isMuted2 ? 'Unmute Video 2' : 'Mute Video 2'}
-                    className="w-7 h-7 flex items-center justify-center rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
+                    <source src={video2Url} type="video/mp4" />
+                  </video>
+
+                  {/* Poster fallback when video load fails */}
+                  {hasError2 && (
+                    !posterError2 && video2Poster ? (
+                      <img 
+                        src={video2Poster} 
+                        alt="Cleaning Service Video 2" 
+                        width="560"
+                        height="315"
+                        onError={() => setPosterError2(true)}
+                        className="absolute inset-0 w-full h-full object-contain bg-black" 
+                      />
+                    ) : (
+                      <div className="absolute inset-0 w-full h-full bg-[#0F2333] flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+                        <Video className="w-8 h-8 mb-2 text-slate-500 opacity-60" />
+                        <span className="text-xs font-medium text-slate-300">ভিডিও বর্তমানে অনুপলব্ধ / Video unavailable</span>
+                      </div>
+                    )
+                  )}
+
+                  {/* Floating Media Controls */}
+                  <div 
+                    className="absolute bottom-2 right-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm p-1 rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    {isMuted2 ? <VolumeX className="w-3.5 h-3.5 text-white/80" /> : <Volume2 className="w-3.5 h-3.5 text-[#38BDF8]" />}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={togglePlay2}
+                      aria-label={isPlaying2 ? 'Pause Video 2' : 'Play Video 2'}
+                      className="w-7 h-7 flex items-center justify-center rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
+                    >
+                      {isPlaying2 ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-white" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={toggleMute2}
+                      aria-label={isMuted2 ? 'Unmute Video 2' : 'Mute Video 2'}
+                      className="w-7 h-7 flex items-center justify-center rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
+                    >
+                      {isMuted2 ? <VolumeX className="w-3.5 h-3.5 text-white/80" /> : <Volume2 className="w-3.5 h-3.5 text-[#38BDF8]" />}
+                    </button>
+                  </div>
+                </>
+              )
+            ) : (
+              /* Neutral empty state when slot 2 has no video configured */
+              <div className="w-full h-full bg-[#0F2333] flex flex-col items-center justify-center text-slate-400 p-4 text-center select-none">
+                <div className="w-10 h-10 rounded-full bg-slate-800/80 flex items-center justify-center mb-2 text-slate-400">
+                  <Video className="w-5 h-5 opacity-60" />
                 </div>
-              </>
+                <span className="text-xs font-semibold text-slate-300">ভিডিও স্লট ২</span>
+                <span className="text-[11px] text-slate-500 mt-0.5">অ্যাডমিন প্যানেল থেকে কনফিগার করুন</span>
+              </div>
             )}
           </div>
- 
+
           {/* ================= VIDEO 3 ================= */}
           <div 
-            className="w-full md:col-span-2 lg:col-span-1 md:w-1/2 md:mx-auto lg:w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-black relative shadow-lg group cursor-pointer"
-            onClick={togglePlay3}
+            ref={video3ContainerRef}
+            className="w-full md:col-span-2 lg:col-span-1 md:w-1/2 md:mx-auto lg:w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-[#0F2333] border border-slate-800/80 relative shadow-lg group cursor-pointer"
+            onClick={(e) => {
+              if (!video3InView) setVideo3InView(true);
+              if (hasVideo3) togglePlay3(e);
+            }}
           >
-            {ytId3 ? (
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${ytId3}?autoplay=1&mute=1&controls=1&loop=1&playlist=${ytId3}&playsinline=1&rel=0`}
-                title="Cleaning Service Video 3"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                className="w-full h-full border-0 object-contain"
-              />
-            ) : (
-              <>
-                <video
-                  ref={video3Ref}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  poster={video3Poster}
-                  onError={() => setHasError3(true)}
-                  className="w-full h-full object-contain bg-black"
-                >
-                  {video3Url ? <source src={video3Url} type="video/mp4" /> : null}
-                </video>
- 
-                {/* Poster fallback when video load fails */}
-                {hasError3 && video3Poster && (
-                  <img 
-                    src={video3Poster} 
-                    alt="Cleaning Service Video 3" 
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = '/assets/aistudio/hero-underground-poster.jpg';
-                    }}
-                    className="absolute inset-0 w-full h-full object-contain bg-black" 
+            {hasVideo3 ? (
+              ytId3 ? (
+                video3InView ? (
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${ytId3}?autoplay=1&mute=1&controls=1&loop=1&playlist=${ytId3}&playsinline=1&rel=0`}
+                    title="Cleaning Service Video 3"
+                    loading="lazy"
+                    width="560"
+                    height="315"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    className="w-full h-full border-0 object-contain bg-black"
                   />
-                )}
-
-                {/* Subtle Floating Media Controls (Play/Pause & Mute/Unmute) */}
-                <div 
-                  className="absolute bottom-2 right-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm p-1 rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    type="button"
-                    onClick={togglePlay3}
-                    aria-label={isPlaying3 ? 'Pause Video 3' : 'Play Video 3'}
-                    className="w-7 h-7 flex items-center justify-center rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
+                ) : (
+                  <div className="relative w-full h-full bg-[#0F2333] flex items-center justify-center">
+                    {!posterError3 && video3Poster ? (
+                      <img
+                        src={video3Poster}
+                        alt="Cleaning Service Video 3"
+                        loading="lazy"
+                        decoding="async"
+                        width="560"
+                        height="315"
+                        onError={() => setPosterError3(true)}
+                        className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-[#0F2333] flex items-center justify-center">
+                        <Video className="w-8 h-8 text-slate-500 opacity-60" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <Play className="w-6 h-6 fill-white ml-0.5" />
+                      </div>
+                    </div>
+                  </div>
+                )
+              ) : (
+                <>
+                  <video
+                    ref={video3Ref}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    poster={!posterError3 ? video3Poster : undefined}
+                    onError={() => setHasError3(true)}
+                    className="w-full h-full object-contain bg-black"
                   >
-                    {isPlaying3 ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-white" />}
-                  </button>
+                    <source src={video3Url} type="video/mp4" />
+                  </video>
 
-                  <button
-                    type="button"
-                    onClick={toggleMute3}
-                    aria-label={isMuted3 ? 'Unmute Video 3' : 'Mute Video 3'}
-                    className="w-7 h-7 flex items-center justify-center rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
+                  {/* Poster fallback when video load fails */}
+                  {hasError3 && (
+                    !posterError3 && video3Poster ? (
+                      <img 
+                        src={video3Poster} 
+                        alt="Cleaning Service Video 3" 
+                        width="560"
+                        height="315"
+                        onError={() => setPosterError3(true)}
+                        className="absolute inset-0 w-full h-full object-contain bg-black" 
+                      />
+                    ) : (
+                      <div className="absolute inset-0 w-full h-full bg-[#0F2333] flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+                        <Video className="w-8 h-8 mb-2 text-slate-500 opacity-60" />
+                        <span className="text-xs font-medium text-slate-300">ভিডিও বর্তমানে অনুপলব্ধ / Video unavailable</span>
+                      </div>
+                    )
+                  )}
+
+                  {/* Floating Media Controls */}
+                  <div 
+                    className="absolute bottom-2 right-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm p-1 rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    {isMuted3 ? <VolumeX className="w-3.5 h-3.5 text-white/80" /> : <Volume2 className="w-3.5 h-3.5 text-[#38BDF8]" />}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={togglePlay3}
+                      aria-label={isPlaying3 ? 'Pause Video 3' : 'Play Video 3'}
+                      className="w-7 h-7 flex items-center justify-center rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
+                    >
+                      {isPlaying3 ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-white" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={toggleMute3}
+                      aria-label={isMuted3 ? 'Unmute Video 3' : 'Mute Video 3'}
+                      className="w-7 h-7 flex items-center justify-center rounded bg-white/20 hover:bg-white/30 text-white transition-colors"
+                    >
+                      {isMuted3 ? <VolumeX className="w-3.5 h-3.5 text-white/80" /> : <Volume2 className="w-3.5 h-3.5 text-[#38BDF8]" />}
+                    </button>
+                  </div>
+                </>
+              )
+            ) : (
+              /* Neutral empty state when slot 3 has no video configured */
+              <div className="w-full h-full bg-[#0F2333] flex flex-col items-center justify-center text-slate-400 p-4 text-center select-none">
+                <div className="w-10 h-10 rounded-full bg-slate-800/80 flex items-center justify-center mb-2 text-slate-400">
+                  <Video className="w-5 h-5 opacity-60" />
                 </div>
-              </>
+                <span className="text-xs font-semibold text-slate-300">ভিডিও স্লট ৩</span>
+                <span className="text-[11px] text-slate-500 mt-0.5">অ্যাডমিন প্যানেল থেকে কনফিগার করুন</span>
+              </div>
             )}
           </div>
 

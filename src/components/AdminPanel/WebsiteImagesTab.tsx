@@ -156,8 +156,8 @@ export const WebsiteImagesTab: React.FC = () => {
       title: 'Homepage Hero Video Poster / Fallback Image',
       titleBn: 'হিরো সেকশনের মূল ব্যানার ও ভিডিও পোস্টার ছবি',
       locationLabel: 'Homepage > Hero Section Cover',
-      currentUrl: hero.posterImageUrl || hero.bgImageUrl || images?.heroPoster || '/assets/aistudio/hero-rooftop-poster.jpg',
-      defaultUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
+      currentUrl: hero.posterImageUrl || hero.bgImageUrl || images?.heroPoster || 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg',
+      defaultUrl: 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg',
       aspectRatio: 'aspect-video',
       badge: 'Hero Cover',
       targetType: 'siteConfig',
@@ -170,8 +170,8 @@ export const WebsiteImagesTab: React.FC = () => {
       title: 'Water Tank Cleaning Service Card Image',
       titleBn: 'ওয়াটার ট্যাংক ক্লিনিং সার্ভিসের মূল কার্ড ছবি',
       locationLabel: 'Homepage > Top Priority Services (পানির ট্যাংক পরিষ্কার)',
-      currentUrl: images?.popularTankImage || tankService?.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
-      defaultUrl: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+      currentUrl: images?.popularTankImage || tankService?.image || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+      defaultUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
       aspectRatio: 'aspect-video',
       badge: 'Popular Service 1',
       targetType: 'service',
@@ -185,8 +185,8 @@ export const WebsiteImagesTab: React.FC = () => {
       title: 'Pipeline Cleaning Service Card Image',
       titleBn: 'পাইপলাইন ক্লিনিং সার্ভিসের মূল কার্ড ছবি',
       locationLabel: 'Homepage > Top Priority Services (পাইপলাইন পরিষ্কার)',
-      currentUrl: images?.popularPipelineImage || pipelineService?.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
-      defaultUrl: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+      currentUrl: images?.popularPipelineImage || pipelineService?.image || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+      defaultUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
       aspectRatio: 'aspect-video',
       badge: 'Popular Service 2',
       targetType: 'service',
@@ -200,8 +200,8 @@ export const WebsiteImagesTab: React.FC = () => {
       title: 'About SUNVILOZ Clean Care Story Image',
       titleBn: 'আমাদের সম্পর্কে সেকশনের টিম ও কাজের ছবি',
       locationLabel: 'Homepage > About SUNVILOZ Clean Care',
-      currentUrl: images?.aboutStoryImage || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
-      defaultUrl: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
+      currentUrl: images?.aboutStoryImage || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
+      defaultUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
       aspectRatio: 'aspect-[4/3]',
       badge: 'About Us Section',
       targetType: 'siteConfig',
@@ -214,8 +214,8 @@ export const WebsiteImagesTab: React.FC = () => {
       title: 'Case 1: Rooftop PVC Tank - Before Cleaning Photo',
       titleBn: 'কেস ১: ছাদের পিভিসি ট্যাংক — পূর্বে (ক্লিনিংয়ের আগের শ্যাওলা)',
       locationLabel: 'Homepage & Portfolio > Before & After Comparison (Case 1)',
-      currentUrl: projects[0]?.beforeImage || projects[0]?.beforeImg || '/assets/aistudio/hero-underground-poster.jpg',
-      defaultUrl: '/assets/aistudio/hero-underground-poster.jpg',
+      currentUrl: projects[0]?.beforeImage || projects[0]?.beforeImg || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+      defaultUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
       aspectRatio: 'aspect-[4/3]',
       badge: 'Before Photo (Case 1)',
       targetType: 'project',
@@ -229,8 +229,8 @@ export const WebsiteImagesTab: React.FC = () => {
       title: 'Case 1: Rooftop PVC Tank - After Cleaning Photo',
       titleBn: 'কেস ১: ছাদের পিভিসি ট্যাংক — পরে (ক্লিনিংয়ের পরের নিরাপদ পানি)',
       locationLabel: 'Homepage & Portfolio > Before & After Comparison (Case 1)',
-      currentUrl: projects[0]?.afterImage || projects[0]?.afterImg || '/assets/aistudio/hero-rooftop-poster.jpg',
-      defaultUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
+      currentUrl: projects[0]?.afterImage || projects[0]?.afterImg || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+      defaultUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
       aspectRatio: 'aspect-[4/3]',
       badge: 'After Photo (Case 1)',
       targetType: 'project',
@@ -245,8 +245,8 @@ export const WebsiteImagesTab: React.FC = () => {
       title: 'Case 2: Underground RCC Reserve - Before Photo',
       titleBn: 'কেস ২: আন্ডারগ্রাউন্ড আরসিসি রিজার্ভার — পূর্বে (কাদা ও স্লাজ)',
       locationLabel: 'Homepage & Portfolio > Before & After Comparison (Case 2)',
-      currentUrl: projects[1]?.beforeImage || projects[1]?.beforeImg || '/assets/aistudio/hero-underground-poster.jpg',
-      defaultUrl: '/assets/aistudio/hero-underground-poster.jpg',
+      currentUrl: projects[1]?.beforeImage || projects[1]?.beforeImg || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+      defaultUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
       aspectRatio: 'aspect-[4/3]',
       badge: 'Before Photo (Case 2)',
       targetType: 'project',
@@ -260,8 +260,8 @@ export const WebsiteImagesTab: React.FC = () => {
       title: 'Case 2: Underground RCC Reserve - After Photo',
       titleBn: 'কেস ২: আন্ডারগ্রাউন্ড আরসিসি রিজার্ভার — পরে (সম্পূর্ণ জীবাণুমুক্ত)',
       locationLabel: 'Homepage & Portfolio > Before & After Comparison (Case 2)',
-      currentUrl: projects[1]?.afterImage || projects[1]?.afterImg || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
-      defaultUrl: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+      currentUrl: projects[1]?.afterImage || projects[1]?.afterImg || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+      defaultUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
       aspectRatio: 'aspect-[4/3]',
       badge: 'After Photo (Case 2)',
       targetType: 'project',
@@ -276,8 +276,8 @@ export const WebsiteImagesTab: React.FC = () => {
       title: 'Case 3: Apartment Multi-Tanks - Before Photo',
       titleBn: 'কেস ৩: অ্যাপার্টমেন্ট ভবনের ট্যাংকসমূহ — পূর্বে (মরিচা ও শ্যাওলা)',
       locationLabel: 'Homepage & Portfolio > Before & After Comparison (Case 3)',
-      currentUrl: projects[2]?.beforeImage || projects[2]?.beforeImg || '/assets/aistudio/hero-underground-poster.jpg',
-      defaultUrl: '/assets/aistudio/hero-underground-poster.jpg',
+      currentUrl: projects[2]?.beforeImage || projects[2]?.beforeImg || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+      defaultUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
       aspectRatio: 'aspect-[4/3]',
       badge: 'Before Photo (Case 3)',
       targetType: 'project',
@@ -291,8 +291,8 @@ export const WebsiteImagesTab: React.FC = () => {
       title: 'Case 3: Apartment Multi-Tanks - After Photo',
       titleBn: 'কেস ৩: অ্যাপার্টমেন্ট ভবনের ট্যাংকসমূহ — পরে (জীবাণুমুক্ত স্বচ্ছ পানি)',
       locationLabel: 'Homepage & Portfolio > Before & After Comparison (Case 3)',
-      currentUrl: projects[2]?.afterImage || projects[2]?.afterImg || '/assets/aistudio/hero-rooftop-poster.jpg',
-      defaultUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
+      currentUrl: projects[2]?.afterImage || projects[2]?.afterImg || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+      defaultUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
       aspectRatio: 'aspect-[4/3]',
       badge: 'After Photo (Case 3)',
       targetType: 'project',
@@ -309,8 +309,8 @@ export const WebsiteImagesTab: React.FC = () => {
         title: `${service.title} Card Image`,
         titleBn: `${service.titleBn || service.title} সার্ভিসের ছবি`,
         locationLabel: `Services > ${service.title}`,
-        currentUrl: service.image || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
-        defaultUrl: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+        currentUrl: service.image || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+        defaultUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
         aspectRatio: 'aspect-video',
         badge: 'Service Card',
         targetType: 'service' as const,
@@ -358,12 +358,16 @@ export const WebsiteImagesTab: React.FC = () => {
       }
 
       // Persist permanently to Supabase Storage registry and Supabase Database
-      await persistImageChange(
+      const persistRes = await persistImageChange(
         editingSlot.targetType,
         editingSlot.targetKey,
         newUrl,
         editingSlot.targetId
       );
+
+      if (!persistRes.success) {
+        throw new Error(persistRes.error || 'Supabase Storage বা Database-এ ছবি সংরক্ষণ ব্যর্থ হয়েছে');
+      }
 
       recordAuditLog(
         adminUser?.email || 'admin@sunviloz.com',
@@ -376,9 +380,9 @@ export const WebsiteImagesTab: React.FC = () => {
       setSuccessToast(`"${editingSlot.titleBn}" এর ছবি স্থায়ীভাবে Supabase-এ সংরক্ষিত ও প্রকাশিত হয়েছে!`);
       setTimeout(() => setSuccessToast(null), 4000);
       setEditingSlot(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to apply new image:', err);
-      setSuccessToast('ছবি প্রয়োগ করতে সমস্যা হয়েছে। অনুগ্রহ করে পুনরায় চেষ্টা করুন।');
+      setSuccessToast(err?.message || 'ছবি প্রয়োগ করতে সমস্যা হয়েছে। অনুগ্রহ করে পুনরায় চেষ্টা করুন।');
       setTimeout(() => setSuccessToast(null), 4000);
     }
   };

@@ -23,7 +23,7 @@ export const AboutPreviewSection: React.FC<AboutPreviewSectionProps> = ({
   const { lang } = useLanguage();
   const { business, images } = useSiteConfig();
 
-  const storyImage = images?.aboutStoryImage || 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png';
+  const storyImage = images?.aboutStoryImage || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png';
 
   const handleGoServices = () => {
     trackEvent('about_cta_services_click', { source: 'about_section' });

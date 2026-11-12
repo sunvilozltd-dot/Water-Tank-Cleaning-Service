@@ -139,7 +139,7 @@ export const ProblemSection: React.FC<ProblemSectionProps> = ({ onCheckPrice = (
               <div 
                 className="absolute inset-0 bg-cover bg-center"
                 style={{
-                  backgroundImage: `url('/assets/aistudio/hero-rooftop-poster.jpg')`
+                  backgroundImage: `url('https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg')`
                 }}
               >
                 <div className="absolute top-4 right-4 bg-cyan-950/90 backdrop-blur-md text-cyan-200 text-xs font-extrabold px-3 py-1.5 rounded-full border border-cyan-400/40 shadow-lg">
@@ -152,7 +152,7 @@ export const ProblemSection: React.FC<ProblemSectionProps> = ({ onCheckPrice = (
                 className="absolute inset-0 bg-cover bg-center overflow-hidden border-r-2 border-white filter contrast-125"
                 style={{
                   width: `${sliderPos}%`,
-                  backgroundImage: `url('/assets/aistudio/hero-underground-poster.jpg')`
+                  backgroundImage: `url('https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png')`
                 }}
               >
                 <div className="absolute inset-0 bg-amber-950/40 mix-blend-multiply" />

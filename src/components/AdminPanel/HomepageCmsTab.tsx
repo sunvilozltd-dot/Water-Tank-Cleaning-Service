@@ -75,9 +75,9 @@ export const HomepageCmsTab: React.FC = () => {
     subtitleBn: 'নিয়মিত পানির ট্যাংক পরিষ্কার রাখা আপনার ও পরিবারের সুস্থতার জন্য জরুরি। আপনার ট্যাংকের তথ্য জানিয়ে রিকোয়েস্ট করুন, আমাদের টিম সঠিক কোটেশন প্রদান করবে।',
     isEnabled: true,
     order: 0,
-    videoUrl: '/videos/tank-cleaning-desktop.mp4',
-    mobileVideoUrl: '/videos/tank-cleaning-mobile.mp4',
-    posterImageUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
+    videoUrl: 'https://youtu.be/vaVkY5afSSE?si=h0czPzjN6VtSIvXZ',
+    mobileVideoUrl: 'https://youtu.be/WY01Mrj5tzc?si=T6DQpEJagoLttn4j',
+    posterImageUrl: 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg',
     settings: {
       videoEnabled: true,
       overlayOpacity: 0.72,
@@ -92,26 +92,26 @@ export const HomepageCmsTab: React.FC = () => {
 
   // Video 1 (ছাদের পানির ট্যাংক ক্লিনিং - Rooftop Tank Cleaning)
   const [video1Url, setVideo1Url] = useState<string>(
-    heroSection.videoUrl || hero.videoUrl || '/videos/tank-cleaning-desktop.mp4'
+    heroSection.videoUrl || hero.videoUrl || 'https://youtu.be/vaVkY5afSSE?si=h0czPzjN6VtSIvXZ'
   );
   const [poster1Url, setPoster1Url] = useState<string>(
-    heroSection.posterImageUrl || hero.posterImageUrl || '/assets/aistudio/hero-rooftop-poster.jpg'
+    heroSection.posterImageUrl || hero.posterImageUrl || 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg'
   );
 
   // Video 2 (আন্ডারগ্রাউন্ড রিজার্ভার ক্লিনিং - Underground Reservoir & Sludge Extraction)
   const [video2Url, setVideo2Url] = useState<string>(
-    heroSection.video2Url || heroSection.mobileVideoUrl || hero.video2Url || hero.mobileVideoUrl || '/videos/tank-cleaning-mobile.mp4'
+    heroSection.video2Url || heroSection.mobileVideoUrl || hero.video2Url || hero.mobileVideoUrl || 'https://youtu.be/WY01Mrj5tzc?si=T6DQpEJagoLttn4j'
   );
   const [poster2Url, setPoster2Url] = useState<string>(
-    heroSection.posterImage2Url || hero.posterImage2Url || '/assets/aistudio/hero-underground-poster.jpg'
+    heroSection.posterImage2Url || hero.posterImage2Url || 'https://img.youtube.com/vi/WY01Mrj5tzc/hqdefault.jpg'
   );
 
   // Video 3 (পানির পাইপলাইন ক্লিনিং - Water Pipeline Descaling & Hydro-Pulse Wash)
   const [video3Url, setVideo3Url] = useState<string>(
-    heroSection.video3Url || hero.video3Url || ''
+    heroSection.video3Url || hero.video3Url || 'https://youtu.be/aE30Yl5Qpt4?si=WyubHkRWWDhyR8OF'
   );
   const [poster3Url, setPoster3Url] = useState<string>(
-    heroSection.posterImage3Url || hero.posterImage3Url || '/assets/aistudio/hero-underground-poster.jpg'
+    heroSection.posterImage3Url || hero.posterImage3Url || 'https://img.youtube.com/vi/aE30Yl5Qpt4/hqdefault.jpg'
   );
 
   const [overlayOpacity, setOverlayOpacity] = useState<number>(
@@ -184,12 +184,12 @@ export const HomepageCmsTab: React.FC = () => {
   useEffect(() => {
     if (heroSection) {
       setVideoEnabled(heroSection.settings?.videoEnabled ?? hero.videoEnabled ?? true);
-      setVideo1Url(heroSection.videoUrl || hero.videoUrl || '/videos/tank-cleaning-desktop.mp4');
-      setPoster1Url(heroSection.posterImageUrl || hero.posterImageUrl || '/assets/aistudio/hero-rooftop-poster.jpg');
-      setVideo2Url(heroSection.video2Url || heroSection.mobileVideoUrl || hero.video2Url || hero.mobileVideoUrl || '/videos/tank-cleaning-mobile.mp4');
-      setPoster2Url(heroSection.posterImage2Url || hero.posterImage2Url || '/assets/aistudio/hero-underground-poster.jpg');
-      setVideo3Url(heroSection.video3Url || hero.video3Url || '');
-      setPoster3Url(heroSection.posterImage3Url || hero.posterImage3Url || '/assets/aistudio/hero-underground-poster.jpg');
+      setVideo1Url(heroSection.videoUrl || hero.videoUrl || 'https://youtu.be/vaVkY5afSSE?si=h0czPzjN6VtSIvXZ');
+      setPoster1Url(heroSection.posterImageUrl || hero.posterImageUrl || 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg');
+      setVideo2Url(heroSection.video2Url || heroSection.mobileVideoUrl || hero.video2Url || hero.mobileVideoUrl || 'https://youtu.be/WY01Mrj5tzc?si=T6DQpEJagoLttn4j');
+      setPoster2Url(heroSection.posterImage2Url || hero.posterImage2Url || 'https://img.youtube.com/vi/WY01Mrj5tzc/hqdefault.jpg');
+      setVideo3Url(heroSection.video3Url || hero.video3Url || 'https://youtu.be/aE30Yl5Qpt4?si=WyubHkRWWDhyR8OF');
+      setPoster3Url(heroSection.posterImage3Url || hero.posterImage3Url || 'https://img.youtube.com/vi/aE30Yl5Qpt4/hqdefault.jpg');
       setOverlayOpacity(heroSection.settings?.overlayOpacity ?? hero.overlayOpacity ?? 0.72);
       setOverlayColor((heroSection.settings?.overlayColor as any) ?? hero.overlayColor ?? 'navy');
     }
@@ -742,7 +742,7 @@ export const HomepageCmsTab: React.FC = () => {
                     type="text"
                     value={poster1Url}
                     onChange={(e) => setPoster1Url(e.target.value)}
-                    placeholder="https://... or /assets/aistudio/hero-rooftop-poster.jpg"
+                    placeholder="https://... বা https://img.youtube.com/vi/..."
                     className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
                   />
                   <label className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg flex items-center gap-1.5 border border-slate-700 shrink-0">
@@ -877,7 +877,7 @@ export const HomepageCmsTab: React.FC = () => {
                     type="text"
                     value={poster2Url}
                     onChange={(e) => setPoster2Url(e.target.value)}
-                    placeholder="https://... or /assets/aistudio/hero-underground-poster.jpg"
+                    placeholder="https://... বা https://img.youtube.com/vi/..."
                     className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
                   />
                   <label className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg flex items-center gap-1.5 border border-slate-700 shrink-0">
@@ -1043,12 +1043,12 @@ export const HomepageCmsTab: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setVideo1Url('/videos/tank-cleaning-desktop.mp4');
-                    setPoster1Url('/assets/aistudio/hero-rooftop-poster.jpg');
-                    setVideo2Url('/videos/tank-cleaning-mobile.mp4');
-                    setPoster2Url('/assets/aistudio/hero-underground-poster.jpg');
-                    setVideo3Url('');
-                    setPoster3Url('/assets/aistudio/hero-underground-poster.jpg');
+                    setVideo1Url('https://youtu.be/vaVkY5afSSE?si=h0czPzjN6VtSIvXZ');
+                    setPoster1Url('https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg');
+                    setVideo2Url('https://youtu.be/WY01Mrj5tzc?si=T6DQpEJagoLttn4j');
+                    setPoster2Url('https://img.youtube.com/vi/WY01Mrj5tzc/hqdefault.jpg');
+                    setVideo3Url('https://youtu.be/aE30Yl5Qpt4?si=WyubHkRWWDhyR8OF');
+                    setPoster3Url('https://img.youtube.com/vi/aE30Yl5Qpt4/hqdefault.jpg');
                     setVideoEnabled(true);
                   }}
                   className="p-3 bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-blue-600 rounded-lg text-left transition-all"
@@ -1060,12 +1060,12 @@ export const HomepageCmsTab: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setVideo1Url('/videos/tank-cleaning-desktop.mp4');
-                    setPoster1Url('/assets/aistudio/hero-rooftop-poster.jpg');
-                    setVideo2Url('/videos/tank-cleaning-desktop.mp4');
-                    setPoster2Url('/assets/aistudio/hero-underground-poster.jpg');
-                    setVideo3Url('');
-                    setPoster3Url('/assets/aistudio/hero-underground-poster.jpg');
+                    setVideo1Url('https://youtu.be/vaVkY5afSSE?si=h0czPzjN6VtSIvXZ');
+                    setPoster1Url('https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg');
+                    setVideo2Url('https://youtu.be/WY01Mrj5tzc?si=T6DQpEJagoLttn4j');
+                    setPoster2Url('https://img.youtube.com/vi/WY01Mrj5tzc/hqdefault.jpg');
+                    setVideo3Url('https://youtu.be/aE30Yl5Qpt4?si=WyubHkRWWDhyR8OF');
+                    setPoster3Url('https://img.youtube.com/vi/aE30Yl5Qpt4/hqdefault.jpg');
                     setVideoEnabled(true);
                   }}
                   className="p-3 bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-cyan-600 rounded-lg text-left transition-all"

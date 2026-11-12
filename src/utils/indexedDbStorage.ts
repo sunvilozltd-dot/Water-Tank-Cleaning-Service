@@ -44,6 +44,7 @@ function getDb(): Promise<IDBDatabase> {
  * Save value to IndexedDB
  */
 export async function idbSet(key: string, value: string): Promise<boolean> {
+  if (typeof window === 'undefined' || !window.indexedDB) return false;
   try {
     const db = await getDb();
     return new Promise((resolve) => {

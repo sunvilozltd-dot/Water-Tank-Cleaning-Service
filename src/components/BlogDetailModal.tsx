@@ -180,15 +180,26 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
           {/* Article Paragraphs */}
           <div className="space-y-4 text-sm sm:text-base text-[#172B3A] leading-relaxed border-t border-[#E2E8F0] pt-6 font-normal">
             {content.split('\n\n').map((paragraph, index) => {
-              if (paragraph.startsWith('### ') || paragraph.startsWith('## ')) {
+              const trimmed = paragraph.trim();
+              if (trimmed === '---') {
+                return <hr key={index} className="border-t border-[#E2E8F0] my-4" />;
+              }
+              if (trimmed.startsWith('## ')) {
                 return (
-                  <h3 key={index} className="text-lg sm:text-xl font-bold text-[#123047] pt-2">
-                    {paragraph.replace(/^#+\s*/, '')}
+                  <h2 key={index} className="text-xl sm:text-2xl font-extrabold text-[#123047] pt-4 pb-1">
+                    {trimmed.replace(/^##\s*/, '')}
+                  </h2>
+                );
+              }
+              if (trimmed.startsWith('### ')) {
+                return (
+                  <h3 key={index} className="text-lg sm:text-xl font-bold text-[#123047] pt-3">
+                    {trimmed.replace(/^###\s*/, '')}
                   </h3>
                 );
               }
-              if (paragraph.startsWith('- ') || paragraph.startsWith('* ')) {
-                const items = paragraph.split('\n').filter(Boolean);
+              if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                const items = trimmed.split('\n').filter(Boolean);
                 return (
                   <ul key={index} className="list-disc list-inside space-y-1.5 pl-2 text-[#172B3A]">
                     {items.map((item, itemIdx) => (
@@ -199,9 +210,21 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
                   </ul>
                 );
               }
+              if (/^\d+\.\s/.test(trimmed)) {
+                const items = trimmed.split('\n').filter(Boolean);
+                return (
+                  <ol key={index} className="list-decimal list-inside space-y-1.5 pl-2 text-[#172B3A]">
+                    {items.map((item, itemIdx) => (
+                      <li key={itemIdx} className="leading-relaxed">
+                        {item.replace(/^\d+\.\s*/, '')}
+                      </li>
+                    ))}
+                  </ol>
+                );
+              }
               return (
                 <p key={index} className="leading-relaxed text-[#172B3A]">
-                  {paragraph}
+                  {trimmed}
                 </p>
               );
             })}

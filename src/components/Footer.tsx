@@ -30,7 +30,8 @@ export const Footer: React.FC<FooterProps> = ({
   const { services } = useServices();
   const { headerConfig } = useHeaderNav();
   const { images } = useSiteConfig();
-  const activeLogoUrl = headerConfig.logoUrl || images?.logo || '/assets/aistudio/sunviloz-logo.png';
+  const activeLogoUrl = headerConfig.logoUrl || images?.logo || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png';
+  const [logoError, setLogoError] = useState(false);
   const currentYear = new Date().getFullYear();
   const [modalPolicy, setModalPolicy] = useState<'privacy' | 'terms' | null>(null);
 
@@ -56,16 +57,15 @@ export const Footer: React.FC<FooterProps> = ({
             {/* Col 1 & 2: Brand Information */}
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                {headerConfig.logoEnabled && activeLogoUrl ? (
+                {headerConfig.logoEnabled && activeLogoUrl && !logoError ? (
                   <img
                     src={activeLogoUrl}
                     alt={headerConfig.logoAlt || `${headerConfig.brandName || 'Sunviloz'} Logo`}
-                    onError={(e) => {
-                      const target = e.currentTarget as HTMLImageElement;
-                      if (!target.src.includes('sunviloz-logo.png')) {
-                        target.src = '/assets/aistudio/sunviloz-logo.png';
-                      }
-                    }}
+                    width={headerConfig.logoWidth || 48}
+                    height={headerConfig.logoHeight || 38}
+                    loading="lazy"
+                    decoding="async"
+                    onError={() => setLogoError(true)}
                     style={{
                       height: `${headerConfig.logoHeight || 38}px`,
                       width: 'auto',
@@ -106,8 +106,8 @@ export const Footer: React.FC<FooterProps> = ({
 
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-sm">
                 {lang === 'bn' 
-                  ? 'ঢাকা শহরের সকল আবাসিক ভবন, অ্যাপার্টমেন্ট ও বাণিজ্যিক প্রতিষ্ঠানে আধুনিক মেকানাইজড রোটারি ওয়াটার জেট ও ফুড-গ্রেড জীবাণুমুক্তকরণ সেবায় সানভিলোজ ক্লিন কেয়ার একটি বিশ্বস্ত নাম।'
-                  : 'Sunviloz Clean Care is the trusted mechanized water tank and pipeline cleaning specialist for residential buildings and commercial properties across Dhaka.'}
+                  ? 'ঢাকা শহরের সকল আবাসিক ভবন, অ্যাপার্টমেন্ট ও বাণিজ্যিক প্রতিষ্ঠানে পেশাদার ওয়াটার ট্যাংক ক্লিনার ও আধুনিক মেকানাইজড রোটারি ওয়াটার জেট জীবাণুমুক্তকরণ সেবায় সানভিলোজ ক্লিন কেয়ার একটি বিশ্বস্ত নাম।'
+                  : 'Sunviloz Clean Care is the trusted professional water tank cleaner and pipeline cleaning specialist for residential buildings and commercial properties across Dhaka.'}
               </p>
 
               {/* Direct Booking & Hotline Actions */}

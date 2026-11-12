@@ -3,8 +3,8 @@ import { getProductionDomain, DEFAULT_GOOGLE_CONFIG } from '../config/siteDomain
 
 export const BUSINESS_CONFIG = {
   name: 'Sunviloz Clean Care',
-  tagline: 'Professional Water Tank Cleaning Service in Dhaka',
-  taglineBn: 'ঢাকায় প্রফেশনাল ওয়াটার ট্যাংক ক্লিনিং সার্ভিস',
+  tagline: 'Professional Water Tank Cleaner & Cleaning Service in Dhaka',
+  taglineBn: 'ঢাকায় প্রফেশনাল ওয়াটার ট্যাংক ক্লিনার ও ক্লিনিং সার্ভিস',
   
   // Contact Configuration (Central & Configurable)
   phone: '01609999612',
@@ -88,9 +88,9 @@ export const SERVICES_DATA: ServiceItem[] = [
     titleBn: 'পানির ট্যাংক পরিষ্কার সার্ভিস',
     shortDesc: 'Underground and overhead water tank cleaning service for residences, apartments, and commercial buildings.',
     shortDescBn: 'বাসা, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের আন্ডারগ্রাউন্ড এবং ওভারহেড পানির ট্যাংক পরিষ্কারের সার্ভিস।',
-    fullDesc: 'Complete mechanized deep cleaning for both rooftop overhead tanks (PVC and concrete RCC) and underground reserve tanks. Our specialized team uses modern high-pressure rotary water jets, sludge extraction pumps, and food-grade sanitization for hygienic water storage.',
-    whatIsThis: 'Water Tank Cleaning Service is a mechanized deep-cleaning service specifically designed for both rooftop and subterranean water storage reservoirs.',
-    whatIsThisBn: 'পানির ট্যাংক পরিষ্কার সার্ভিস হলো বাসা, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের আন্ডারগ্রাউন্ড এবং ওভারহেড পানির ট্যাংক আধুনিক মেশিনে নিখুঁতভাবে পরিষ্কার করার পেশাদার সেবা।',
+    fullDesc: 'Complete mechanized deep cleaning by professional water tank cleaner experts for both rooftop overhead tanks (PVC and concrete RCC) and underground reserve tanks. Our specialized team uses modern high-pressure rotary water jets, sludge extraction pumps, and food-grade sanitization for hygienic water storage.',
+    whatIsThis: 'Water Tank Cleaning Service by our certified water tank cleaner team is a mechanized deep-cleaning service specifically designed for both rooftop and subterranean water storage reservoirs.',
+    whatIsThisBn: 'পানির ট্যাংক পরিষ্কার সার্ভিস হলো বাসা, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের আন্ডারগ্রাউন্ড এবং ওভারহেড পানির ট্যাংক অভিজ্ঞ ওয়াটার ট্যাংক ক্লিনারের আধুনিক মেশিনে নিখুঁতভাবে পরিষ্কার করার পেশাদার সেবা।',
     whyNeeded: 'Tanks develop heavy sludge, municipal sand, and green algae that cultivate harmful bacteria, causing foul odors and clogged taps.',
     whyNeededBn: 'নিয়মিত পরিষ্কার না করলে ট্যাংকে ময়লা, কাদা ও শ্যাওলা জমে পানির স্বাভাবিক গন্ধ ও স্বচ্ছতা নষ্ট করে এবং পাইপলাইনে প্রতিবন্ধকতা সৃষ্টি করে।',
     whenNeeded: [
@@ -138,7 +138,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'বাণিজ্যিক ভবন ও কর্পোরেট অফিস',
       'হাসপাতাল, স্কুল ও রেস্টুরেন্ট'
     ],
-    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     faqs: [
       {
         question: 'How often should water tanks be cleaned in Dhaka?',
@@ -205,7 +205,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'বাণিজ্যিক অফিস ও শপিং মল',
       'আয়রনযুক্ত পুরানো পানির পাইপলাইন'
     ],
-    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
     faqs: [
       {
         question: 'Do you need to break walls for pipeline cleaning?',
@@ -292,7 +292,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'বাণিজ্যিক ভবন ও কর্পোরেট অফিস',
       'ডুপ্লেক্স বাড়ি ও ছাদের পিভিসি ব্যাটারি ট্যাংক'
     ],
-    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     faqs: [
       {
         question: 'Will high pressure water jet damage my PVC rooftop tank?',
@@ -389,10 +389,10 @@ export const SERVICES_DATA: ServiceItem[] = [
       'বাণিজ্যিক কমপ্লেক্স, শপিং মল ও কর্পোরেট অফিস',
       'হাসপাতাল, শিক্ষাপ্রতিষ্ঠান ও আবাসিক হোটেল'
     ],
-    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
     beforeAfterImage: {
-      before: '/assets/aistudio/hero-underground-poster.jpg',
-      after: '/assets/aistudio/hero-rooftop-poster.jpg'
+      before: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+      after: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
     },
     faqs: [
       {
@@ -477,7 +477,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'বহুতল বাণিজ্যিক ভবন ও কর্পোরেট সেন্টার',
       'শিক্ষাপ্রতিষ্ঠান, রেস্তোরাঁ ও কারখানা'
     ],
-    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     faqs: [
       {
         question: 'Can both tanks be cleaned on the same day?',
@@ -561,7 +561,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'পুরাতন বিল্ডিং যেখানে পাইপের মুখে আয়রন আটকে প্রেশার কমে গেছে',
       'শিশুদের ত্বক ও পরিবারের সুস্বাস্থ্যে সচেতন পরিবারসমূহ'
     ],
-    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
     faqs: [
       {
         question: 'Will pipeline cleaning damage internal CPVC, PPR, or PVC pipes?',
@@ -641,7 +641,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'ভবনের পাইপলাইনের স্বাভাবিক পানির গতি ফেরাতে',
       'কল বা শাওয়ারের মুখে আটকে থাকা ময়লা পরিষ্কার করতে'
     ],
-    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
     faqs: [
       {
         question: 'Do I need to break any walls or replace pipes?',
@@ -725,7 +725,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'হাসপাতাল, কিন্ডারগার্টেন, কলেজ ও বিশ্ববিদ্যালয় হোস্টেল',
       'স্বাস্থ্য সচেতন আধুনিক পরিবারবর্গ'
     ],
-    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     faqs: [
       {
         question: 'How do you coordinate with tenants so water is not shut off for too long?',
@@ -745,7 +745,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Comprehensive home cleaning designed to make your living spaces hygienic and sparkling. Our trained cleaning specialists thoroughly sanitize living rooms, bedrooms, balconies, and common areas using eco-friendly solutions.',
     iconName: 'Home',
     isPrimary: false,
-    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
   },
   {
     id: 'service-office-cleaning',
@@ -757,7 +757,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Keep your workplace spotless, hygienic, and productive with our commercial office cleaning services. We sanitize workstations, meeting rooms, glass partitions, and executive suites.',
     iconName: 'Briefcase',
     isPrimary: false,
-    image: '/assets/aistudio/hero-rooftop-poster.jpg'
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
   },
   {
     id: 'service-deep-cleaning',
@@ -769,7 +769,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Goes beyond routine surface dusting. Our deep cleaning tackles hidden grime, tile grout calcification, appliance exteriors, light fixtures, and neglected corners.',
     iconName: 'Sparkles',
     isPrimary: false,
-    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
   },
   {
     id: 'service-sofa-cleaning',
@@ -781,7 +781,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Restore freshness and hygiene to your sofas and armchairs. We use specialized injection-extraction vacuum machines that lift deep grime, food stains, and allergen dust mites.',
     iconName: 'Layers',
     isPrimary: false,
-    image: '/assets/aistudio/hero-rooftop-poster.jpg'
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
   },
   {
     id: 'service-bathroom-cleaning',
@@ -793,7 +793,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Intensive descaling and bacterial disinfection for washrooms. Removes stubborn yellowish iron stains from floor tiles, glass shower enclosures, mirrors, and sanitary fittings.',
     iconName: 'Droplets',
     isPrimary: false,
-    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
   },
   {
     id: 'service-kitchen-cleaning',
@@ -805,7 +805,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Thorough grease removal and kitchen hygiene. Eliminates oily films from exhaust hoods, cooktops, countertops, cabinets, and splashback tiles.',
     iconName: 'Wrench',
     isPrimary: false,
-    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
   },
   {
     id: 'service-pest-control',
@@ -817,7 +817,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Safe, odorless formulations designed to help protect your living environment and manage household pest infestations responsibly.',
     iconName: 'ShieldAlert',
     isPrimary: false,
-    image: '/assets/aistudio/hero-underground-poster.jpg'
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png'
   },
   {
     id: 'service-glass-window-cleaning',
@@ -829,7 +829,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Crystal clear glass cleaning for residential windows, high-rise building facades, and office glass partitions using scratch-free squeegees and purified water rinses.',
     iconName: 'Building',
     isPrimary: false,
-    image: '/assets/aistudio/hero-rooftop-poster.jpg'
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
   },
   {
     id: 'service-carpet-cleaning',
@@ -841,7 +841,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Deep carpet shampooing using industrial injection-extraction equipment that lifts trapped mud and dust mites without over-wetting, ensuring fast drying.',
     iconName: 'Layers',
     isPrimary: false,
-    image: '/assets/aistudio/hero-rooftop-poster.jpg'
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png'
   },
   {
     id: 'service-commercial-cleaning',
@@ -853,7 +853,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     fullDesc: 'Turnkey facility maintenance and post-renovation commercial scrubbing with multi-person squads equipped with rotary floor scrubbers and wet vacuum extractors.',
     iconName: 'Building',
     isPrimary: false,
-    image: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
+    image: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
   }
 ];
 

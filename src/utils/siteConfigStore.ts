@@ -12,10 +12,11 @@ import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { 
   getStoredImageRegistry, 
   fetchCentralImageRegistry, 
-  CENTRAL_IMAGES_EVENT 
+  CENTRAL_IMAGES_EVENT,
+  isDemoOrStockUrl 
 } from '../services/imageSyncService';
 
-const SITE_CONFIG_STORAGE_KEY = 'sunviloz_site_master_config_v4';
+const SITE_CONFIG_STORAGE_KEY = 'sunviloz_site_master_config_v5';
 export const SITE_CONFIG_EVENT = 'sunviloz_site_config_changed';
 
 export const DEFAULT_HOMEPAGE_SECTIONS: SectionConfig[] = [
@@ -48,12 +49,12 @@ export const DEFAULT_HERO_CONFIG: HeroConfig = {
   ctaQuoteTextBn: 'কোটেশন রিকোয়েস্ট করুন',
   ctaCallTextEn: 'Call 01609-999612',
   ctaCallTextBn: 'কল করুন 01609-999612',
-  bgImageUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
+  bgImageUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
   // Hero Tri-Video Settings (Responsive Side-by-Side on Desktop, Stacked on Mobile)
   videoEnabled: true,
-  videoUrl: '/videos/tank-cleaning-desktop.mp4',
-  video2Url: '/videos/tank-cleaning-mobile.mp4',
-  video3Url: '',
+  videoUrl: 'https://youtu.be/vaVkY5afSSE?si=h0czPzjN6VtSIvXZ',
+  video2Url: 'https://youtu.be/WY01Mrj5tzc?si=T6DQpEJagoLttn4j',
+  video3Url: 'https://youtu.be/aE30Yl5Qpt4?si=WyubHkRWWDhyR8OF',
   video1TitleEn: 'Rooftop Tank Cleaning (150-Bar Rotary Jet)',
   video1TitleBn: '১. ছাদের ট্যাংক ক্লিনিং (১৫০ বার রোটারি জেট)',
   video2TitleEn: 'Underground Reserve Tank & Sludge Extraction',
@@ -66,12 +67,12 @@ export const DEFAULT_HERO_CONFIG: HeroConfig = {
   video2SubtitleBn: 'সাবমারসিবল পাম্পে মাটির নিচের গভীর কাদা ও ভারী স্লাজ উত্তোলন',
   video3SubtitleEn: 'Hydrodynamic pipe descaling flushing iron, rust & biofilms without wall damage',
   video3SubtitleBn: 'দেয়াল না ভেঙে হাইড্রো-পালস পদ্ধতিতে পাইপলাইনের ভেতরের মরিচা ও শ্যাওলা পরিষ্কার',
-  mobileVideoUrl: '/videos/tank-cleaning-desktop.mp4',
-  mobileVideo2Url: '/videos/tank-cleaning-mobile.mp4',
-  mobileVideo3Url: '',
-  posterImageUrl: '/assets/aistudio/hero-rooftop-poster.jpg',
-  posterImage2Url: '/assets/aistudio/hero-underground-poster.jpg',
-  posterImage3Url: '/assets/aistudio/hero-underground-poster.jpg',
+  mobileVideoUrl: 'https://youtu.be/vaVkY5afSSE?si=h0czPzjN6VtSIvXZ',
+  mobileVideo2Url: 'https://youtu.be/WY01Mrj5tzc?si=T6DQpEJagoLttn4j',
+  mobileVideo3Url: 'https://youtu.be/aE30Yl5Qpt4?si=WyubHkRWWDhyR8OF',
+  posterImageUrl: 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg',
+  posterImage2Url: 'https://img.youtube.com/vi/WY01Mrj5tzc/hqdefault.jpg',
+  posterImage3Url: 'https://img.youtube.com/vi/aE30Yl5Qpt4/hqdefault.jpg',
   overlayOpacity: 0.72,
   overlayColor: 'navy',
   visualHeadingBn: 'অত্যাধুনিক মেকানাইজড ওয়াটার ট্যাংক ক্লিনিং',
@@ -110,11 +111,11 @@ export const INITIAL_FULL_SITE_CONFIG: FullSiteConfig = {
     socialOgImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png'
   },
   images: {
-    heroPoster: '/assets/aistudio/hero-rooftop-poster.jpg',
-    aboutStoryImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
-    popularTankImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
-    popularUndergroundImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
-    popularPipelineImage: 'https://mznffcqjlnfgmcyhkmwv.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
+    heroPoster: 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg',
+    aboutStoryImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/hero/aboutstoryimage_1794136892339.png',
+    popularTankImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
+    popularUndergroundImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    popularPipelineImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'
   }
 };
 
@@ -171,10 +172,25 @@ export const sanitizeAndMergeConfig = (parsed: Partial<FullSiteConfig>): FullSit
   };
 
   const imageReg = getStoredImageRegistry();
-  const mergedImages = {
+  const rawMerged = {
     ...INITIAL_FULL_SITE_CONFIG.images,
     ...(parsed.images || {}),
     ...(imageReg?.siteImages || {})
+  };
+
+  const getCleanImg = (val?: string, def?: string) => {
+    if (val && typeof val === 'string' && val.trim() && !isDemoOrStockUrl(val)) {
+      return val.trim();
+    }
+    return def || '';
+  };
+
+  const mergedImages = {
+    heroPoster: getCleanImg(rawMerged.heroPoster, INITIAL_FULL_SITE_CONFIG.images?.heroPoster),
+    aboutStoryImage: getCleanImg(rawMerged.aboutStoryImage, INITIAL_FULL_SITE_CONFIG.images?.aboutStoryImage),
+    popularTankImage: getCleanImg(rawMerged.popularTankImage, INITIAL_FULL_SITE_CONFIG.images?.popularTankImage),
+    popularUndergroundImage: getCleanImg(rawMerged.popularUndergroundImage, INITIAL_FULL_SITE_CONFIG.images?.popularUndergroundImage),
+    popularPipelineImage: getCleanImg(rawMerged.popularPipelineImage, INITIAL_FULL_SITE_CONFIG.images?.popularPipelineImage)
   };
 
   return {
@@ -185,8 +201,8 @@ export const sanitizeAndMergeConfig = (parsed: Partial<FullSiteConfig>): FullSit
       ...(imageReg?.heroVideos?.video1Url ? { videoUrl: imageReg.heroVideos.video1Url } : {}),
       ...(imageReg?.heroVideos?.video2Url ? { video2Url: imageReg.heroVideos.video2Url, mobileVideoUrl: imageReg.heroVideos.video2Url } : {}),
       ...(imageReg?.heroVideos?.video3Url ? { video3Url: imageReg.heroVideos.video3Url } : {}),
-      ...(imageReg?.siteImages?.heroPoster ? { posterImageUrl: imageReg.siteImages.heroPoster } : {}),
-      ...(imageReg?.siteImages?.heroBg ? { bgImageUrl: imageReg.siteImages.heroBg } : {})
+      ...(imageReg?.siteImages?.heroPoster && !isDemoOrStockUrl(imageReg.siteImages.heroPoster) ? { posterImageUrl: imageReg.siteImages.heroPoster } : {}),
+      ...(imageReg?.siteImages?.heroBg && !isDemoOrStockUrl(imageReg.siteImages.heroBg) ? { bgImageUrl: imageReg.siteImages.heroBg } : {})
     },
     sections: mergedSections,
     whyChooseUs: parsed.whyChooseUs || INITIAL_FULL_SITE_CONFIG.whyChooseUs,
