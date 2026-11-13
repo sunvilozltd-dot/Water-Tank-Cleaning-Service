@@ -16,6 +16,7 @@ import { AmbientWaterBackground } from './components/AmbientWaterBackground';
 import { initUtmTracking } from './utils/utmTracking';
 import { initAnalytics, trackPageView } from './utils/tracking';
 import { fetchCentralImageRegistry } from './services/imageSyncService';
+import { fetchUrlRedirects } from './services/zoneContentService';
 
 // Critical Homepage eagerly loaded for instant FCP / LCP
 import { HomePage } from './pages/HomePage';
@@ -168,6 +169,15 @@ function AppContent({ initialPath, ssrComponents }: AppProps) {
       } else if (currentPath === '/pricing' || currentPath === '/pricing/') {
         window.history.replaceState(null, '', '/get-quote');
         setCurrentPath('/get-quote');
+      } else if (!currentPath.startsWith('/admin')) {
+        const cleanCurrent = currentPath === '/' ? '/' : currentPath.replace(/\/+$/, '');
+        fetchUrlRedirects().then(redirects => {
+          const match = redirects.find(r => r.isActive && r.fromPath === cleanCurrent);
+          if (match && match.toPath && match.toPath !== cleanCurrent) {
+            window.history.replaceState(null, '', match.toPath);
+            setCurrentPath(match.toPath);
+          }
+        }).catch(() => {});
       }
     }
   }, [currentPath]);
@@ -371,7 +381,7 @@ function AppContent({ initialPath, ssrComponents }: AppProps) {
       <Footer onNavigate={navigate} />
 
       {/* Mobile Sticky Bar & Floating Action Buttons */}
-      <MobileStickyBar onOpenQuoteModal={() => handleOpenQuoteModal()} />
+      <MobileStickyBar onOpenQuoteModal={() => handleOpenQuoteModal()} isHidden={isQuoteModalOpen || Boolean(selectedBlogPost)} />
       <FloatingContactButtons onOpenQuoteModal={() => handleOpenQuoteModal()} />
 
       {/* GDPR / Privacy Consent Banner */}

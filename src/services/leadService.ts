@@ -44,7 +44,7 @@ export async function createLead(
   ownershipToken?: string | null
 ): Promise<QuoteLead> {
   const cleanPhone = normalizeBangladeshiPhone(data.phone || '');
-  const cleanName = sanitizeInputString(data.name, 100);
+  const cleanName = sanitizeInputString(data.name, 100) || 'Website Visitor';
   const cleanArea = sanitizeInputString(data.area, 100);
   const cleanWhatsapp = normalizeBangladeshiPhone(data.whatsapp || data.phone || '');
 
@@ -54,7 +54,7 @@ export async function createLead(
       const localLeads = getLocalLeads();
       const nowMs = Date.now();
       const recentDuplicate = localLeads.find(l => {
-        if (!l.createdAt || !l.phone) return false;
+        if (!l.createdAt || !l.phone || !l.isSyncedToCloud) return false;
         const createdMs = new Date(l.createdAt).getTime();
         const isRecent = (nowMs - createdMs) < 20000; // 20 second idempotency window
         const lCleanPhone = normalizeBangladeshiPhone(l.phone);
@@ -163,7 +163,7 @@ export async function createLead(
             phone: cleanPhone,
             whatsapp: cleanWhatsapp,
             email: data.email ? sanitizeInputString(data.email, 100) : null,
-            area: cleanArea,
+            area: cleanArea || 'Dhaka',
             address: address || null,
             service_type: data.serviceType || 'Water Tank Cleaning',
             tank_type: data.tankType || null,
@@ -615,14 +615,14 @@ export async function updateLeadDetails(lead: QuoteLead): Promise<boolean> {
  */
 export async function saveOrUpdatePartialLead(
   leadId: string | null,
-  data: Partial<QuoteLead> & { name: string; phone: string },
+  data: Partial<QuoteLead> & { name?: string; phone: string },
   ownershipToken?: string | null,
   idempotencyKey?: string | null
 ): Promise<QuoteLead> {
   const localLeads = getLocalLeads();
   const now = new Date().toISOString();
   const cleanPhone = normalizeBangladeshiPhone(data.phone);
-  const cleanName = sanitizeInputString(data.name, 100);
+  const cleanName = sanitizeInputString(data.name, 100) || 'Website Visitor';
   const cleanWhatsapp = normalizeBangladeshiPhone(data.whatsapp || cleanPhone);
   const cleanArea = sanitizeInputString(data.area, 100) || 'Dhaka';
   const attribution = getStoredAttribution();

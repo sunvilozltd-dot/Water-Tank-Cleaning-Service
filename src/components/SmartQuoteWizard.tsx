@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { QuoteFormData, QuoteLead } from '../types';
 import { createLead, saveOrUpdatePartialLead, getLeadDraft, saveLeadDraft, clearLeadDraft, generateIdempotencyKey } from '../services/leadService';
-import { trackFormStarted, trackFormStepCompleted, trackLeadSaved, trackWhatsAppClick } from '../utils/tracking';
+import { trackFormStarted, trackFormStepCompleted, trackLeadSaved, trackPhoneClick, trackWhatsAppClick } from '../utils/tracking';
 import { isValidBangladeshiPhone, normalizeBangladeshiPhone } from '../utils/validation';
 import { calculateQuoteEstimate } from '../utils/pricingCalculator';
 import { useLanguage } from '../context/LanguageContext';
@@ -202,20 +202,12 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
 
     let hasError = false;
 
-    if (!trimmedName) {
-      setNameError(lang === 'bn' ? 'অনুগ্রহ করে আপনার নাম লিখুন।' : 'Please enter your name.');
-      hasError = true;
-    } else if (trimmedName.length < 2) {
-      setNameError(lang === 'bn' ? 'নাম ন্যূনতম ২ অক্ষরের হতে হবে।' : 'Name must be at least 2 characters.');
-      hasError = true;
-    }
-
     if (!rawPhone) {
       setPhoneError(lang === 'bn' ? 'অনুগ্রহ করে আপনার মোবাইল নম্বর দিন।' : 'Please enter your mobile phone number.');
       hasError = true;
     } else if (!isValidBangladeshiPhone(rawPhone)) {
-      setPhoneError(lang === 'bn' 
-        ? 'সঠিক বাংলাদেশি মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX বা +8801XXXXXXXXX)' 
+      setPhoneError(lang === 'bn'
+        ? 'সঠিক বাংলাদেশি মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX বা +8801XXXXXXXXX)'
         : 'Please enter a valid Bangladeshi mobile number (e.g. 017XXXXXXXX or +8801XXXXXXXXX)');
       hasError = true;
     }
@@ -223,6 +215,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
     if (hasError) return;
 
     const normalized = normalizeBangladeshiPhone(rawPhone);
+    const effectiveName = trimmedName || 'Website Visitor';
 
     // Save lead IMMEDIATELY as Incomplete Lead so drop-offs can be followed up by admin!
     setIsSubmitting(true);
@@ -230,7 +223,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
       const draft = getLeadDraft();
       const effectiveIdemKey = draft?.idempotencyKey || generateIdempotencyKey();
       const partialLead = await saveOrUpdatePartialLead(capturedLeadId, {
-        name: trimmedName,
+        name: effectiveName,
         phone: normalized,
         whatsapp: normalized,
         area: getEffectiveArea(),
@@ -486,25 +479,36 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
       // Passing capturedLeadId & ownershipToken ensures completing an incomplete lead updates the SAME database record securely!
       const savedLead = await createLead(fullLeadPayload as any, sourceContext || 'Website Booking Form', capturedLeadId, ownershipToken);
       const leadNum = savedLead.leadNumber || 'SVC-' + Math.floor(100000 + Math.random() * 900000);
-      setConfirmedLeadNumber(leadNum);
-      setIsCloudSynced(Boolean(savedLead.isSyncedToCloud));
-      clearLeadDraft();
 
-      trackLeadSaved(leadNum, { phone: normalizedPhone, leadNum, source: sourceContext });
-
-      // Generate WhatsApp Link to 8801609999612
-      const rawNumber = '8801609999612';
+      // Generate WhatsApp Link
+      const rawNumber = (business.whatsappNumber || '8801609999612').replace(/\D/g, '');
       const msg = buildWhatsAppMessage(leadNum);
       const generatedWaUrl = `https://wa.me/${rawNumber}?text=${encodeURIComponent(msg)}`;
       setWhatsappUrl(generatedWaUrl);
+
+      if (!savedLead.isSyncedToCloud) {
+        setIsCloudSynced(false);
+        setErrorMsg(
+          lang === 'bn'
+            ? 'সার্ভারে রিকোয়েস্ট সংরক্ষণ করা যায়নি। অনুগ্রহ করে নিচের "পুনরায় চেষ্টা করুন" বাটনে ক্লিক করুন অথবা সরাসরি WhatsApp-এ কোটেশন নিন।'
+            : 'Could not sync your request to the server. Please retry or send your details directly on WhatsApp.'
+        );
+        return;
+      }
+
+      setConfirmedLeadNumber(leadNum);
+      setIsCloudSynced(true);
+      clearLeadDraft();
+
+      trackLeadSaved(leadNum, { phone: normalizedPhone, leadNum, source: sourceContext, service: fullLeadPayload.serviceType, area: fullLeadPayload.area });
 
       // Transition to Success Screen
       setStep(6);
       if (onSuccess) onSuccess();
     } catch (err) {
       console.error('Submission error:', err);
-      setErrorMsg(lang === 'bn' 
-        ? 'তথ্য পাঠাতে কিছুটা সমস্যা হয়েছে। নিচের বাটনে পুনরায় চেষ্টা করুন অথবা সরাসরি WhatsApp-এ বার্তা পাঠান।' 
+      setErrorMsg(lang === 'bn'
+        ? 'তথ্য পাঠাতে কিছুটা সমস্যা হয়েছে। নিচের বাটনে পুনরায় চেষ্টা করুন অথবা সরাসরি WhatsApp-এ বার্তা পাঠান।'
         : 'There was an issue sending your details. Please retry below or message directly on WhatsApp.');
     } finally {
       setIsSubmitting(false);
@@ -512,7 +516,7 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
     }
   };
 
-  // Popular Dhaka Area Chips for quick selection
+  // Popular Area Chips for quick selection (Dhaka, Narayanganj, Gazipur, Savar)
   const POPULAR_DHAKA_AREAS = [
     'Gulshan',
     'Banani',
@@ -527,7 +531,10 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
     'Rampura',
     'Banasree',
     'Mohakhali',
-    'Old Dhaka'
+    'Old Dhaka',
+    'Narayanganj',
+    'Gazipur',
+    'Savar'
   ];
 
   return (
@@ -582,24 +589,24 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
               </span>
               <span className="text-[11px] text-[#16A34A] flex items-center gap-1 font-semibold">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>{lang === 'bn' ? '১০০% তথ্য সুরক্ষিত' : '100% Privacy Protected'}</span>
+                <span>{lang === 'bn' ? 'তথ্য সম্পূর্ণ সুরক্ষিত' : 'Privacy Protected'}</span>
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-extrabold text-[#123047]">
-              {lang === 'bn' ? 'আপনার নাম ও মোবাইল নম্বর লিখুন' : 'Enter Your Name & Mobile Number'}
+              {lang === 'bn' ? 'মোবাইল নম্বর ও নাম (ঐচ্ছিক) লিখুন' : 'Enter Mobile Number & Name (Optional)'}
             </h2>
             <p className="text-xs sm:text-sm text-[#64748B]">
-              {lang === 'bn' 
-                ? 'মাত্র ১ মিনিটে সঠিক কোটেশন পেতে আপনার নাম এবং যোগাযোগের মোবাইল নম্বর দিয়ে এগিয়ে যান।' 
-                : 'Get an instant accurate estimate in under 1 minute. We will send quotation details to your number.'}
+              {lang === 'bn'
+                ? 'সঠিক কোটেশন পেতে আপনার সক্রিয় মোবাইল নম্বর দিয়ে এগিয়ে যান।'
+                : 'Get an accurate estimate quickly. Enter your mobile number to continue.'}
             </p>
           </div>
 
           <div className="space-y-4 pt-1">
-            {/* Customer Name */}
+            {/* Customer Name (Optional) */}
             <div>
               <label className="text-xs font-semibold text-[#172B3A] block mb-1.5">
-                {lang === 'bn' ? 'আপনার পূর্ণ নাম *' : 'Your Full Name *'}
+                {lang === 'bn' ? 'আপনার নাম (ঐচ্ছিক)' : 'Your Name (Optional)'}
               </label>
               <div className="relative">
                 <User className="w-4 h-4 text-[#0D9488] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -610,21 +617,11 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
                     setCustomerName(e.target.value);
                     if (nameError) setNameError('');
                   }}
-                  placeholder={lang === 'bn' ? 'উদা: মোঃ আরিফুল ইসলাম' : 'e.g. John Doe / Md. Ariful Islam'}
-                  className={`w-full pl-10 pr-4 py-3 rounded-xl bg-white border text-[#172B3A] text-sm focus:outline-none transition-colors ${
-                    nameError 
-                      ? 'border-red-400 focus:border-red-500' 
-                      : 'border-[#E2E8F0] focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/10'
-                  }`}
+                  placeholder={lang === 'bn' ? 'উদা: মোঃ আরিফুল ইসলাম (ঐচ্ছিক)' : 'e.g. Md. Ariful Islam (Optional)'}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-[#E2E8F0] focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/10 text-[#172B3A] text-sm focus:outline-none transition-colors"
                   autoFocus
                 />
               </div>
-              {nameError && (
-                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3 shrink-0" />
-                  <span>{nameError}</span>
-                </p>
-              )}
             </div>
 
             {/* Mobile Number */}
@@ -668,9 +665,9 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
           <div className="p-3 bg-[#F5FAFC] border border-[#E2E8F0] rounded-xl flex items-center gap-2.5 text-xs text-[#64748B]">
             <Lock className="w-4 h-4 text-[#0D9488] shrink-0" />
             <span>
-              {lang === 'bn' 
-                ? 'আপনার তথ্যের শতভাগ গোপনীয়তা নিশ্চিত করা হয়। কোনো প্রকার স্প্যাম কল দেওয়া হবে না।' 
-                : 'Your contact details are strictly confidential. Zero spam policy guaranteed.'}
+              {lang === 'bn'
+                ? 'আপনার তথ্যের সম্পূর্ণ গোপনীয়তা বজায় রাখা হয়। কোনো অযাচিত কল দেওয়া হবে না।'
+                : 'Your contact details are kept strictly confidential. Zero spam calls.'}
             </span>
           </div>
 
@@ -1512,49 +1509,37 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
               </div>
             )}
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#123047]">
-              {lang === 'bn' ? 'আপনার কোটেশন রিকোয়েস্ট সফলভাবে গৃহীত হয়েছে!' : 'Quote Request Received!'}
+              {lang === 'bn' ? 'অনুরোধ গ্রহণ করা হয়েছে!' : 'Quote Request Received!'}
             </h2>
             <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">
-              {lang === 'bn' 
-                ? `ধন্যবাদ ${customerName}! আমাদের টেকনিক্যাল টিম আপনার তথ্য পেয়ে গেছে। দ্রুত চূড়ান্ত কোটেশন ও শিডিউলের জন্য নিচের বাটনে ক্লিক করে সরাসরি WhatsApp এ মেসেজ পাঠান।`
-                : `Thank you ${customerName}! Our crew has received your details. For instant confirmation, connect directly via WhatsApp.`}
+              {lang === 'bn'
+                ? `ধন্যবাদ ${customerName.trim() || ''}! আমাদের টেকনিক্যাল টিম আপনার তথ্য পেয়েছে। দ্রুত কোটেশন ও শিডিউলের জন্য সরাসরি WhatsApp-এ মেসেজ পাঠান।`
+                : `Thank you ${customerName.trim() || ''}! Our crew has received your details. Connect directly via WhatsApp for quick scheduling.`}
             </p>
-            {!isCloudSynced && (
-              <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-[#D97706] text-xs text-left flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 shrink-0 text-[#D97706] mt-0.5" />
-                <div>
-                  <p className="font-semibold">{lang === 'bn' ? 'অফলাইন ব্যাকআপে সংরক্ষিত' : 'Saved to Local Backup'}</p>
-                  <p className="text-[11px] text-amber-700 mt-0.5">
-                    {lang === 'bn' 
-                      ? 'নেটওয়ার্ক সীমাবদ্ধতার কারণে আপনার বুকিংটি লোকাল মেমরিতে সংরক্ষিত আছে। বুকিং শতভাগ নিশ্চিত করতে নিচের WhatsApp বাটনে ট্যাপ করুন।' 
-                      : 'Saved locally due to network conditions. Tap WhatsApp below to confirm your booking instantly with our team.'}
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Primary Action Buttons */}
           <div className="max-w-md mx-auto pt-2 flex flex-col gap-3">
-            {/* Primary WhatsApp Action to 01609999612 */}
+            {/* Primary WhatsApp Action */}
             <a
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackWhatsAppClick({ source: 'quote_wizard_success' })}
+              onClick={() => trackWhatsAppClick({ source: 'quote_wizard_success', leadNumber: confirmedLeadNumber })}
               className="min-h-[50px] px-6 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] active:bg-[#1c9250] text-white font-extrabold text-sm sm:text-base transition-all shadow-lg shadow-[#25D366]/20 flex items-center justify-center gap-2 cursor-pointer"
             >
               <MessageCircle className="w-5 h-5 text-white" />
-              <span>{lang === 'bn' ? 'WhatsApp এ মেসেজ পাঠান (01609-999612)' : 'Send to WhatsApp (01609-999612)'}</span>
+              <span>{lang === 'bn' ? 'WhatsApp-এ কোটেশন নিন (01609-999612)' : 'Get Quote on WhatsApp (01609-999612)'}</span>
             </a>
 
             {/* Direct Phone Call Button */}
             <a
               href={`tel:${business.phone}`}
+              onClick={() => trackPhoneClick({ source: 'quote_wizard_success' })}
               className="min-h-[46px] px-6 py-3 rounded-xl bg-[#123047] hover:bg-[#1b4363] text-white font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
             >
               <Phone className="w-4 h-4 text-[#38BDF8]" />
-              <span>{lang === 'bn' ? `জরুরি হেল্পলাইনে কল করুন: ${business.displayPhone}` : `Call Hotline: ${business.displayPhone}`}</span>
+              <span>{lang === 'bn' ? `সরাসরি কল করুন: ${business.displayPhone}` : `Call Hotline: ${business.displayPhone}`}</span>
             </a>
 
             {onCloseModal && (

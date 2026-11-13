@@ -69,7 +69,7 @@ export const CustomerProblemSection: React.FC<CustomerProblemSectionProps> = ({
       icon: Layers,
       titleBn: 'পলি ও বালুকণা জমা রোধ',
       titleEn: 'Sediment buildup prevention',
-      descBn: 'ওয়াসার পানিতে থাকা অদৃশ্য ভারী খনিজ ও পলি তলদেশে জমতে না দিয়ে ট্যাংকের মোট ওয়াটার ক্যাপাসিটি শতভাগ কার্যকর রাখে।'
+      descBn: 'ওয়াসার পানিতে থাকা অদৃশ্য ভারী খনিজ ও পলি তলদেশে জমতে না দিয়ে ট্যাংকের মোট ওয়াটার ক্যাপাসিটি সম্পূর্ণ কার্যকর রাখে।'
     },
     {
       icon: Waves,

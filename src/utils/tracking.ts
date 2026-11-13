@@ -8,7 +8,8 @@ import {
   applyTrackingScripts,
   getUserConsent,
   setUserConsent,
-  withdrawUserConsent
+  withdrawUserConsent,
+  logCtaEvent
 } from '../services/trackingService';
 
 export interface TrackingEvent {
@@ -30,25 +31,24 @@ export function trackEvent(
   serviceTrackEvent(eventName, params, options);
 }
 
-/**
- * Standardized Conversion Event Helpers (Section 8)
- * - phone_call_click
- * - whatsapp_click
- * - quote_form_start
- * - quote_form_submit
- * - contact_form_submit
- * - google_maps_click
- * - google_review_click
- */
-
 export function trackPhoneClick(sourceOrMetadata: string | Record<string, any> = {}): void {
   const metadata = typeof sourceOrMetadata === 'string' ? { source: sourceOrMetadata } : (sourceOrMetadata || {});
-  trackEvent('phone_call_click', { channel: 'phone', ...metadata }, { isConversion: true });
+  trackEvent('click_call', { channel: 'phone', ...metadata }, { isConversion: true });
+  logCtaEvent('click_call', {
+    sourcePage: String(metadata.source || (typeof window !== 'undefined' ? window.location.pathname : '/')),
+    area: metadata.area ? String(metadata.area) : undefined,
+    service: metadata.service ? String(metadata.service) : undefined
+  });
 }
 
 export function trackWhatsAppClick(sourceOrMetadata: string | Record<string, any> = {}): void {
   const metadata = typeof sourceOrMetadata === 'string' ? { source: sourceOrMetadata } : (sourceOrMetadata || {});
-  trackEvent('whatsapp_click', { channel: 'whatsapp', ...metadata }, { isConversion: true });
+  trackEvent('click_whatsapp', { channel: 'whatsapp', ...metadata }, { isConversion: true });
+  logCtaEvent('click_whatsapp', {
+    sourcePage: String(metadata.source || (typeof window !== 'undefined' ? window.location.pathname : '/')),
+    area: metadata.area ? String(metadata.area) : undefined,
+    service: metadata.service ? String(metadata.service) : undefined
+  });
 }
 
 export function trackFormStarted(source = 'quote_wizard'): void {
@@ -64,10 +64,10 @@ export function trackFormStepCompleted(stepNumber: number, stepName: string, met
 }
 
 /**
- * Only fire successful form conversion events AFTER the backend/database confirms successful submission.
+ * Only fire successful form conversion events AFTER Supabase confirms cloud persistence.
  */
 export function trackLeadSaved(leadNumber: string, metadata: Record<string, any> = {}): void {
-  trackEvent('quote_form_submit', {
+  trackEvent('lead_submit_success', {
     lead_number: leadNumber,
     service_type: metadata.serviceType || 'Water Tank Cleaning',
     tank_type: metadata.tankType,

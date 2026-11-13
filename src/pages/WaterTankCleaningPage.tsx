@@ -124,7 +124,7 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
   const waterTankFaqs = [
     {
       qBn: 'পানির ট্যাংক কত দিন পরপর পরিষ্কার করা উচিত?',
-      aBn: 'স্বাস্থ্যসম্মত ব্যবহারের জন্য প্রতি ৬ মাস অন্তর (বছরে অন্তত দুই বার) ছাদের ওভারহেড ট্যাংক এবং আন্ডারগ্রাউন্ড রিজার্ভার ডিপ ক্লিন করা বিশ্ব স্বাস্থ্য মানদণ্ড অনুযায়ী সুপারিশকৃত।'
+      aBn: 'স্বাস্থ্যসম্মত ব্যবহারের জন্য প্রতি ৬ মাস অন্তর (বছরে অন্তত দুই বার) ছাদের ওভারহেড ট্যাংক এবং আন্ডারগ্রাউন্ড রিজার্ভার ডিপ ক্লিন করা নিয়মিত রক্ষণাবেক্ষণের অংশ হিসেবে সুপারিশকৃত।'
     },
     {
       qBn: 'পানির ট্যাংক পরিষ্কার করতে কত সময় লাগে?',
@@ -174,13 +174,13 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-16">
       <SeoHead
-        title="Professional Water Tank Cleaner & Cleaning in Dhaka | SUNVILOZ CLEAN CARE"
-        description="Professional water tank cleaner & specialized mechanized tank cleaning in Dhaka for overhead and underground reserve tanks. Sludge extraction & disinfection. Call 01609999612."
+        title="Water Tank Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE"
+        description="Mechanized water tank cleaning service in Dhaka, Narayanganj, Gazipur & Savar for rooftop overhead and underground reserve tanks. Sludge extraction & food-grade sanitization. Call 01609999612."
         canonicalUrl="https://sunvilozcleancare.com/services/water-tank-cleaning"
         serviceSchema={{
-          name: 'Professional Water Tank Cleaner & Cleaning in Dhaka',
-          serviceType: 'Water Tank Cleaner & Water Tank Cleaning Service',
-          description: 'Mechanized deep cleaning and food-grade sanitization by expert water tank cleaners for rooftop overhead tanks (PVC and concrete RCC) and underground reserve tanks across Dhaka metro areas.'
+          name: 'Water Tank Cleaning Service in Dhaka',
+          serviceType: 'Water Tank Cleaning Service',
+          description: 'Mechanized deep cleaning and food-grade sanitization for rooftop overhead tanks (PVC and concrete RCC) and underground reserve tanks across Dhaka, Narayanganj, Gazipur and Savar.'
         }}
         breadcrumbs={breadcrumbsList}
         faqSchema={structuredFaqs}
@@ -209,13 +209,13 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#123047] tracking-tight leading-tight">
-              {lang === 'bn' ? 'ঢাকায় পেশাদার পানির ট্যাংক পরিষ্কার সার্ভিস (Professional Water Tank Cleaner)' : 'Professional Water Tank Cleaner & Cleaning Service in Dhaka'}
+              {lang === 'bn' ? 'ঢাকায় পেশাদার পানির ট্যাংক পরিষ্কার সার্ভিস (Water Tank Cleaning Service in Dhaka)' : 'Water Tank Cleaning Service in Dhaka, Narayanganj, Gazipur & Savar'}
             </h1>
 
             <p className="text-sm sm:text-base text-[#64748B] leading-relaxed max-w-2xl">
               {lang === 'bn'
-                ? 'বাসাবাড়ি, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের ছাদের ওভারহেড এবং ভূগর্ভস্থ আন্ডারগ্রাউন্ড পানির ট্যাংক পরিষ্কারে সানভিলোজ ক্লিন কেয়ারের পেশাদার ওয়াটার ট্যাংক ক্লিনার ও আধুনিক মেকানিক্যাল স্যানিটাইজিং সল্যুশন।'
-                : 'Expert water tank cleaner team providing deep cleaning, heavy sludge extraction, high-pressure jet washing, and food-safe sanitization for underground reservoirs and rooftop tanks across Dhaka metro areas.'}
+                ? 'বাসাবাড়ি, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের ছাদের ওভারহেড এবং ভূগর্ভস্থ আন্ডারগ্রাউন্ড পানির ট্যাংক পরিষ্কারে সানভিলোজ ক্লিন কেয়ারের আধুনিক মেকানাইজড ও স্যানিটাইজিং সল্যুশন।'
+                : 'Mechanized water tank cleaning service providing deep cleaning, heavy sludge extraction, high-pressure jet washing, and food-safe sanitization for underground reservoirs and rooftop tanks.'}
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -256,7 +256,7 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
             <div className="relative aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-md bg-[#F5FAFC] group">
               <OptimizedImage
                 src="https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg"
-                alt="Professional Water Tank Cleaner & Cleaning Service in Dhaka"
+                alt="Mechanized Water Tank Cleaning Service in Dhaka"
                 width={800}
                 height={600}
                 aspectRatio="4/3"
@@ -511,13 +511,50 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
         </div>
       </section>
 
-      {/* 10. Related Services */}
+      {/* 10. Specialized Sub-Services */}
       <section className="space-y-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-[#123047]">
-          সম্পর্কিত অন্যান্য সেবা
-        </h2>
+        <div className="space-y-1">
+          <span className="text-xs font-bold text-[#0D9488] uppercase tracking-wider block">
+            বিশেষায়িত সেবা
+          </span>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#123047]">
+            {lang === 'bn' ? 'সম্পর্কিত অন্যান্য ওয়াটার ট্যাংক ও পাইপলাইন সেবা' : 'Related Water Tank & Plumbing Services'}
+          </h2>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <button
+            type="button"
+            onClick={() => handleNavigate('/services/overhead-tank-cleaning')}
+            className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
+          >
+            <Building2 className="w-8 h-8 text-[#0D9488] shrink-0" />
+            <div>
+              <h3 className="font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors text-base">
+                Overhead Water Tank Cleaning Service
+              </h3>
+              <p className="text-xs text-[#64748B] mt-1">
+                ছাদের পিভিসি ও আরসিসি কংক্রিট ট্যাংকের রোটারি প্রেশার ওয়াশ ও শ্যাওলা পরিষ্কার।
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleNavigate('/services/underground-water-tank-cleaning')}
+            className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
+          >
+            <Droplets className="w-8 h-8 text-[#0D9488] shrink-0" />
+            <div>
+              <h3 className="font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors text-base">
+                Underground Water Tank Cleaning Service
+              </h3>
+              <p className="text-xs text-[#64748B] mt-1">
+                আন্ডারগ্রাউন্ড রিজার্ভার ও রিজার্ভ ট্যাংকের ভারী কাদা স্লাজ পাম্পে উত্তোলন ও জীবাণুমুক্তকরণ।
+              </p>
+            </div>
+          </button>
+
           <button
             type="button"
             onClick={() => handleNavigate('/services/pipeline-cleaning')}
@@ -526,45 +563,59 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
             <Wrench className="w-8 h-8 text-[#0D9488] shrink-0" />
             <div>
               <h3 className="font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors text-base">
-                Pipeline Cleaning Service
+                Water Pipeline Cleaning Service in Dhaka
               </h3>
               <p className="text-xs text-[#64748B] mt-1">
-                পাইপলাইনে জমে থাকা আয়রন ও মরিচা দেয়াল অক্ষত রেখে ফ্লাশিং।
+                অভ্যন্তরীণ পানির পাইপলাইনের আয়রন ও মরিচা দেয়াল অক্ষত রেখে হাইড্রো-পালস ফ্লাশিং।
               </p>
             </div>
           </button>
+        </div>
+      </section>
 
-          <button
-            type="button"
-            onClick={() => handleNavigate('/services/home-deep-cleaning')}
-            className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
-          >
-            <Sparkles className="w-8 h-8 text-[#16A34A] shrink-0" />
-            <div>
-              <h3 className="font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors text-base">
-                Professional Deep Cleaning
-              </h3>
-              <p className="text-xs text-[#64748B] mt-1">
-                নতুন বাসা, ফ্ল্যাট বা রেনোভেশনের পর সম্পূর্ণ বাড়ি ডিপ ক্লিন।
-              </p>
-            </div>
-          </button>
+      {/* 11. Service Areas Hub Linking */}
+      <section className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-8 space-y-5 shadow-sm">
+        <div className="flex items-center gap-2 text-xs font-bold text-[#0D9488] uppercase tracking-wider">
+          <MapPin className="w-4 h-4 text-[#0D9488]" />
+          <span>সার্ভিস কভারেজ ও এলাকাভিত্তিক টিম</span>
+        </div>
+        <h2 className="text-xl sm:text-2xl font-extrabold text-[#123047]">
+          {lang === 'bn' ? 'ঢাকা ও সংলগ্ন এলাকায় ওয়াটার ট্যাংক ক্লিনিং সার্ভিস' : 'Water Tank Cleaning Service Across Dhaka Locations'}
+        </h2>
+        <p className="text-xs sm:text-sm text-[#64748B] max-w-3xl leading-relaxed">
+          {lang === 'bn'
+            ? 'আমাদের অভিজ্ঞ টেকনিশিয়ান টিম ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভারের আবাসিক ও বাণিজ্যিক জোনগুলোতে সক্রিয়ভাবে পানির ট্যাংক পরিষ্কার সার্ভিস প্রদান করছে। আপনার এলাকার নির্দিষ্ট সেবা ও পানির মান সম্পর্কিত তথ্য দেখতে নিচের এলাকায় ক্লিক করুন:'
+            : 'Our technician teams provide daily mechanized overhead and underground water tank cleaning service across Dhaka, Narayanganj, Gazipur and Savar:'}
+        </p>
 
-          <button
-            type="button"
-            onClick={() => handleNavigate('/services/sofa-cleaning')}
-            className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
-          >
-            <Droplets className="w-8 h-8 text-[#38BDF8] shrink-0" />
-            <div>
-              <h3 className="font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors text-base">
-                Sofa & Upholstery Cleaning
-              </h3>
-              <p className="text-xs text-[#64748B] mt-1">
-                সোফার ডাস্ট ও দাগ দূরীকরণে আধুনিক ফোম ওয়াশ ও ভ্যাকুয়াম।
-              </p>
-            </div>
-          </button>
+        <div className="flex flex-wrap gap-2 pt-1">
+          {[
+            { name: 'উত্তরা (Uttara)', slug: 'uttara' },
+            { name: 'গুলশান (Gulshan)', slug: 'gulshan' },
+            { name: 'বনানী (Banani)', slug: 'banani' },
+            { name: 'ধানমন্ডি (Dhanmondi)', slug: 'dhanmondi' },
+            { name: 'মিরপুর (Mirpur)', slug: 'mirpur' },
+            { name: 'বসুন্ধরা (Bashundhara)', slug: 'bashundhara' },
+            { name: 'মোহাম্মদপুর (Mohammadpur)', slug: 'mohammadpur' },
+            { name: 'বাড্ডা ও রামপুরা (Badda)', slug: 'badda' },
+            { name: 'বারিধারা (Baridhara)', slug: 'baridhara' },
+            { name: 'খিলক্ষেত (Khilkhet)', slug: 'khilkhet' },
+            { name: 'রামপুরা (Rampura)', slug: 'rampura' },
+            { name: 'গাজীপুর (Gazipur)', slug: 'gazipur' },
+            { name: 'সাভার (Savar)', slug: 'savar' },
+            { name: 'নারায়ণগঞ্জ (Narayanganj)', slug: 'narayanganj' },
+            { name: 'ঢাকা মেট্রো (Dhaka All)', slug: 'dhaka' }
+          ].map((area, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => handleNavigate(`/service-areas/${area.slug}`)}
+              className="px-3.5 py-2 rounded-xl bg-[#F5FAFC] hover:bg-[#E8F5F3] border border-[#E2E8F0] hover:border-[#0D9488]/40 text-xs font-semibold text-[#123047] hover:text-[#0D9488] transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <MapPin className="w-3.5 h-3.5 text-[#0D9488] shrink-0" />
+              <span>{area.name}</span>
+            </button>
+          ))}
         </div>
       </section>
 

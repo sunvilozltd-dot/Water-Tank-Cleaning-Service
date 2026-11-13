@@ -198,7 +198,7 @@ export const Hero: React.FC<HeroProps> = () => {
               ytId1 ? (
                 <iframe
                   src={`https://www.youtube-nocookie.com/embed/${ytId1}?autoplay=1&mute=1&controls=1&loop=1&playlist=${ytId1}&playsinline=1&rel=0`}
-                  title="Cleaning Service Video 1"
+                  title="SUNVILOZ mechanized water tank cleaning service demonstration in Dhaka"
                   loading="eager"
                   width="560"
                   height="315"
@@ -226,7 +226,7 @@ export const Hero: React.FC<HeroProps> = () => {
                     !posterError1 && video1Poster ? (
                       <img 
                         src={video1Poster} 
-                        alt="Cleaning Service Video 1" 
+                        alt="SUNVILOZ mechanized water tank cleaning service demonstration in Dhaka" 
                         width="560"
                         height="315"
                         onError={() => setPosterError1(true)}
@@ -291,7 +291,7 @@ export const Hero: React.FC<HeroProps> = () => {
                 video2InView ? (
                   <iframe
                     src={`https://www.youtube-nocookie.com/embed/${ytId2}?autoplay=1&mute=1&controls=1&loop=1&playlist=${ytId2}&playsinline=1&rel=0`}
-                    title="Cleaning Service Video 2"
+                    title="Overhead water tank rotary jet scrubbing and sludge extraction demonstration"
                     loading="lazy"
                     width="560"
                     height="315"
@@ -303,7 +303,7 @@ export const Hero: React.FC<HeroProps> = () => {
                     {!posterError2 && video2Poster ? (
                       <img
                         src={video2Poster}
-                        alt="Cleaning Service Video 2"
+                        alt="Overhead water tank rotary jet scrubbing and sludge extraction demonstration"
                         loading="lazy"
                         decoding="async"
                         width="560"
@@ -344,7 +344,7 @@ export const Hero: React.FC<HeroProps> = () => {
                     !posterError2 && video2Poster ? (
                       <img 
                         src={video2Poster} 
-                        alt="Cleaning Service Video 2" 
+                        alt="Overhead water tank rotary jet scrubbing and sludge extraction demonstration" 
                         width="560"
                         height="315"
                         onError={() => setPosterError2(true)}
@@ -409,7 +409,7 @@ export const Hero: React.FC<HeroProps> = () => {
                 video3InView ? (
                   <iframe
                     src={`https://www.youtube-nocookie.com/embed/${ytId3}?autoplay=1&mute=1&controls=1&loop=1&playlist=${ytId3}&playsinline=1&rel=0`}
-                    title="Cleaning Service Video 3"
+                    title="Underground reserve tank deep cleaning and pipeline flushing demonstration"
                     loading="lazy"
                     width="560"
                     height="315"
@@ -421,7 +421,7 @@ export const Hero: React.FC<HeroProps> = () => {
                     {!posterError3 && video3Poster ? (
                       <img
                         src={video3Poster}
-                        alt="Cleaning Service Video 3"
+                        alt="Underground reserve tank deep cleaning and pipeline flushing demonstration"
                         loading="lazy"
                         decoding="async"
                         width="560"
@@ -462,7 +462,7 @@ export const Hero: React.FC<HeroProps> = () => {
                     !posterError3 && video3Poster ? (
                       <img 
                         src={video3Poster} 
-                        alt="Cleaning Service Video 3" 
+                        alt="Underground reserve tank deep cleaning and pipeline flushing demonstration" 
                         width="560"
                         height="315"
                         onError={() => setPosterError3(true)}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   QuoteLead, 
   LeadStatus, 
@@ -19,9 +19,12 @@ import {
   AlertTriangle,
   Flame,
   ArrowRight,
-  Trash2
+  Trash2,
+  PhoneCall,
+  Briefcase
 } from 'lucide-react';
 import { formatWhatsAppUrl, generateAbandonedLeadRecoveryWhatsAppUrl } from '../../utils/whatsapp';
+import { fetchCtaEventCounts, CtaEventCounts } from '../../services/trackingService';
 
 interface LeadsTabProps {
   leads: QuoteLead[];
@@ -42,7 +45,23 @@ export const LeadsTab: React.FC<LeadsTabProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
-  const [activeQuickTab, setActiveQuickTab] = useState<'all' | 'incomplete' | 'confirmed' | 'new'>('all');
+  const [activeQuickTab, setActiveQuickTab] = useState<'all' | 'incomplete' | 'confirmed' | 'new' | 'completed'>('all');
+  const [ctaCounts, setCtaCounts] = useState<CtaEventCounts>({
+    callTotal: 0,
+    whatsappTotal: 0,
+    callLast30Days: 0,
+    whatsappLast30Days: 0
+  });
+
+  useEffect(() => {
+    let active = true;
+    fetchCtaEventCounts().then((res) => {
+      if (active) setCtaCounts(res);
+    });
+    return () => {
+      active = false;
+    };
+  }, [leads.length]);
 
   const incompleteCount = leads.filter(l => 
     l.isAbandoned || 
@@ -54,6 +73,7 @@ export const LeadsTab: React.FC<LeadsTabProps> = ({
 
   const newCount = leads.filter(l => l.status === 'New' || l.status === 'new').length;
   const confirmedCount = leads.filter(l => l.status === 'Confirmed' || l.status === 'confirmed' || l.status === 'Booked').length;
+  const completedCount = leads.filter(l => l.status === 'Completed' || l.status === 'completed').length;
 
   const filteredLeads = leads.filter(lead => {
     const isLeadIncomplete = 
@@ -67,6 +87,7 @@ export const LeadsTab: React.FC<LeadsTabProps> = ({
     if (activeQuickTab === 'incomplete' && !isLeadIncomplete) return false;
     if (activeQuickTab === 'new' && lead.status !== 'New' && lead.status !== 'new') return false;
     if (activeQuickTab === 'confirmed' && lead.status !== 'Confirmed' && lead.status !== 'confirmed' && lead.status !== 'Booked') return false;
+    if (activeQuickTab === 'completed' && lead.status !== 'Completed' && lead.status !== 'completed') return false;
 
     // Search term
     const matchesSearch = 
@@ -150,8 +171,39 @@ export const LeadsTab: React.FC<LeadsTabProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* KPI / Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Call & WhatsApp Click Engagement (Tracked Separately from Submitted Form Leads) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="p-3.5 rounded-xl border border-cyan-800/40 bg-cyan-950/20 flex items-center justify-between">
+          <div>
+            <span className="text-[11px] font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+              <PhoneCall className="w-3.5 h-3.5" />
+              <span>Call Clicks (কল বাটন ক্লিক)</span>
+            </span>
+            <p className="text-[11px] text-slate-400 mt-0.5">সাবমিট হওয়া ফর্ম লিড থেকে আলাদা</p>
+          </div>
+          <div className="text-right">
+            <span className="text-xl font-extrabold text-cyan-300 block">{ctaCounts.callTotal}</span>
+            <span className="text-[10px] text-slate-400">৩০ দিন: {ctaCounts.callLast30Days}</span>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-xl border border-emerald-800/40 bg-emerald-950/20 flex items-center justify-between">
+          <div>
+            <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>WhatsApp Clicks (হোয়াটসঅ্যাপ ক্লিক)</span>
+            </span>
+            <p className="text-[11px] text-slate-400 mt-0.5">সাবমিট হওয়া ফর্ম লিড থেকে আলাদা</p>
+          </div>
+          <div className="text-right">
+            <span className="text-xl font-extrabold text-emerald-300 block">{ctaCounts.whatsappTotal}</span>
+            <span className="text-[10px] text-slate-400">৩০ দিন: {ctaCounts.whatsappLast30Days}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Form Leads KPI / Metric Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <button
           type="button"
           onClick={() => {
@@ -164,7 +216,7 @@ export const LeadsTab: React.FC<LeadsTabProps> = ({
               : 'bg-slate-900 border-slate-800 hover:border-slate-700'
           }`}
         >
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Total Leads</span>
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Form Leads</span>
           <span className="text-xl font-extrabold text-white mt-0.5 block">{leads.length}</span>
         </button>
 
@@ -181,7 +233,7 @@ export const LeadsTab: React.FC<LeadsTabProps> = ({
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider block">Incomplete / Abandoned</span>
+            <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider block">Incomplete</span>
             <Flame className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <span className="text-xl font-extrabold text-amber-300 mt-0.5 block">{incompleteCount}</span>
@@ -215,8 +267,27 @@ export const LeadsTab: React.FC<LeadsTabProps> = ({
               : 'bg-slate-900 border-slate-800 hover:border-slate-700'
           }`}
         >
-          <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block">Confirmed Orders</span>
+          <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block">Confirmed</span>
           <span className="text-xl font-extrabold text-emerald-300 mt-0.5 block">{confirmedCount}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveQuickTab('completed');
+            setStatusFilter('all');
+          }}
+          className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer col-span-2 sm:col-span-1 ${
+            activeQuickTab === 'completed'
+              ? 'bg-cyan-950/40 border-cyan-500 ring-1 ring-cyan-500'
+              : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider block">Completed Jobs</span>
+            <Briefcase className="w-3.5 h-3.5 text-cyan-400" />
+          </div>
+          <span className="text-xl font-extrabold text-cyan-300 mt-0.5 block">{completedCount}</span>
         </button>
       </div>
 
@@ -317,6 +388,11 @@ export const LeadsTab: React.FC<LeadsTabProps> = ({
                         {isIncomplete && (
                           <span className="text-[10px] font-semibold text-amber-300 bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/40">
                             Drop-off Recovery
+                          </span>
+                        )}
+                        {lead.source && (
+                          <span className="text-[10px] text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">
+                            {lead.source}
                           </span>
                         )}
                       </div>
@@ -472,6 +548,11 @@ export const LeadsTab: React.FC<LeadsTabProps> = ({
                           {isIncomplete && (
                             <span className="text-[10px] text-amber-400 font-sans font-normal">
                               Drop-off Recovery
+                            </span>
+                          )}
+                          {lead.source && (
+                            <span className="text-[10px] text-slate-400 font-sans bg-slate-800/80 px-1.5 py-0.5 rounded border border-slate-700 w-max">
+                              {lead.source}
                             </span>
                           )}
                         </div>

@@ -6,6 +6,7 @@ import { DynamicServiceBookingModal } from '../components/DynamicServiceBookingM
 import { useServices } from '../utils/servicesStore';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { NotFoundPage } from './NotFoundPage';
 import { 
   ShieldCheck, 
   CheckCircle2, 
@@ -37,7 +38,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
 }) => {
   const { lang } = useLanguage();
   const { business } = useSiteConfig();
-  const { services } = useServices();
+  const { services, loading } = useServices();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
 
@@ -65,22 +66,21 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
     if (slug === 'water-pipeline-cleaning' && (s.slug === 'pipeline-cleaning' || s.id === 'srv-water-pipeline')) return true;
     if (slug === 'underground-tank-cleaning' && s.slug === 'underground-water-tank-cleaning') return true;
     return false;
-  }) || services[0];
+  }) || null;
 
-  if (!service) {
+  if (loading && !service) {
     return (
-      <main className="min-h-screen bg-transparent text-[#172B3A] py-16 px-4 text-center max-w-xl mx-auto space-y-4">
-        <h1 className="text-2xl font-bold text-[#123047]">
-          {lang === 'bn' ? 'সার্ভিসটি পাওয়া যায়নি' : 'Service Not Found'}
-        </h1>
-        <button
-          onClick={() => handleNavigate('/services')}
-          className="px-5 py-2.5 bg-[#0D9488] hover:bg-[#0F766E] text-white rounded-xl text-xs font-bold transition-all shadow-md"
-        >
-          {lang === 'bn' ? 'সকল সার্ভিস দেখুন' : 'View All Services'}
-        </button>
+      <main className="min-h-[60vh] flex items-center justify-center px-4">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 rounded-full border-2 border-[#0D9488]/30 border-t-[#0D9488] animate-spin mx-auto" />
+          <p className="text-xs font-medium text-[#64748B]">সার্ভিস তথ্য লোড হচ্ছে...</p>
+        </div>
       </main>
     );
+  }
+
+  if (!service) {
+    return <NotFoundPage onNavigate={handleNavigate} />;
   }
 
   const title = lang === 'bn' ? (service.titleBn || service.title) : service.title;
@@ -314,17 +314,46 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
       </div>
 
       {/* 7. Applicable Service Areas */}
-      <section className="bg-white border border-[#E2E8F0] rounded-2xl p-6 sm:p-8 space-y-3 shadow-sm">
-        <div className="flex items-center gap-2 text-xs font-bold text-[#0D9488] uppercase">
-          <MapPin className="w-4 h-4" />
-          <span>সার্ভিস কভারেজ</span>
+      <section className="bg-white border border-[#E2E8F0] rounded-2xl p-6 sm:p-8 space-y-4 shadow-sm">
+        <div className="flex items-center gap-2 text-xs font-bold text-[#0D9488] uppercase tracking-wider">
+          <MapPin className="w-4 h-4 text-[#0D9488]" />
+          <span>সার্ভিস কভারেজ ও এলাকাভিত্তিক টিম</span>
         </div>
         <h3 className="text-lg sm:text-xl font-bold text-[#123047]">
           ঢাকা মেট্রোপলিটন, সাভার, গাজীপুর ও নারায়ণগঞ্জ এলাকার যেকোনো স্থানে সার্ভিস উপলব্ধ
         </h3>
         <p className="text-xs sm:text-sm text-[#64748B]">
-          গুলশান, বনানী, বারিধারা, ধানমন্ডি, উত্তরা, মিরপুর, মোহাম্মদপুর, বাড্ডা, বসুন্ধরা আবাসিক, পুরান ঢাকাসহ সাভার, গাজীপুর, নারায়ণগঞ্জ ও পার্শ্ববর্তী সকল আবাসিক ও বাণিজ্যিক এলাকায় দ্রুত টিম পৌঁছানো হয়।
+          আপনার এলাকার পানির মান ও ওয়াটার ট্যাংক ক্লিনিং বিস্তারিত দেখতে নিচের নির্দিষ্ট এলাকায় ক্লিক করুন:
         </p>
+        <div className="flex flex-wrap gap-2 pt-1">
+          {[
+            { name: 'গুলশান', slug: 'gulshan' },
+            { name: 'বনানী', slug: 'banani' },
+            { name: 'বারিধারা', slug: 'baridhara' },
+            { name: 'ধানমন্ডি', slug: 'dhanmondi' },
+            { name: 'উত্তরা', slug: 'uttara' },
+            { name: 'মিরপুর', slug: 'mirpur' },
+            { name: 'মোহাম্মদপুর', slug: 'mohammadpur' },
+            { name: 'বাড্ডা', slug: 'badda' },
+            { name: 'বসুন্ধরা', slug: 'bashundhara' },
+            { name: 'খিলক্ষেত', slug: 'khilkhet' },
+            { name: 'রামপুরা', slug: 'rampura' },
+            { name: 'সাভার', slug: 'savar' },
+            { name: 'গাজীপুর', slug: 'gazipur' },
+            { name: 'নারায়ণগঞ্জ', slug: 'narayanganj' },
+            { name: 'সকল সার্ভিস এরিয়া', slug: 'dhaka' }
+          ].map((item, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => handleNavigate(`/service-areas/${item.slug}`)}
+              className="px-3 py-1.5 rounded-xl bg-[#F5FAFC] hover:bg-[#E8F5F3] border border-[#E2E8F0] hover:border-[#0D9488]/40 text-xs font-semibold text-[#123047] hover:text-[#0D9488] transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <MapPin className="w-3 h-3 text-[#0D9488] shrink-0" />
+              <span>{item.name}</span>
+            </button>
+          ))}
+        </div>
       </section>
 
       {/* 8. Service-Specific FAQ Accordion */}

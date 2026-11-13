@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MapPin, 
   Search, 
@@ -12,8 +12,16 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
-import { LOCATIONS_DATA } from '../data/locationsData';
-import { trackEvent, trackWhatsAppClick } from '../utils/tracking';
+import {
+  DEFAULT_SERVICE_ZONES,
+  DEFAULT_ZONE_AREAS,
+  ServiceZoneRecord,
+  ZoneAreaRecord,
+  ZONES_CHANGED_EVENT,
+  fetchZonesAndAreas
+} from '../services/zoneContentService';
+import { isSupabaseConfigured } from '../utils/supabaseClient';
+import { trackEvent, trackPhoneClick, trackWhatsAppClick } from '../utils/tracking';
 
 interface ServiceAreaSectionProps {
   onAreaSelected?: (areaName: string) => void;
@@ -26,6 +34,9 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
 }) => {
   const { lang, t } = useLanguage();
   const { areas, business } = useSiteConfig();
+  const [zones, setZones] = useState<ServiceZoneRecord[]>(() => (isSupabaseConfigured() ? [] : DEFAULT_SERVICE_ZONES));
+  const [zoneAreas, setZoneAreas] = useState<ZoneAreaRecord[]>(() => (isSupabaseConfigured() ? [] : DEFAULT_ZONE_AREAS));
+  const [loadedFromDb, setLoadedFromDb] = useState(() => !isSupabaseConfigured());
   const [searchTerm, setSearchTerm] = useState('');
   const [checkResult, setCheckResult] = useState<{
     found: boolean;
@@ -34,38 +45,42 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
     slug?: string;
   } | null>(null);
 
-  const DHAKA_ZONES = [
-    {
-      name: 'North Dhaka Hub',
-      nameBn: 'উত্তর ঢাকা জোন',
-      places: 'উত্তরা, বসুন্ধরা আ/এ, নিকুঞ্জ, খিলক্ষেত, কুড়িল',
-      featuredSlug: 'bashundhara'
-    },
-    {
-      name: 'Diplomatic & Commercial',
-      nameBn: 'ডিপ্লোম্যাটিক ও বাণিজ্যিক জোন',
-      places: 'গুলশান ১ ও ২, বনানী, বারিধারা, বারিধারা ডিওএইচএস, নিকেতন',
-      featuredSlug: 'gulshan'
-    },
-    {
-      name: 'Central & West Dhaka',
-      nameBn: 'সেন্ট্রাল ও পশ্চিম ঢাকা জোন',
-      places: 'ধানমন্ডি, মোহাম্মদপুর, লালমাটিয়া, তেজগাঁও, মহাখালী, মিরপুর',
-      featuredSlug: 'dhanmondi'
-    },
-    {
-      name: 'South & East Dhaka',
-      nameBn: 'পূর্ব ও দক্ষিণ ঢাকা জোন',
-      places: 'বাড্ডা, রামপুরা, বনশ্রী, খিলগাঁও, মালিবাগ, শান্তিনগর, পুরান ঢাকা',
-      featuredSlug: 'dhaka'
-    },
-    {
-      name: 'Greater Dhaka Corridor',
-      nameBn: 'বৃহত্তর ঢাকা করিডোর',
-      places: 'গাজীপুর, টঙ্গী, সাভার, আশুলিয়া, হেমায়েতপুর, নারায়ণগঞ্জ',
-      featuredSlug: 'gazipur'
+  useEffect(() => {
+    let active = true;
+    const loadZones = async () => {
+      const bundle = await fetchZonesAndAreas({ includeDrafts: false });
+      if (!active) return;
+      if (bundle.fromDatabase || !isSupabaseConfigured()) {
+        setZones(bundle.zones);
+        setZoneAreas(bundle.areas);
+        setLoadedFromDb(true);
+      } else if (bundle.zones.length > 0 || bundle.areas.length > 0) {
+        setZones(bundle.zones);
+        setZoneAreas(bundle.areas);
+      }
+    };
+    loadZones();
+    const onChanged = () => loadZones();
+    if (typeof window !== 'undefined') {
+      window.addEventListener(ZONES_CHANGED_EVENT, onChanged);
     }
-  ];
+    return () => {
+      active = false;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(ZONES_CHANGED_EVENT, onChanged);
+      }
+    };
+  }, []);
+
+  const visibleZones = zones.filter(z => z.isVisible);
+  const visibleZoneAreas = zoneAreas.filter(a => a.isVisible);
+  const coreCitySlugs = ['dhaka', 'narayanganj', 'gazipur', 'savar'];
+  const coreCityLinks = [
+    { slug: 'dhaka', bn: 'ঢাকা', en: 'Dhaka' },
+    { slug: 'narayanganj', bn: 'নারায়ণগঞ্জ', en: 'Narayanganj' },
+    { slug: 'gazipur', bn: 'গাজীপুর', en: 'Gazipur' },
+    { slug: 'savar', bn: 'সাভার', en: 'Savar' }
+  ].filter(c => visibleZoneAreas.some(a => a.slug === c.slug) || (!loadedFromDb && !isSupabaseConfigured() && coreCitySlugs.includes(c.slug)));
 
   const handleNavigate = (path: string) => {
     if (onNavigate) {
@@ -85,7 +100,27 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
 
     const term = searchTerm.trim().toLowerCase();
 
-    // 1. Explicitly check for an active and verified service area record
+    const matchedZoneArea = visibleZoneAreas.find(a =>
+      a.areaName.toLowerCase().includes(term) ||
+      a.areaNameBn.includes(searchTerm.trim()) ||
+      a.slug.toLowerCase().includes(term) ||
+      (a.publishedData.coverageDetails || []).some(c => c.toLowerCase().includes(term))
+    );
+
+    if (matchedZoneArea) {
+      trackEvent('service_area_check', { area: matchedZoneArea.areaName, verified: true });
+      const displayName = lang === 'bn' ? matchedZoneArea.areaNameBn : matchedZoneArea.areaName;
+      setCheckResult({
+        found: true,
+        name: displayName,
+        message: lang === 'bn'
+          ? `হ্যাঁ! ${matchedZoneArea.areaNameBn} এলাকায় আমাদের মোবাইল টিম নিয়মিত পানির ট্যাংক ও পাইপলাইন পরিষ্কার সার্ভিস দিয়ে থাকে।`
+          : `Yes! Professional water tank and pipeline cleaning service is actively available in ${matchedZoneArea.areaName}.`,
+        slug: matchedZoneArea.slug
+      });
+      return;
+    }
+
     const verifiedActiveArea = areas.find(a => 
       Boolean(a.active) && (
         a.name.toLowerCase().includes(term) ||
@@ -96,7 +131,7 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
 
     if (verifiedActiveArea && verifiedActiveArea.active === true) {
       trackEvent('service_area_check', { area: verifiedActiveArea.name, verified: true });
-      const matchedLocation = LOCATIONS_DATA.find(loc => 
+      const matchedLocation = visibleZoneAreas.find(loc => 
         loc.areaName.toLowerCase().includes(verifiedActiveArea.name.toLowerCase()) || 
         verifiedActiveArea.name.toLowerCase().includes(loc.areaName.toLowerCase())
       );
@@ -112,13 +147,12 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
       return;
     }
 
-    // 2. Unverified or Unlisted Area: Strictly show contact confirmation message
     trackEvent('service_area_check', { area: searchTerm.trim(), verified: false });
     setCheckResult({
       found: false,
       name: searchTerm.trim(),
       message: lang === 'bn'
-        ? `অনুগ্রহ করে আমাদের সাথে যোগাযোগ করে আপনার এলাকায় সার্ভিসের প্রাপ্যতা নিশ্চিত করুন (Please contact us to confirm service availability)। আমাদের হটলাইন ${business.displayPhone} নম্বরে সরাসরি কল করুন অথবা হোয়াটসঅ্যাপে জানান।`
+        ? `অনুগ্রহ করে আমাদের সাথে যোগাযোগ করে আপনার এলাকায় সার্ভিসের প্রাপ্যতা নিশ্চিত করুন। আমাদের হটলাইন ${business.displayPhone} নম্বরে সরাসরি কল করুন অথবা হোয়াটসঅ্যাপে জানান।`
         : `Please contact us to confirm service availability for "${searchTerm.trim()}". Call our dispatch desk directly at ${business.displayPhone} or reach out via WhatsApp.`
     });
   };
@@ -137,65 +171,87 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest text-[#0D9488] uppercase mb-2 bg-[#E8F5F3] px-3.5 py-1 rounded-full border border-[#0D9488]/30">
             <MapPin className="w-4 h-4 text-[#0D9488]" aria-hidden="true" />
-            <span>{lang === 'bn' ? 'সার্ভিস কভারেজ ও জোন' : 'Dhaka Metro Coverage'}</span>
+            <span>{lang === 'bn' ? 'সার্ভিস কভারেজ ও জোন' : 'Dhaka Metro & Surrounding Coverage'}</span>
           </div>
           <h2 id="areas-heading" className="text-2xl sm:text-3xl md:text-4xl font-black text-[#123047] tracking-tight mt-2.5">
             {lang === 'bn' 
-              ? 'ঢাকা শহরের সকল এলাকায় আমাদের সার্ভিস কভারেজ' 
-              : 'Water Tank Cleaning Services Across Dhaka City'}
+              ? 'ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভারে আমাদের সার্ভিস কভারেজ' 
+              : 'Water Tank Cleaning Services Across Dhaka, Narayanganj, Gazipur & Savar'}
           </h2>
           <div className="w-20 h-1 bg-gradient-to-r from-transparent via-[#0D9488] to-transparent mx-auto my-3.5 rounded-full" />
           <p className="text-sm sm:text-base text-[#64748B] leading-relaxed max-w-3xl mx-auto">
             {lang === 'bn'
-              ? 'ঢাকা, গাজীপুর, সাভার, নারায়ণগঞ্জসহ ঢাকার পার্শ্ববর্তী বিভিন্ন এলাকায় আপনার বাসা, ভবন ও প্রতিষ্ঠানের জন্য পেশাদার পানির ট্যাংক ও পাইপলাইন ক্লিনিং সার্ভিস নিয়ে আমরা আছি আপনার পাশে।'
-              : 'Providing professional water tank and pipeline cleaning services for your home, building, and commercial establishments across Dhaka, Gazipur, Savar, Narayanganj, and adjoining areas.'}
+              ? 'ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভারের আবাসিক ভবন, অ্যাপার্টমেন্ট ও বাণিজ্যিক প্রতিষ্ঠানের জন্য পেশাদার পানির ট্যাংক ও পাইপলাইন পরিষ্কার সার্ভিস।'
+              : 'Providing professional water tank and pipeline cleaning services for homes, apartment buildings, and commercial establishments across Dhaka, Narayanganj, Gazipur, and Savar.'}
           </p>
+
+          {/* 4 Core Cities Quick Navigation Strip */}
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            {coreCityLinks.map((city) => (
+              <button
+                key={city.slug}
+                type="button"
+                onClick={() => handleNavigate(`/service-areas/${city.slug}`)}
+                className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#E8F5F3] border border-[#0D9488]/30 text-xs font-bold text-[#123047] hover:text-[#0D9488] transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+              >
+                <MapPin className="w-3.5 h-3.5 text-[#0D9488]" aria-hidden="true" />
+                <span>{lang === 'bn' ? city.bn : city.en}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* 1. Dhaka Primary Zones Overview Cards */}
+        {/* 1. Dhaka Primary Zones Overview Cards (Dynamic CMS while preserving exact 5-card grid look) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-          {DHAKA_ZONES.map((zone) => (
-            <div
-              key={zone.name}
-              className="bg-white rounded-2xl p-5 border border-[#E2E8F0] hover:border-[#0D9488]/40 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#E8F5F3] text-[#0D9488] flex items-center justify-center font-bold" aria-hidden="true">
-                    <MapPin className="w-5 h-5 text-[#0D9488]" />
+          {visibleZones.map((zone) => {
+            const zoneData = zone.publishedData;
+            const featuredSlug = zoneData?.featuredSlug || zone.featuredSlug;
+            const placesText = zoneData?.placesText || zone.placesText;
+            const hasFeaturedArea = visibleZoneAreas.some(a => a.slug === featuredSlug);
+
+            return (
+              <div
+                key={zone.slug}
+                className="bg-white rounded-2xl p-5 border border-[#E2E8F0] hover:border-[#0D9488]/40 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#E8F5F3] text-[#0D9488] flex items-center justify-center font-bold" aria-hidden="true">
+                      <MapPin className="w-5 h-5 text-[#0D9488]" />
+                    </div>
                   </div>
+                  <h3 className="text-base font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors">
+                    {lang === 'bn' ? zone.nameBn : zone.nameEn}
+                  </h3>
+                  <p className="text-xs text-[#64748B] mt-2 line-clamp-2 leading-relaxed">
+                    {placesText}
+                  </p>
                 </div>
-                <h3 className="text-base font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors">
-                  {lang === 'bn' ? zone.nameBn : zone.name}
-                </h3>
-                <p className="text-xs text-[#64748B] mt-2 line-clamp-2 leading-relaxed">
-                  {zone.places}
-                </p>
-              </div>
 
-              <div className="mt-5 space-y-2">
-                <button
-                  type="button"
-                  onClick={() => onAreaSelected(zone.nameBn)}
-                  className="w-full min-h-[40px] py-2 px-3 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
-                >
-                  <span>{lang === 'bn' ? 'এই জোনে বুক করুন' : 'Book in this Zone'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-                </button>
-
-                {zone.featuredSlug && (
+                <div className="mt-5 space-y-2">
                   <button
                     type="button"
-                    onClick={() => handleNavigate(`/service-areas/${zone.featuredSlug}`)}
-                    className="w-full text-center text-[11px] text-[#0D9488] hover:underline flex items-center justify-center gap-1 py-1 font-semibold"
+                    onClick={() => onAreaSelected(zone.nameBn)}
+                    className="w-full min-h-[40px] py-2 px-3 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                   >
-                    <span>{lang === 'bn' ? 'এরিয়া বিস্তারিত দেখুন' : 'View Area Details'}</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <span>{lang === 'bn' ? 'এই জোনে বুক করুন' : 'Book in this Zone'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                   </button>
-                )}
+
+                  {featuredSlug && hasFeaturedArea && (
+                    <button
+                      type="button"
+                      onClick={() => handleNavigate(`/service-areas/${featuredSlug}`)}
+                      className="w-full text-center text-[11px] text-[#0D9488] hover:underline flex items-center justify-center gap-1 py-1 font-semibold"
+                    >
+                      <span>{lang === 'bn' ? 'এরিয়া বিস্তারিত দেখুন' : 'View Area Details'}</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* 2. Interactive Area Availability Checker Tool */}
@@ -284,20 +340,21 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
                       <>
                         <a
                           href={`tel:${business.phone}`}
+                          onClick={() => trackPhoneClick({ source: 'unlisted_area_check' })}
                           className="min-h-[36px] py-1.5 px-3.5 rounded-lg bg-[#123047] hover:bg-[#0f2638] text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                         >
                           <Phone className="w-3.5 h-3.5 text-[#38BDF8]" />
-                          <span>{lang === 'bn' ? `হটলাইনে কল করুন (${business.displayPhone})` : `Call Hotline (${business.displayPhone})`}</span>
+                          <span>{lang === 'bn' ? `সরাসরি কল করুন (${business.displayPhone})` : `Call Direct (${business.displayPhone})`}</span>
                         </a>
                         <a
-                          href={`https://wa.me/${rawWhatsapp}?text=${encodeURIComponent(`আসসালামু আলাইকুম। আমি ${checkResult.name} এলাকা থেকে বলছি। এখানে ওয়াটার ট্যাংক ক্লিনিং সার্ভিস পাওয়া যাবে কি না জানতে চাই।`)}`}
+                          href={`https://wa.me/${rawWhatsapp}?text=${encodeURIComponent(`আসসালামু আলাইকুম। আমি ${checkResult.name} এলাকা থেকে বলছি। এখানে পানির ট্যাংক পরিষ্কার সার্ভিসের কোটেশন জানতে চাই।`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => trackWhatsAppClick({ source: 'unlisted_area_check' })}
                           className="min-h-[36px] py-1.5 px-3.5 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
-                          <span>{lang === 'bn' ? 'WhatsApp এ নিশ্চিত হোন' : 'Confirm on WhatsApp'}</span>
+                          <span>{lang === 'bn' ? 'WhatsApp-এ কোটেশন নিন' : 'Get WhatsApp Quote'}</span>
                         </a>
                       </>
                     )}
@@ -312,15 +369,15 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
         <div>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
-              {lang === 'bn' ? 'প্রধান কভারেজ এলাকা সমুহ:' : 'Key Active Dhaka Coverage Locations:'}
+              {lang === 'bn' ? 'প্রধান কভারেজ এলাকা সমূহ:' : 'Key Active Dhaka Coverage Locations:'}
             </h3>
             <span className="text-xs text-[#0D9488] font-mono font-bold">
-              {LOCATIONS_DATA.length} Prime Dedicated Hubs
+              {visibleZoneAreas.length} Active Hubs
             </span>
           </div>
 
           <div className="flex flex-wrap gap-2.5">
-            {LOCATIONS_DATA.map((loc) => (
+            {visibleZoneAreas.map((loc) => (
               <button
                 key={loc.slug}
                 type="button"
@@ -340,7 +397,7 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
           <div className="space-y-1 text-center sm:text-left">
             <span className="text-xs uppercase font-extrabold text-[#38BDF8] tracking-wider flex items-center justify-center sm:justify-start gap-1.5">
               <PhoneCall className="w-3.5 h-3.5 text-[#25D366] animate-pulse" aria-hidden="true" />
-              <span>{lang === 'bn' ? 'সরাসরি হেল্পলাইন' : 'Emergency Hotline & Dispatch'}</span>
+              <span>{lang === 'bn' ? 'সরাসরি হেল্পলাইন' : 'Direct Service Hotline'}</span>
             </span>
             <h3 className="text-xl sm:text-2xl font-black text-white font-mono">
               {business.displayPhone}
@@ -348,27 +405,28 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
             <p className="text-xs text-slate-300 max-w-md">
               {lang === 'bn' 
                 ? 'সরাসরি ফোনে কথা বলে দ্রুত কোটেশন ও শিডিউল নিশ্চিত করুন।'
-                : 'Direct line for prompt dispatch and water tank cleaning consultation across Dhaka.'}
+                : 'Direct line for prompt dispatch and water tank cleaning consultation across Dhaka, Narayanganj, Gazipur & Savar.'}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <a
               href={`tel:${business.phone}`}
+              onClick={() => trackPhoneClick({ source: 'service_area_bottom' })}
               className="min-h-[44px] py-3 px-6 rounded-xl bg-white hover:bg-slate-100 text-[#123047] font-extrabold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
               <Phone className="w-4 h-4 text-[#0D9488]" aria-hidden="true" />
-              <span>{lang === 'bn' ? 'কল করুন' : 'Call Now'}</span>
+              <span>{lang === 'bn' ? 'সরাসরি কল করুন' : 'Call Direct'}</span>
             </a>
             <a
-              href={`https://wa.me/${rawWhatsapp}?text=${encodeURIComponent('আসসালামু আলাইকুম। আমি ঢাকা শহরে ওয়াটার ট্যাংক ক্লিনিং সার্ভিস সম্পর্কে জানতে চাই।')}`}
+              href={`https://wa.me/${rawWhatsapp}?text=${encodeURIComponent('আসসালামু আলাইকুম। আমি পানির ট্যাংক পরিষ্কার সার্ভিসের কোটেশন জানতে চাই।')}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackWhatsAppClick({ source: 'service_area_bottom' })}
               className="min-h-[44px] py-3 px-6 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
               <MessageCircle className="w-4 h-4 text-white" aria-hidden="true" />
-              <span>WhatsApp</span>
+              <span>{lang === 'bn' ? 'WhatsApp-এ কোটেশন নিন' : 'Get WhatsApp Quote'}</span>
             </a>
           </div>
         </div>

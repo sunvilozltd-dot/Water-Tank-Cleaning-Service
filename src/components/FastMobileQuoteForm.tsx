@@ -17,7 +17,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { isValidBangladeshiPhone, normalizeBangladeshiPhone } from '../utils/validation';
 import { createLead, getLeadDraft, saveLeadDraft, clearLeadDraft } from '../services/leadService';
-import { trackFormStarted, trackLeadSaved, trackWhatsAppClick } from '../utils/tracking';
+import { trackFormStarted, trackLeadSaved, trackPhoneClick, trackWhatsAppClick } from '../utils/tracking';
 
 export interface FastMobileQuoteFormProps {
   initialService?: string;
@@ -85,7 +85,7 @@ export const FastMobileQuoteForm: React.FC<FastMobileQuoteFormProps> = ({
   const [confirmedLeadNumber, setConfirmedLeadNumber] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [phoneError, setPhoneError] = useState<string>('');
-  const [nameError, setNameError] = useState<string>('');
+  const [areaError, setAreaError] = useState<string>('');
 
   const submittingRef = useRef<boolean>(false);
   const startedTrackingRef = useRef<boolean>(false);
@@ -117,37 +117,36 @@ export const FastMobileQuoteForm: React.FC<FastMobileQuoteFormProps> = ({
     e.preventDefault();
     if (submittingRef.current || isSubmitting) return;
 
-    setNameError('');
+    setAreaError('');
     setPhoneError('');
     setErrorMessage('');
 
     const trimmedName = name.trim();
     const rawPhone = phone.trim();
+    const finalArea = area === 'অন্যান্য এলাকা' ? customArea.trim() : area.trim();
 
     let hasError = false;
-
-    if (!trimmedName || trimmedName.length < 2) {
-      setNameError(lang === 'bn' ? 'অনুগ্রহ করে আপনার নাম লিখুন (কমপক্ষে ২ অক্ষর)' : 'Please enter your name (at least 2 letters)');
-      hasError = true;
-    }
 
     if (!rawPhone) {
       setPhoneError(lang === 'bn' ? 'মোবাইল নম্বর লিখুন' : 'Please enter your mobile phone number');
       hasError = true;
     } else if (!isValidBangladeshiPhone(rawPhone)) {
       setPhoneError(
-        lang === 'bn' 
-          ? 'সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX)' 
+        lang === 'bn'
+          ? 'সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX)'
           : 'Please enter a valid 11-digit Bangladeshi mobile number (e.g., 017XXXXXXXX)'
       );
+      hasError = true;
+    }
+
+    if (!finalArea) {
+      setAreaError(lang === 'bn' ? 'আপনার এলাকা লিখুন বা নির্বাচন করুন' : 'Please select or enter your area');
       hasError = true;
     }
 
     if (hasError) return;
 
     const normalizedPhone = normalizeBangladeshiPhone(rawPhone);
-    const finalArea = area === 'অন্যান্য এলাকা' ? (customArea.trim() || 'অন্যান্য এলাকা') : area;
-
     const serviceLabel = SERVICE_OPTIONS.find(s => s.id === selectedService);
     const serviceName = serviceLabel ? (lang === 'bn' ? serviceLabel.titleBn : serviceLabel.titleEn) : 'Water Tank Cleaning';
 
@@ -156,7 +155,7 @@ export const FastMobileQuoteForm: React.FC<FastMobileQuoteFormProps> = ({
 
     try {
       const createdLead = await createLead({
-        name: trimmedName,
+        name: trimmedName || 'Website Visitor',
         phone: normalizedPhone,
         whatsapp: normalizedPhone,
         serviceType: serviceName,
@@ -167,7 +166,15 @@ export const FastMobileQuoteForm: React.FC<FastMobileQuoteFormProps> = ({
         message: message.trim() || undefined
       }, sourceContext);
 
-      // Clear local draft upon successful submission
+      if (!createdLead.isSyncedToCloud) {
+        setErrorMessage(
+          lang === 'bn'
+            ? 'সার্ভারে রিকোয়েস্ট সংরক্ষণ করা যায়নি। অনুগ্রহ করে পুনরায় চেষ্টা করুন অথবা সরাসরি WhatsApp বা কল করে কোটেশন নিন।'
+            : 'Could not save request to the server. Please retry or use WhatsApp / Call directly.'
+        );
+        return;
+      }
+
       clearLeadDraft();
 
       const leadNum = createdLead.leadNumber || 'SVC-' + Date.now().toString().slice(-6);
@@ -185,8 +192,8 @@ export const FastMobileQuoteForm: React.FC<FastMobileQuoteFormProps> = ({
       console.error('Lead submission error:', err);
       setErrorMessage(
         lang === 'bn'
-          ? 'রিকোয়েস্ট পাঠাতে কিছুটা সমস্যা হয়েছে। অনুগ্রহ করে সরাসরি কল বা হোয়াটসঅ্যাপ করুন।'
-          : 'Submission issue. Please call or message us directly via WhatsApp.'
+          ? 'রিকোয়েস্ট পাঠাতে সমস্যা হয়েছে। অনুগ্রহ করে পুনরায় চেষ্টা করুন অথবা সরাসরি WhatsApp বা কল করুন।'
+          : 'Submission issue. Please retry or call / message us directly via WhatsApp.'
       );
     } finally {
       setIsSubmitting(false);
@@ -213,15 +220,15 @@ export const FastMobileQuoteForm: React.FC<FastMobileQuoteFormProps> = ({
 
         <div className="space-y-2">
           <span className="text-xs font-bold uppercase tracking-widest text-[#0D9488] bg-[#E8F5F3] px-3 py-1 rounded-full">
-            {lang === 'bn' ? 'সফলভাবে গ্রহণ করা হয়েছে' : 'Request Received'}
+            {lang === 'bn' ? 'অনুরোধ গ্রহণ করা হয়েছে' : 'Request Received'}
           </span>
           <h3 className="text-xl sm:text-2xl font-extrabold text-[#123047]">
             {lang === 'bn' ? 'ধন্যবাদ! আপনার রিকোয়েস্ট পেয়েছি' : 'Thank you! We received your request'}
           </h3>
           <p className="text-xs sm:text-sm text-[#64748B] max-w-md mx-auto">
-            {lang === 'bn' 
-              ? 'আমাদের কাস্টমার কেয়ার টিম পরবর্তী ১৫-৩০ মিনিটের মধ্যে আপনার সাথে যোগাযোগ করবে।' 
-              : 'Our customer support team will call you within 15-30 minutes with an exact quotation.'}
+            {lang === 'bn'
+              ? 'আমাদের কাস্টমার কেয়ার টিম দ্রুত আপনার সাথে যোগাযোগ করবে।'
+              : 'Our customer support team will call you shortly with an exact quotation.'}
           </p>
           {confirmedLeadNumber && (
             <div className="inline-block mt-2 px-3 py-1 bg-[#F5FAFC] border border-[#E2E8F0] rounded-lg text-xs font-mono text-[#123047]">
@@ -236,19 +243,20 @@ export const FastMobileQuoteForm: React.FC<FastMobileQuoteFormProps> = ({
             href={`https://wa.me/${rawWhatsapp}?text=${encodedWhatsappMsg}`}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => trackWhatsAppClick({ source: 'fast_form_success' })}
+            onClick={() => trackWhatsAppClick({ source: 'fast_form_success', leadNumber: confirmedLeadNumber })}
             className="w-full min-h-[48px] px-5 py-3 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-sm flex items-center justify-center gap-2.5 shadow-md shadow-[#25D366]/20 transition-all cursor-pointer"
           >
             <MessageCircle className="w-5 h-5" />
-            <span>{lang === 'bn' ? 'হোয়াটসঅ্যাপে দ্রুত উত্তর পেতে ক্লিক করুন' : 'Instant WhatsApp Handover'}</span>
+            <span>{lang === 'bn' ? 'WhatsApp-এ কোটেশন নিন' : 'Get Quote on WhatsApp'}</span>
           </a>
 
           <a
             href={`tel:${business.phone}`}
+            onClick={() => trackPhoneClick({ source: 'fast_form_success' })}
             className="w-full min-h-[44px] px-5 py-2.5 rounded-xl bg-[#123047] hover:bg-[#1b4363] text-white font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             <Phone className="w-4 h-4 text-[#38BDF8]" />
-            <span>{business.displayPhone} এ সরাসরি কল করুন</span>
+            <span>{lang === 'bn' ? `সরাসরি কল করুন (${business.displayPhone})` : `Call ${business.displayPhone}`}</span>
           </a>
         </div>
 
@@ -282,37 +290,52 @@ export const FastMobileQuoteForm: React.FC<FastMobileQuoteFormProps> = ({
       </div>
 
       {errorMessage && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-          <span>{errorMessage}</span>
+        <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 space-y-2.5" role="alert">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={`https://wa.me/${rawWhatsapp}?text=${encodedWhatsappMsg}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackWhatsAppClick({ source: 'fast_form_error_fallback' })}
+              className="px-3 py-1.5 rounded-lg bg-[#25D366] text-white font-bold text-[11px] inline-flex items-center gap-1"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>WhatsApp-এ কোটেশন নিন</span>
+            </a>
+            <a
+              href={`tel:${business.phone}`}
+              onClick={() => trackPhoneClick({ source: 'fast_form_error_fallback' })}
+              className="px-3 py-1.5 rounded-lg bg-[#123047] text-white font-bold text-[11px] inline-flex items-center gap-1"
+            >
+              <Phone className="w-3.5 h-3.5 text-[#38BDF8]" />
+              <span>সরাসরি কল করুন</span>
+            </a>
+          </div>
         </div>
       )}
 
-      {/* Row 1: Name & Phone */}
+      {/* Row 1: Name (Optional) & Phone */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Name Input */}
         <div>
           <label className="block text-xs font-semibold text-[#172B3A] mb-1">
-            {lang === 'bn' ? 'আপনার নাম' : 'Your Name'} <span className="text-red-500">*</span>
+            {lang === 'bn' ? 'আপনার নাম (ঐচ্ছিক)' : 'Your Name (Optional)'}
           </label>
           <div className="relative">
             <User className="absolute left-3 top-3 w-4 h-4 text-[#64748B] pointer-events-none" />
             <input
               type="text"
-              required
               value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (nameError) setNameError('');
-              }}
+              onChange={(e) => setName(e.target.value)}
               onFocus={handleFocus}
-              placeholder={lang === 'bn' ? 'যেমন: মোহাম্মদ শফিকুল ইসলাম' : 'e.g. Shafiqul Islam'}
-              className={`w-full min-h-[44px] pl-9 pr-3 py-2 bg-[#F5FAFC] border rounded-xl text-xs sm:text-sm text-[#172B3A] placeholder-[#94A3B8] focus:bg-white focus:outline-none transition-all ${
-                nameError ? 'border-red-500 ring-2 ring-red-200' : 'border-[#E2E8F0] focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20'
-              }`}
+              placeholder={lang === 'bn' ? 'যেমন: শফিকুল ইসলাম (ঐচ্ছিক)' : 'e.g. Shafiqul Islam (Optional)'}
+              className="w-full min-h-[44px] pl-9 pr-3 py-2 bg-[#F5FAFC] border border-[#E2E8F0] rounded-xl text-xs sm:text-sm text-[#172B3A] placeholder-[#94A3B8] focus:bg-white focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20 transition-all"
             />
           </div>
-          {nameError && <p className="mt-1 text-[11px] text-red-600 font-medium">{nameError}</p>}
         </div>
 
         {/* Phone Input */}
@@ -369,13 +392,16 @@ export const FastMobileQuoteForm: React.FC<FastMobileQuoteFormProps> = ({
       {/* Row 3: Area Selection */}
       <div>
         <label className="block text-xs font-semibold text-[#172B3A] mb-1">
-          {lang === 'bn' ? 'আপনার এলাকা (ঢাকা ও পার্শ্ববর্তী)' : 'Your Area in Dhaka'}
+          {lang === 'bn' ? 'আপনার এলাকা (ঢাকা, নারায়ণগঞ্জ, গাজীপুর, সাভার)' : 'Your Area'} <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <MapPin className="absolute left-3 top-3 w-4 h-4 text-[#64748B] pointer-events-none" />
           <select
             value={area}
-            onChange={(e) => setArea(e.target.value)}
+            onChange={(e) => {
+              setArea(e.target.value);
+              if (areaError) setAreaError('');
+            }}
             className="w-full min-h-[44px] pl-9 pr-8 py-2 bg-[#F5FAFC] border border-[#E2E8F0] rounded-xl text-xs sm:text-sm text-[#172B3A] appearance-none focus:bg-white focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20 transition-all cursor-pointer"
           >
             {POPULAR_AREAS.map((a) => (
@@ -391,11 +417,17 @@ export const FastMobileQuoteForm: React.FC<FastMobileQuoteFormProps> = ({
           <input
             type="text"
             value={customArea}
-            onChange={(e) => setCustomArea(e.target.value)}
+            onChange={(e) => {
+              setCustomArea(e.target.value);
+              if (areaError) setAreaError('');
+            }}
             placeholder={lang === 'bn' ? 'আপনার নির্দিষ্ট এলাকা ও ঠিকানা লিখুন' : 'Enter your specific locality/address'}
-            className="mt-2 w-full min-h-[40px] px-3 py-2 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#172B3A] placeholder-[#94A3B8] focus:outline-none focus:border-[#0D9488]"
+            className={`mt-2 w-full min-h-[40px] px-3 py-2 bg-white border rounded-xl text-xs text-[#172B3A] placeholder-[#94A3B8] focus:outline-none ${
+              areaError ? 'border-red-500 ring-2 ring-red-200' : 'border-[#E2E8F0] focus:border-[#0D9488]'
+            }`}
           />
         )}
+        {areaError && <p className="mt-1 text-[11px] text-red-600 font-medium">{areaError}</p>}
       </div>
 
       {/* Row 4: Short Optional Message */}

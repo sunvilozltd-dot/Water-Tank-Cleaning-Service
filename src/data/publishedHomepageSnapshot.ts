@@ -265,7 +265,7 @@ export const PUBLISHED_HOMEPAGE_SECTIONS: HomepageSection[] = [
     id: 'sec-finalCta',
     sectionKey: 'finalCta',
     sectionType: 'cta',
-    title: 'Ready for 100% Hygienic Water?',
+    title: 'Ready for Clean & Safe Water?',
     titleBn: 'নিরাপদ ও বিশুদ্ধ পানির জন্য আজই যোগাযোগ করুন',
     subtitle: 'Book your service today or speak with our water hygiene engineer.',
     subtitleBn: 'আমরা ঢাকা শহরের যেকোনো প্রান্তে দ্রুততম সময়ে সেবা প্রদান করি।',

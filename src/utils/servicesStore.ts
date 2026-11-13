@@ -13,6 +13,7 @@ import {
   CENTRAL_IMAGES_EVENT,
   isDemoOrStockUrl 
 } from '../services/imageSyncService';
+import { enqueueIndexNowUrls } from '../services/indexnowService';
 
 const STORAGE_KEY = 'sunviloz_authoritative_services_v9';
 const EVENT_NAME = 'sunviloz_services_changed';
@@ -111,7 +112,7 @@ function mapRowToService(d: any): ExtensibleServiceItem {
       requiresPropertyDetails: true,
       requiresPipelineDetails: false
     },
-    benefits: Array.isArray(d.benefits) ? d.benefits : ['মেকানাইজড ওয়াশ', '১০০% জীবাণুমুক্তকরণ'],
+    benefits: Array.isArray(d.benefits) ? d.benefits : ['মেকানাইজড ওয়াশ', 'ফুড-গ্রেড জীবাণুমুক্তকরণ'],
     benefitsBn: Array.isArray(d.benefits_bn) ? d.benefits_bn : (Array.isArray(d.benefits) ? d.benefits : []),
     process: Array.isArray(d.process) ? d.process : ['পরিদর্শন', 'মেকানাইজড পরিষ্কার', 'জীবাণুমুক্তকরণ', 'হ্যান্ডওভার'],
     processBn: Array.isArray(d.process_bn) ? d.process_bn : (Array.isArray(d.process) ? d.process : []),
@@ -166,41 +167,71 @@ function mapServiceToRow(s: ExtensibleServiceItem): any {
 }
 
 /**
- * Retrieve stored services with fallback to authoritative defaults.
- * Synchronous for instant render.
+ * Retrieve cached services when Supabase is configured, or bundled defaults strictly in offline/unconfigured mode.
  */
 export const getStoredServices = (): ExtensibleServiceItem[] => {
-  if (typeof window === 'undefined') return INITIAL_SERVICES;
+  if (typeof window === 'undefined') {
+    return isSupabaseConfigured() ? [] : INITIAL_SERVICES;
+  }
   try {
     const raw = safeGetItem(STORAGE_KEY);
-    if (!raw) {
-      safeSetItem(STORAGE_KEY, JSON.stringify(INITIAL_SERVICES));
-      return INITIAL_SERVICES;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map(sanitizeStoredService);
+      }
     }
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.map(sanitizeStoredService);
-    }
-    return INITIAL_SERVICES;
   } catch (err) {
     console.error('Failed to parse stored services:', err);
-    return INITIAL_SERVICES;
   }
+  return isSupabaseConfigured() ? [] : INITIAL_SERVICES;
 };
+
+export interface ServiceFetchResult {
+  services: ExtensibleServiceItem[];
+  fromDatabase: boolean;
+  error?: string;
+}
 
 /**
  * Authoritative Supabase fetch for services.
- * Populates local cache and returns latest database records.
+ * Separates DB query/network errors from legitimate empty results (`[]`).
+ * Never auto-reseeds INITIAL_SERVICES on read.
  */
-export const fetchServicesFromSupabase = async (): Promise<ExtensibleServiceItem[]> => {
-  let list = getStoredServices();
+export const fetchServicesWithStatus = async (): Promise<ServiceFetchResult> => {
+  if (!isSupabaseConfigured()) {
+    return { services: INITIAL_SERVICES, fromDatabase: false };
+  }
 
-  // Hydrate with Supabase Central Image Registry (Storage + Database)
+  let registryServiceImages: Record<string, string> = {};
   try {
     const registry = await fetchCentralImageRegistry();
-    if (registry?.serviceImages && Object.keys(registry.serviceImages).length > 0) {
+    if (registry?.serviceImages) {
+      registryServiceImages = registry.serviceImages;
+    }
+  } catch (regErr) {
+    console.warn('[ServicesStore] Central registry hydration notice:', regErr);
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .order('display_order', { ascending: true });
+
+    if (error) {
+      return {
+        services: getStoredServices(),
+        fromDatabase: false,
+        error: error.message
+      };
+    }
+
+    let list: ExtensibleServiceItem[] = Array.isArray(data) ? data.map(mapRowToService) : [];
+
+    if (list.length > 0 && Object.keys(registryServiceImages).length > 0) {
       list = list.map(item => {
-        const rawUrl = registry.serviceImages[item.id] || registry.serviceImages[item.slug];
+        const rawUrl = registryServiceImages[item.id] || registryServiceImages[item.slug];
         const customUrl = rawUrl && !isDemoOrStockUrl(rawUrl) ? rawUrl : undefined;
         if (customUrl) {
           return {
@@ -209,40 +240,28 @@ export const fetchServicesFromSupabase = async (): Promise<ExtensibleServiceItem
             featured_image: customUrl
           };
         }
-        return sanitizeStoredService(item);
+        return item;
       });
-      if (typeof window !== 'undefined') {
-        safeSetItem(STORAGE_KEY, JSON.stringify(list));
-      }
     }
-  } catch (regErr) {
-    console.warn('[ServicesStore] Central registry hydration notice:', regErr);
-  }
 
-  if (isSupabaseConfigured()) {
-    try {
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .order('display_order', { ascending: true });
-
-      if (!error && Array.isArray(data) && data.length > 0) {
-        list = data.map(mapRowToService);
-        if (typeof window !== 'undefined') {
-          safeSetItem(STORAGE_KEY, JSON.stringify(list));
-          window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: list }));
-        }
-      } else if (!error && Array.isArray(data) && data.length === 0) {
-        // Table exists but empty, seed authoritative initial services to Supabase
-        const rows = INITIAL_SERVICES.map(mapServiceToRow);
-        await supabase.from('services').upsert(rows, { onConflict: 'id' });
-      }
-    } catch (err) {
-      console.warn('Could not query services from Supabase, using local cache:', err);
+    if (typeof window !== 'undefined') {
+      safeSetItem(STORAGE_KEY, JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: list }));
     }
-  }
 
-  return list;
+    return { services: list, fromDatabase: true };
+  } catch (err: any) {
+    return {
+      services: getStoredServices(),
+      fromDatabase: false,
+      error: err?.message || 'Could not query services from Supabase'
+    };
+  }
+};
+
+export const fetchServicesFromSupabase = async (): Promise<ExtensibleServiceItem[]> => {
+  const res = await fetchServicesWithStatus();
+  return res.services;
 };
 
 /**
@@ -271,23 +290,25 @@ export const getQuoteFormServices = (): ExtensibleServiceItem[] => {
  * Save all services to storage, broadcast update event, and persist to Supabase.
  */
 export const saveAllServices = async (services: ExtensibleServiceItem[]): Promise<boolean> => {
-  if (typeof window !== 'undefined') {
-    safeSetItem(STORAGE_KEY, JSON.stringify(services));
-    window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: services }));
-  }
-
   if (isSupabaseConfigured()) {
     try {
-      const rows = services.map(mapServiceToRow);
-      const { error } = await supabase.from('services').upsert(rows, { onConflict: 'id' });
-      if (error) {
-        console.error('Failed to sync services to Supabase:', error.message);
-        return false;
+      if (services.length > 0) {
+        const rows = services.map(mapServiceToRow);
+        const { error } = await supabase.from('services').upsert(rows, { onConflict: 'id' });
+        if (error) {
+          console.error('Failed to sync services to Supabase:', error.message);
+          return false;
+        }
       }
     } catch (err) {
       console.error('Database connection error saving services:', err);
       return false;
     }
+  }
+
+  if (typeof window !== 'undefined') {
+    safeSetItem(STORAGE_KEY, JSON.stringify(services));
+    window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: services }));
   }
 
   return true;
@@ -316,7 +337,8 @@ export const findServiceBySlug = (slug: string, servicesList?: ExtensibleService
  * Add a new service dynamically and persist to Supabase.
  */
 export const addNewService = async (serviceData: Partial<ExtensibleServiceItem>): Promise<ExtensibleServiceItem> => {
-  const current = getStoredServices();
+  const currentRes = await fetchServicesWithStatus();
+  const current = currentRes.services;
   const id = serviceData.id || `srv-${Date.now()}`;
   let slug = serviceData.slug?.trim() || (serviceData.title || serviceData.name || 'service')
     .toLowerCase()
@@ -367,10 +389,10 @@ export const addNewService = async (serviceData: Partial<ExtensibleServiceItem>)
       requiresPropertyDetails: true,
       requiresPipelineDetails: false
     },
-    benefits: serviceData.benefits && serviceData.benefits.length > 0 
-      ? serviceData.benefits 
-      : ['মেকানাইজড ওয়াশ', '১০০% জীবাণুমুক্তকরণ', 'দ্রুত সময়ে ডেলিভারি', 'সাশ্রয়ী কোটেশন'],
-    benefitsBn: serviceData.benefitsBn || serviceData.benefits || ['মেকানাইজড ওয়াশ', '১০০% জীবাণুমুক্তকরণ'],
+    benefits: serviceData.benefits && serviceData.benefits.length > 0
+      ? serviceData.benefits
+      : ['মেকানাইজড ওয়াশ', 'ফুড-গ্রেড জীবাণুমুক্তকরণ', 'দ্রুত সময়ে ডেলিভারি', 'সাশ্রয়ী কোটেশন'],
+    benefitsBn: serviceData.benefitsBn || serviceData.benefits || ['মেকানাইজড ওয়াশ', 'ফুড-গ্রেড জীবাণুমুক্তকরণ'],
     process: serviceData.process && serviceData.process.length > 0
       ? serviceData.process
       : ['পরিদর্শন', 'মেকানাইজড পরিষ্কার', 'জীবাণুমুক্তকরণ', 'হ্যান্ডওভার'],
@@ -380,15 +402,24 @@ export const addNewService = async (serviceData: Partial<ExtensibleServiceItem>)
     faqs: serviceData.faqs || []
   };
 
-  const updated = [...current, newService];
-  await saveAllServices(updated);
-
   if (isSupabaseConfigured()) {
-    try {
-      await supabase.from('services').upsert(mapServiceToRow(newService), { onConflict: 'id' });
-    } catch (err) {
-      console.warn('Direct service insert notice:', err);
+    const { error } = await supabase.from('services').upsert(mapServiceToRow(newService), { onConflict: 'id' });
+    if (error) {
+      throw new Error(error.message);
     }
+    await fetchServicesWithStatus();
+  } else {
+    const updated = [...current, newService];
+    await saveAllServices(updated);
+  }
+
+  if (newService.is_active !== false && newService.slug) {
+    enqueueIndexNowUrls(['/services', `/services/${newService.slug}`], {
+      action: 'publish_service',
+      entityType: 'service',
+      entitySlug: newService.slug,
+      verifyPublic: true
+    }).catch(() => {});
   }
 
   return newService;
@@ -398,24 +429,37 @@ export const addNewService = async (serviceData: Partial<ExtensibleServiceItem>)
  * Update existing service and persist to Supabase.
  */
 export const updateService = async (id: string, updates: Partial<ExtensibleServiceItem>): Promise<boolean> => {
-  const current = getStoredServices();
+  const currentRes = await fetchServicesWithStatus();
+  const current = currentRes.services;
   const index = current.findIndex(s => s.id === id);
   if (index === -1) return false;
 
-  current[index] = {
+  const updatedItem: ExtensibleServiceItem = {
     ...current[index],
     ...updates,
     updated_at: new Date().toISOString()
   };
 
-  await saveAllServices(current);
-
   if (isSupabaseConfigured()) {
-    try {
-      await supabase.from('services').upsert(mapServiceToRow(current[index]), { onConflict: 'id' });
-    } catch (err) {
-      console.warn('Direct service update notice:', err);
+    const { error } = await supabase.from('services').upsert(mapServiceToRow(updatedItem), { onConflict: 'id' });
+    if (error) {
+      console.error('Supabase update service error:', error.message);
+      return false;
     }
+    await fetchServicesWithStatus();
+  } else {
+    current[index] = updatedItem;
+    await saveAllServices(current);
+  }
+
+  if (updatedItem.slug) {
+    const isActive = updatedItem.is_active !== false;
+    enqueueIndexNowUrls(['/services', `/services/${updatedItem.slug}`], {
+      action: isActive ? 'update_service' : 'hide_service',
+      entityType: 'service',
+      entitySlug: updatedItem.slug,
+      verifyPublic: isActive
+    }).catch(() => {});
   }
 
   return true;
@@ -425,7 +469,8 @@ export const updateService = async (id: string, updates: Partial<ExtensibleServi
  * Toggle active state.
  */
 export const toggleServiceActive = async (id: string, isActive?: boolean): Promise<boolean> => {
-  const current = getStoredServices();
+  const currentRes = await fetchServicesWithStatus();
+  const current = currentRes.services;
   const index = current.findIndex(s => s.id === id);
   if (index === -1) return false;
 
@@ -438,21 +483,27 @@ export const toggleServiceActive = async (id: string, isActive?: boolean): Promi
  */
 export const deleteService = async (id: string): Promise<boolean> => {
   const current = getStoredServices();
-  const filtered = current.filter(s => s.id !== id);
-  if (filtered.length === current.length) return false;
-
-  await saveAllServices(filtered);
+  const matched = current.find(s => s.id === id);
+  const targetSlug = matched?.slug || '';
 
   if (isSupabaseConfigured()) {
-    try {
-      const { error } = await supabase.from('services').delete().eq('id', id);
-      if (error) {
-        console.error('Supabase delete service error:', error.message);
-      }
-    } catch (err) {
-      console.error('Failed to delete service from Supabase:', err);
+    const { error } = await supabase.from('services').delete().eq('id', id);
+    if (error) {
+      console.error('Supabase delete service error:', error.message);
+      return false;
     }
+    await fetchServicesWithStatus();
+  } else {
+    const filtered = current.filter(s => s.id !== id);
+    await saveAllServices(filtered);
   }
+
+  enqueueIndexNowUrls(['/services', ...(targetSlug ? [`/services/${targetSlug}`] : [])], {
+    action: 'delete_service',
+    entityType: 'service',
+    entitySlug: targetSlug || id,
+    verifyPublic: false
+  }).catch(() => {});
 
   return true;
 };
@@ -461,13 +512,25 @@ export const deleteService = async (id: string): Promise<boolean> => {
  * Reorder services.
  */
 export const reorderServices = async (orderedIds: string[]): Promise<boolean> => {
-  const current = getStoredServices();
+  const currentRes = await fetchServicesWithStatus();
+  const current = currentRes.services;
   const updated = current.map(s => {
     const idx = orderedIds.indexOf(s.id);
     return idx !== -1 ? { ...s, display_order: idx + 1 } : s;
   });
   updated.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
   return await saveAllServices(updated);
+};
+
+export const seedDefaultServices = async (): Promise<{ success: boolean; count: number; error?: string }> => {
+  if (!isSupabaseConfigured()) {
+    return { success: false, count: 0, error: 'Supabase সংযুক্ত নয়।' };
+  }
+  const rows = INITIAL_SERVICES.map(mapServiceToRow);
+  const { error } = await supabase.from('services').upsert(rows, { onConflict: 'id', ignoreDuplicates: true });
+  if (error) return { success: false, count: 0, error: error.message };
+  await fetchServicesWithStatus();
+  return { success: true, count: rows.length };
 };
 
 export const resetServicesToDefault = async (): Promise<ExtensibleServiceItem[]> => {
@@ -480,23 +543,31 @@ export const resetServicesToDefault = async (): Promise<ExtensibleServiceItem[]>
  */
 export const useServices = () => {
   const [allServices, setAllServices] = useState<ExtensibleServiceItem[]>(() => getStoredServices());
+  const [loading, setLoading] = useState<boolean>(() => isSupabaseConfigured());
+  const [fromDatabase, setFromDatabase] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadLatest = async () => {
+    const res = await fetchServicesWithStatus();
+    setAllServices(res.services);
+    setFromDatabase(res.fromDatabase);
+    setError(res.error || null);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    // 1. Initial authoritative fetch from Supabase
-    fetchServicesFromSupabase().then(latest => {
-      if (latest && latest.length > 0) {
-        setAllServices(latest);
-      }
-    });
+    loadLatest();
 
-    // 2. In-tab event listener
-    const handleUpdate = () => {
-      setAllServices(getStoredServices());
+    const handleUpdate = (e: any) => {
+      if (Array.isArray(e?.detail)) {
+        setAllServices(e.detail);
+      } else {
+        setAllServices(getStoredServices());
+      }
     };
     window.addEventListener(EVENT_NAME, handleUpdate);
     window.addEventListener(CENTRAL_IMAGES_EVENT, handleUpdate);
 
-    // 3. Supabase Realtime subscription for cross-device updates (Polite 2.5s deferral)
     let channel: any = null;
     const realtimeTimer = setTimeout(() => {
       if (isSupabaseConfigured() && typeof window !== 'undefined') {
@@ -507,7 +578,7 @@ export const useServices = () => {
               'postgres_changes',
               { event: '*', schema: 'public', table: 'services' },
               () => {
-                fetchServicesFromSupabase();
+                loadLatest();
               }
             )
             .subscribe();
@@ -542,12 +613,16 @@ export const useServices = () => {
     homepageServices,
     navigationServices,
     quoteFormServices,
+    loading,
+    fromDatabase,
+    error,
     addNewService,
     updateService,
     toggleServiceActive,
     deleteService,
     reorderServices,
     resetServicesToDefault,
+    refreshServices: loadLatest,
     getServiceBySlug: (slug: string) => findServiceBySlug(slug, allServices)
   };
 };
@@ -556,7 +631,8 @@ export const getServices = getActiveServices;
 export const getAllServicesForAdmin = getStoredServices;
 
 export const saveService = async (service: ServiceItem): Promise<boolean> => {
-  const all = getStoredServices();
+  const res = await fetchServicesWithStatus();
+  const all = res.services;
   const index = all.findIndex(s => s.id === service.id);
   if (index >= 0) {
     return await updateService(service.id, service);

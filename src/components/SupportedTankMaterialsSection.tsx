@@ -55,7 +55,7 @@ export const SupportedTankMaterialsSection: React.FC<SupportedTankMaterialsSecti
       descriptionEn: 'Gentle non-abrasive food-grade sanitization for modern SS water tanks, preventing oxidation and preserving mirror-finish hygiene.',
       descriptionBn: 'আধুনিক স্টেইনলেস স্টিল ট্যাংকের ফিনিশিং অক্ষত রেখে সম্পূর্ণ খাদ্য-বান্ধব নিরাপদ জীবাণুমুক্তকরণ ও রিন্সিং।',
       featuresEn: ['Non-scratch microfiber washing', 'Scale and rust prevention', 'Spotless potable water handover'],
-      featuresBn: ['নন-স্ক্র্যাচ বিশেষ ওয়াশ', 'আয়রন ও চুন জমার বিরুদ্ধে কার্যকর', '১০০% বিশুদ্ধ পানি সংরক্ষণের প্রস্তুতি'],
+      featuresBn: ['নন-স্ক্র্যাচ বিশেষ ওয়াশ', 'আয়রন ও চুন জমার বিরুদ্ধে কার্যকর', 'পরিচ্ছন্ন পানি সংরক্ষণের প্রস্তুতি'],
       badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
     },
     {

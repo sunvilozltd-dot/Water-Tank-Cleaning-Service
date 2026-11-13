@@ -14,6 +14,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useServices } from '../utils/servicesStore';
 import { useHeaderNav } from '../context/HeaderNavContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { trackGoogleMapsClick, trackGoogleReviewClick, trackPhoneClick, trackWhatsAppClick } from '../utils/tracking';
 
 interface FooterProps {
   onSelectService?: (slug: string) => void;
@@ -29,8 +30,12 @@ export const Footer: React.FC<FooterProps> = ({
   const { lang } = useLanguage();
   const { services } = useServices();
   const { headerConfig } = useHeaderNav();
-  const { images } = useSiteConfig();
+  const { images, business } = useSiteConfig();
   const activeLogoUrl = headerConfig.logoUrl || images?.logo || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png';
+  const showVerifiedGbp = Boolean(
+    business?.gbpVerified &&
+      (business?.googleMapsDirectionsUrl || business?.googleReviewsUrl || business?.googleBusinessProfileUrl)
+  );
   const [logoError, setLogoError] = useState(false);
   const currentYear = new Date().getFullYear();
   const [modalPolicy, setModalPolicy] = useState<'privacy' | 'terms' | null>(null);
@@ -106,28 +111,30 @@ export const Footer: React.FC<FooterProps> = ({
 
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-sm">
                 {lang === 'bn' 
-                  ? 'ঢাকা শহরের সকল আবাসিক ভবন, অ্যাপার্টমেন্ট ও বাণিজ্যিক প্রতিষ্ঠানে পেশাদার ওয়াটার ট্যাংক ক্লিনার ও আধুনিক মেকানাইজড রোটারি ওয়াটার জেট জীবাণুমুক্তকরণ সেবায় সানভিলোজ ক্লিন কেয়ার একটি বিশ্বস্ত নাম।'
-                  : 'Sunviloz Clean Care is the trusted professional water tank cleaner and pipeline cleaning specialist for residential buildings and commercial properties across Dhaka.'}
+                  ? 'ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভারের সকল আবাসিক ভবন, অ্যাপার্টমেন্ট ও বাণিজ্যিক প্রতিষ্ঠানে আধুনিক মেকানাইজড রোটারি ওয়াটার জেট ও পাইপলাইন পরিষ্কার সেবায় সানভিলোজ ক্লিন কেয়ার একটি বিশ্বস্ত নাম।'
+                  : 'Sunviloz Clean Care is a trusted water tank cleaning service and pipeline flushing specialist for residential buildings and commercial properties across Dhaka, Narayanganj, Gazipur & Savar.'}
               </p>
 
               {/* Direct Booking & Hotline Actions */}
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <a
-                  href={`tel:${BUSINESS_CONFIG.phone}`}
+                  href={`tel:${business.phone || BUSINESS_CONFIG.phone}`}
+                  onClick={() => trackPhoneClick({ source: 'footer_call' })}
                   className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#0e273a] hover:bg-[#183c57] text-white border border-slate-600 font-bold text-xs transition-colors"
                 >
                   <Phone className="w-3.5 h-3.5 text-[#38BDF8]" aria-hidden="true" />
-                  <span>{BUSINESS_CONFIG.displayPhone}</span>
+                  <span>{lang === 'bn' ? `সরাসরি কল করুন (${business.displayPhone || BUSINESS_CONFIG.displayPhone})` : (business.displayPhone || BUSINESS_CONFIG.displayPhone)}</span>
                 </a>
 
                 <a
-                  href={BUSINESS_CONFIG.whatsappUrl}
+                  href={business.whatsappUrl || BUSINESS_CONFIG.whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackWhatsAppClick({ source: 'footer_whatsapp' })}
                   className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs transition-colors shadow-xs"
                 >
                   <MessageCircle className="w-3.5 h-3.5 text-white" aria-hidden="true" />
-                  <span>WhatsApp</span>
+                  <span>{lang === 'bn' ? 'WhatsApp-এ কোটেশন নিন' : 'Get WhatsApp Quote'}</span>
                 </a>
               </div>
             </div>
@@ -242,61 +249,63 @@ export const Footer: React.FC<FooterProps> = ({
                 <ul className="space-y-2 text-xs">
                   <li className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-[#38BDF8] shrink-0 mt-0.5" aria-hidden="true" />
-                    <span>Dhaka, Bangladesh</span>
+                    <span>{lang === 'bn' ? 'ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভার' : 'Dhaka, Narayanganj, Gazipur & Savar'}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-[#25D366] shrink-0" aria-hidden="true" />
-                    <a href={`tel:${BUSINESS_CONFIG.phone}`} className="hover:text-white transition-colors">
-                      {BUSINESS_CONFIG.displayPhone}
+                    <a
+                      href={`tel:${business.phone || BUSINESS_CONFIG.phone}`}
+                      onClick={() => trackPhoneClick({ source: 'footer_contact_phone' })}
+                      className="hover:text-white transition-colors"
+                    >
+                      {business.displayPhone || BUSINESS_CONFIG.displayPhone}
                     </a>
                   </li>
                   <li className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-[#38BDF8] shrink-0" aria-hidden="true" />
-                    <a href={`mailto:${BUSINESS_CONFIG.email}`} className="hover:text-white transition-colors break-all">
-                      {BUSINESS_CONFIG.email}
+                    <a href={`mailto:${business.email || BUSINESS_CONFIG.email}`} className="hover:text-white transition-colors break-all">
+                      {business.email || BUSINESS_CONFIG.email}
                     </a>
                   </li>
                   <li className="flex items-start gap-2">
                     <Clock className="w-4 h-4 text-slate-300 shrink-0 mt-0.5" aria-hidden="true" />
-                    <span>{lang === 'bn' ? BUSINESS_CONFIG.operatingHoursBn : BUSINESS_CONFIG.operatingHours}</span>
+                    <span>{lang === 'bn' ? (business.operatingHoursBn || BUSINESS_CONFIG.operatingHoursBn) : (business.operatingHours || BUSINESS_CONFIG.operatingHours)}</span>
                   </li>
                 </ul>
               </div>
 
-              {/* Google Verified Business Links */}
-              <div className="pt-2 border-t border-slate-700/60 space-y-2 text-xs">
-                <div className="font-bold text-[11px] uppercase tracking-wider text-[#38BDF8]">
-                  {lang === 'bn' ? 'গুগল প্রোফাইল ও ম্যাপস' : 'Google Business Profile'}
+              {/* Google Verified Business Links (Only rendered when GBP is verified & configured) */}
+              {showVerifiedGbp && (
+                <div className="pt-2 border-t border-slate-700/60 space-y-2 text-xs">
+                  <div className="font-bold text-[11px] uppercase tracking-wider text-[#38BDF8]">
+                    {lang === 'bn' ? 'গুগল প্রোফাইল ও ম্যাপস' : 'Google Business Profile'}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    {(business.googleMapsDirectionsUrl || business.googleBusinessProfileUrl) && (
+                      <a
+                        href={business.googleMapsDirectionsUrl || business.googleBusinessProfileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => trackGoogleMapsClick({ source: 'footer_gbp_maps' })}
+                        className="hover:text-white text-slate-300 inline-flex items-center gap-1.5"
+                      >
+                        <span>📍 {lang === 'bn' ? 'গুগল ম্যাপে প্রোফাইল দেখুন' : 'View Google Business Profile'}</span>
+                      </a>
+                    )}
+                    {business.googleReviewsUrl && (
+                      <a
+                        href={business.googleReviewsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => trackGoogleReviewClick({ source: 'footer_gbp_reviews' })}
+                        className="hover:text-[#F59E0B] text-amber-300 inline-flex items-center gap-1.5"
+                      >
+                        <span>⭐ {lang === 'bn' ? 'গুগলে রিভিউ দিন' : 'Rate us on Google Reviews'}</span>
+                      </a>
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <a
-                    href={BUSINESS_CONFIG.googleMapsDirectionsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => {
-                      if (typeof window !== 'undefined' && (window as any).gtag) {
-                        (window as any).gtag('event', 'google_maps_click', { platform: 'google_maps' });
-                      }
-                    }}
-                    className="hover:text-white text-slate-300 inline-flex items-center gap-1.5"
-                  >
-                    <span>📍 {lang === 'bn' ? 'গুগল ম্যাপে লোকেশন ও ডিরেকশন' : 'Google Maps Directions'}</span>
-                  </a>
-                  <a
-                    href={BUSINESS_CONFIG.googleReviewsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => {
-                      if (typeof window !== 'undefined' && (window as any).gtag) {
-                        (window as any).gtag('event', 'google_review_click', { platform: 'google_reviews' });
-                      }
-                    }}
-                    className="hover:text-[#F59E0B] text-amber-300 inline-flex items-center gap-1.5"
-                  >
-                    <span>⭐ {lang === 'bn' ? 'গুগলে ৫-স্টার রিভিউ দিন' : 'Rate us on Google Reviews'}</span>
-                  </a>
-                </div>
-              </div>
+              )}
             </div>
 
           </div>

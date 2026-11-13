@@ -245,7 +245,7 @@ export const CustomerReviewModal: React.FC<CustomerReviewModalProps> = ({
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0D9488]/30 text-[#38BDF8] text-xs font-bold">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>সানভিলোজ ক্লিন কেয়ার ভেরিফাইড রিভিউ</span>
+              <span>সানভিলোজ ক্লিন কেয়ার গ্রাহক মতামত</span>
             </div>
             <h3 className="text-lg sm:text-xl font-black text-white">
               সার্ভিস রিভিউ ও মতামত দিন

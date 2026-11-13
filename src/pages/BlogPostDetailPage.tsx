@@ -20,6 +20,7 @@ import { Breadcrumbs } from '../components/Breadcrumbs';
 import { useBlogPosts } from '../utils/blogStore';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { NotFoundPage } from './NotFoundPage';
 
 interface BlogPostDetailPageProps {
   slug: string;
@@ -34,7 +35,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
 }) => {
   const { lang } = useLanguage();
   const { business } = useSiteConfig();
-  const { publishedPosts } = useBlogPosts();
+  const { publishedPosts, loading } = useBlogPosts();
   const [copied, setCopied] = useState(false);
   const [pageProgress, setPageProgress] = useState(0);
 
@@ -97,29 +98,19 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  if (!post) {
+  if (loading && !post) {
     return (
-      <main className="min-h-screen bg-transparent text-[#172B3A] py-16 px-4 text-center max-w-xl mx-auto space-y-4">
-        <h1 className="text-2xl font-bold text-[#123047]">
-          {lang === 'bn' ? 'আর্টিকেলটি খুঁজে পাওয়া যায়নি' : 'Article Not Found'}
-        </h1>
-        <p className="text-sm text-[#64748B]">
-          {lang === 'bn' 
-            ? 'আপনি যে আর্টিকেলটি খুঁজছেন তা মুছে ফেলা হয়েছে অথবা লিংকটি পরিবর্তিত হয়েছে।' 
-            : 'The requested guide could not be located. It may have moved or been updated.'}
-        </p>
-        <div className="pt-2">
-          <button
-            type="button"
-            onClick={() => handleNavigate('/blog')}
-            className="px-5 py-2.5 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs font-bold transition-all shadow-md inline-flex items-center gap-2 cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>{lang === 'bn' ? 'সকল টিপস ও গাইড দেখুন' : 'Return to All Articles'}</span>
-          </button>
+      <main className="min-h-[60vh] flex items-center justify-center px-4">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 rounded-full border-2 border-[#0D9488]/30 border-t-[#0D9488] animate-spin mx-auto" />
+          <p className="text-xs font-medium text-[#64748B]">আর্টিকেল লোড হচ্ছে...</p>
         </div>
       </main>
     );
+  }
+
+  if (!post) {
+    return <NotFoundPage onNavigate={handleNavigate} />;
   }
 
   const title = lang === 'bn' && post.titleBn ? post.titleBn : post.title;

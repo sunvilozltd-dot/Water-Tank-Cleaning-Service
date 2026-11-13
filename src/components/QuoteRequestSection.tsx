@@ -22,7 +22,7 @@ import { useSiteConfig } from '../context/SiteConfigContext';
 import { isValidBangladeshiPhone } from '../utils/validation';
 import { createLead } from '../services/leadService';
 import { generateWhatsAppQuoteUrl, openWhatsAppDirect, WHATSAPP_INT_NUMBER } from '../utils/whatsapp';
-import { trackEvent, trackLeadSaved, trackFormStarted, trackWhatsAppClick } from '../utils/tracking';
+import { trackLeadSaved, trackFormStarted, trackPhoneClick, trackWhatsAppClick } from '../utils/tracking';
 
 interface QuoteRequestSectionProps {
   initialService?: string;
@@ -69,7 +69,10 @@ const DHAKA_AREAS = [
   'Nikunja (নিকুঞ্জ)',
   'Kafrul & Cantonment (ক্যান্টনমেন্ট)',
   'Jatrabari & Sayedabad (যাত্রাবাড়ী)',
-  'Other Dhaka Area (ঢাকার অন্যান্য এলাকা)'
+  'Narayanganj (নারায়ণগঞ্জ)',
+  'Gazipur (গাজীপুর)',
+  'Savar & Ashulia (সাভার ও আশুলিয়া)',
+  'Other Dhaka / Nearby Area (অন্যান্য এলাকা)'
 ];
 
 const LAST_CLEANING_OPTIONS = [
@@ -117,9 +120,11 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
   const [inquiryId, setInquiryId] = useState<string>('');
   const [whatsAppUrl, setWhatsAppUrl] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string>('');
   const [hasStarted, setHasStarted] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const submittingRef = useRef<boolean>(false);
 
   const handleStart = () => {
     if (!hasStarted) {
@@ -142,18 +147,24 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
 
     const remainingSlots = 4 - photoPreviews.length;
     if (remainingSlots <= 0) {
-      alert(lang === 'bn' ? 'সর্বোচ্চ ৪টি ছবি আপলোড করা যাবে।' : 'You can upload a maximum of 4 photos.');
+      setErrors(prev => ({ ...prev, photos: lang === 'bn' ? 'সর্বোচ্চ ৪টি ছবি আপলোড করা যাবে।' : 'You can upload a maximum of 4 photos.' }));
       return;
     }
+
+    setErrors(prev => {
+      const next = { ...prev };
+      delete next.photos;
+      return next;
+    });
 
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
     filesToProcess.forEach(file => {
       if (file.size > 5 * 1024 * 1024) {
-        alert(lang === 'bn' ? 'ছবির সাইজ সর্বোচ্চ ৫ মেগাবাইট হতে পারবে।' : 'File size must be under 5MB.');
+        setErrors(prev => ({ ...prev, photos: lang === 'bn' ? 'ছবির সাইজ সর্বোচ্চ ৫ মেগাবাইট হতে পারবে।' : 'File size must be under 5MB.' }));
         return;
       }
       if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
-        alert(lang === 'bn' ? 'অনুগ্রহ করে JPG, PNG অথবা WebP ফরম্যাটের ছবি দিন।' : 'Please select JPG, PNG, or WebP.');
+        setErrors(prev => ({ ...prev, photos: lang === 'bn' ? 'অনুগ্রহ করে JPG, PNG অথবা WebP ফরম্যাটের ছবি দিন।' : 'Please select JPG, PNG, or WebP.' }));
         return;
       }
 
@@ -178,9 +189,6 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    if (!formData.name.trim()) {
-      errs.name = lang === 'bn' ? 'অনুগ্রহ করে আপনার নাম লিখুন।' : 'Please enter your name.';
-    }
     if (!formData.phone.trim()) {
       errs.phone = lang === 'bn' ? 'অনুগ্রহ করে আপনার মোবাইল ফোন নম্বর দিন।' : 'Please enter your mobile phone number.';
     } else if (!isValidBangladeshiPhone(formData.phone)) {
@@ -189,13 +197,18 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
     if (!formData.area.trim()) {
       errs.area = lang === 'bn' ? 'অনুগ্রহ করে আপনার এলাকা নির্বাচন করুন বা লিখুন।' : 'Please select or enter your area.';
     }
+    if (!(formData.serviceType || '').trim()) {
+      errs.serviceType = lang === 'bn' ? 'অনুগ্রহ করে একটি সার্ভিস নির্বাচন করুন।' : 'Please select a service type.';
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current || isSubmitting) return;
     handleStart();
+    setSubmitError('');
 
     if (!validate()) {
       const firstErr = document.getElementById('quote-form-top');
@@ -203,10 +216,12 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
       return;
     }
 
+    submittingRef.current = true;
     setIsSubmitting(true);
     try {
       const finalForm: QuoteFormData = {
         ...formData,
+        name: formData.name.trim() || 'Website Visitor',
         whatsapp: sameAsPhone ? formData.phone : (formData.whatsapp || formData.phone),
         photos: photoPreviews,
         photoUrls: photoPreviews.length > 0 ? photoPreviews : undefined
@@ -214,6 +229,22 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
 
       const lead = await createLead(finalForm, sourceContext);
       const leadId = lead.leadNumber || `SVC-${Date.now().toString().slice(-6)}`;
+      const waUrl = generateWhatsAppQuoteUrl(finalForm, {
+        serviceType: finalForm.serviceType,
+        source: sourceContext,
+        leadNumber: leadId
+      });
+      setWhatsAppUrl(waUrl);
+
+      if (!lead.isSyncedToCloud) {
+        setSubmitError(
+          lang === 'bn'
+            ? 'সার্ভারে রিকোয়েস্ট সংরক্ষণ করা যায়নি। অনুগ্রহ করে পুনরায় চেষ্টা করুন অথবা সরাসরি WhatsApp বা কল করুন।'
+            : 'Could not save inquiry to server. Please retry or contact us via WhatsApp / Call.'
+        );
+        return;
+      }
+
       setInquiryId(leadId);
 
       trackLeadSaved(leadId, {
@@ -223,18 +254,17 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
         has_photos: photoPreviews.length > 0
       });
 
-      const waUrl = generateWhatsAppQuoteUrl(finalForm, {
-        serviceType: finalForm.serviceType,
-        source: sourceContext,
-        leadNumber: leadId
-      });
-      setWhatsAppUrl(waUrl);
-
       setIsSubmitted(true);
     } catch (err) {
       console.error('Inquiry submission error:', err);
+      setSubmitError(
+        lang === 'bn'
+          ? 'তথ্য পাঠাতে সমস্যা হয়েছে। অনুগ্রহ করে পুনরায় চেষ্টা করুন অথবা সরাসরি WhatsApp / কল করুন।'
+          : 'Failed to submit inquiry. Please retry or use WhatsApp / Call directly.'
+      );
     } finally {
       setIsSubmitting(false);
+      submittingRef.current = false;
     }
   };
 
@@ -281,10 +311,10 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                   রেফারেন্স আইডি: {inquiryId}
                 </span>
                 <h3 className="text-2xl sm:text-3xl font-black text-[#123047]">
-                  {lang === 'bn' ? 'ধন্যবাদ! আপনার রিকোয়েস্ট গৃহীত হয়েছে' : 'Thank You!'}
+                  {lang === 'bn' ? 'ধন্যবাদ! অনুরোধ গ্রহণ করা হয়েছে' : 'Thank You! Request Received'}
                 </h3>
                 <p className="text-sm sm:text-base text-slate-600 max-w-xl mx-auto leading-relaxed">
-                  {lang === 'bn' 
+                  {lang === 'bn'
                     ? 'আপনার সার্ভিস রিকোয়েস্ট সংরক্ষিত হয়েছে। আমাদের প্রতিনিধি দ্রুততম সময়ে ফোনে বা হোয়াটসঅ্যাপে যোগাযোগ করে কোটেশন ও শিডিউল নিশ্চিত করবে।'
                     : 'We have received your inquiry. Our team will review your requirements and reach out promptly with your customized quotation.'}
                 </p>
@@ -294,11 +324,11 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
               <div className="bg-emerald-50/70 border-2 border-emerald-200 rounded-2xl p-5 sm:p-6 max-w-xl mx-auto space-y-3">
                 <h4 className="text-base sm:text-lg font-black text-emerald-950 flex items-center justify-center gap-2">
                   <MessageCircle className="w-5 h-5 text-emerald-600" aria-hidden="true" />
-                  <span>{lang === 'bn' ? 'WhatsApp-এ তথ্য পাঠান' : 'Send Details on WhatsApp'}</span>
+                  <span>{lang === 'bn' ? 'WhatsApp-এ কোটেশন নিন' : 'Get Quote on WhatsApp'}</span>
                 </h4>
                 <p className="text-xs sm:text-sm text-emerald-900/90 leading-relaxed">
-                  {lang === 'bn' 
-                    ? 'আপনার ট্যাংকের সকল বিবরণ স্বয়ংক্রিয়ভাবে মেসেজ বক্সে প্রস্তুত করা হয়েছে। সরাসরি হোয়াটসঅ্যাপে পাঠিয়ে দিন দ্রুত উত্তরের জন্য।'
+                  {lang === 'bn'
+                    ? 'আপনার ট্যাংকের সকল বিবরণ স্বয়ংক্রিয়ভাবে মেসেজ বক্সে প্রস্তুত করা হয়েছে। দ্রুত উত্তরের জন্য সরাসরি হোয়াটসঅ্যাপে পাঠিয়ে দিন।'
                     : 'Your inquiry has been logged. For instant follow-up, connect directly with our coordination team on WhatsApp.'}
                 </p>
                 <div className="pt-2">
@@ -311,7 +341,7 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 min-h-[48px] px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm sm:text-base shadow-md transition-all active:scale-95 cursor-pointer"
                   >
                     <MessageCircle className="w-5 h-5 text-white" aria-hidden="true" />
-                    <span>{lang === 'bn' ? 'WhatsApp-এ চ্যাট করুন' : 'Chat on WhatsApp'}</span>
+                    <span>{lang === 'bn' ? 'WhatsApp-এ কোটেশন নিন' : 'Chat on WhatsApp'}</span>
                   </button>
                 </div>
               </div>
@@ -320,11 +350,11 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
               <div className="pt-4 flex flex-wrap items-center justify-center gap-3">
                 <a
                   href={`tel:${business.phone}`}
-                  onClick={() => trackEvent('phone_click', { source: 'quote_success_call' })}
+                  onClick={() => trackPhoneClick({ source: 'quote_success_call' })}
                   className="inline-flex items-center gap-2 min-h-[44px] px-6 py-2.5 rounded-xl bg-white border border-slate-300 hover:border-slate-400 text-slate-800 font-bold text-xs sm:text-sm shadow-xs transition-colors"
                 >
                   <Phone className="w-4 h-4 text-cyan-700" aria-hidden="true" />
-                  <span>{lang === 'bn' ? 'সরাসরি কল করুন (01609-999612)' : 'Call Hotline'}</span>
+                  <span>{lang === 'bn' ? `সরাসরি কল করুন (${business.displayPhone})` : 'Call Hotline'}</span>
                 </a>
                 {onExploreServices && (
                   <button
@@ -588,6 +618,12 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                   className="hidden"
                   aria-label="Upload tank photos"
                 />
+                {errors.photos && (
+                  <p className="text-[11px] text-red-600 font-semibold mt-1 flex items-center gap-1" role="alert">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{errors.photos}</span>
+                  </p>
+                )}
               </div>
 
               {/* STEP 4: ADDRESS DETAILS */}
@@ -653,31 +689,22 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Name */}
+                  {/* Name (Optional) */}
                   <div>
                     <label htmlFor="quote-customer-name" className="block text-xs font-bold text-slate-700 mb-1.5">
-                      {lang === 'bn' ? 'আপনার নাম *' : 'Your Name *'}
+                      {lang === 'bn' ? 'আপনার নাম (ঐচ্ছিক)' : 'Your Name (Optional)'}
                     </label>
                     <input
                       id="quote-customer-name"
                       type="text"
-                      placeholder={lang === 'bn' ? 'যেমন: তানভীর আহমেদ' : 'Enter your full name'}
+                      placeholder={lang === 'bn' ? 'যেমন: তানভীর আহমেদ (ঐচ্ছিক)' : 'Enter your name (Optional)'}
                       value={formData.name}
                       onChange={(e) => {
                         handleStart();
                         setFormData(prev => ({ ...prev, name: e.target.value }));
-                        if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
                       }}
-                      className={`w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border ${
-                        errors.name ? 'border-red-500 bg-red-50/30' : 'border-slate-300 bg-slate-50'
-                      } focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none`}
+                      className="w-full min-h-[44px] px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#0D9488] focus:outline-none"
                     />
-                    {errors.name && (
-                      <p className="text-[11px] text-red-600 font-semibold mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>{errors.name}</span>
-                      </p>
-                    )}
                   </div>
 
                   {/* Mobile Phone */}
@@ -777,11 +804,50 @@ export const QuoteRequestSection: React.FC<QuoteRequestSectionProps> = ({
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" aria-hidden="true" />
                   <span>
-                    {lang === 'bn' 
+                    {lang === 'bn'
                       ? 'আপনার ব্যক্তিগত তথ্যাদি সম্পূর্ণ নিরাপদ ও সুরক্ষিত থাকবে এবং তৃতীয় কারও সাথে শেয়ার করা হয় না।'
                       : 'Your personal and contact details are stored securely and never shared with third parties.'}
                   </span>
                 </div>
+
+                {submitError && (
+                  <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm space-y-3" role="alert">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                      <span>{submitError}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-xs cursor-pointer"
+                      >
+                        {lang === 'bn' ? 'পুনরায় চেষ্টা করুন' : 'Retry'}
+                      </button>
+                      {whatsAppUrl && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            trackWhatsAppClick({ source: 'quote_error_fallback' });
+                            openWhatsAppDirect(whatsAppUrl, 'quote_error_whatsapp');
+                          }}
+                          className="px-3.5 py-1.5 rounded-lg bg-[#25D366] text-white font-bold text-xs inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>WhatsApp-এ কোটেশন নিন</span>
+                        </button>
+                      )}
+                      <a
+                        href={`tel:${business.phone}`}
+                        onClick={() => trackPhoneClick({ source: 'quote_error_fallback' })}
+                        className="px-3.5 py-1.5 rounded-lg bg-[#123047] text-white font-bold text-xs inline-flex items-center gap-1"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-[#38BDF8]" />
+                        <span>সরাসরি কল করুন</span>
+                      </a>
+                    </div>
+                  </div>
+                )}
 
                 <button
                   type="submit"

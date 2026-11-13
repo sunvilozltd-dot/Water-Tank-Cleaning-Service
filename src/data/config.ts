@@ -3,8 +3,8 @@ import { getProductionDomain, DEFAULT_GOOGLE_CONFIG } from '../config/siteDomain
 
 export const BUSINESS_CONFIG = {
   name: 'Sunviloz Clean Care',
-  tagline: 'Professional Water Tank Cleaner & Cleaning Service in Dhaka',
-  taglineBn: 'ঢাকায় প্রফেশনাল ওয়াটার ট্যাংক ক্লিনার ও ক্লিনিং সার্ভিস',
+  tagline: 'Professional Water Tank & Pipeline Cleaning Service in Dhaka',
+  taglineBn: 'ঢাকা ও আশপাশের এলাকায় পেশাদার পানির ট্যাংক ও পাইপলাইন পরিষ্কার সার্ভিস',
   
   // Contact Configuration (Central & Configurable)
   phone: '01609999612',
@@ -13,17 +13,19 @@ export const BUSINESS_CONFIG = {
   whatsappUrl: 'https://wa.me/8801609999612',
   messengerUrl: 'https://m.me/sunvilozcleancare',
   email: 'sunvilozltd@gmail.com',
-  address: 'Dhaka, Bangladesh',
+  address: 'Dhaka, Narayanganj, Gazipur & Savar',
   operatingHours: '8:00 AM - 8:00 PM (Everyday, 7 Days a week)',
   operatingHoursBn: 'সকাল ৮:০০ - রাত ৮:০০ (সপ্তাহের ৭ দিন খোলা)',
   
-  // Google Business Profile & Maps Config (Configurable by Admin)
+  // Google Business Profile & Maps Config (Configurable & Verified by Admin)
+  gbpVerified: false,
   googleBusinessProfileUrl: DEFAULT_GOOGLE_CONFIG.businessProfileUrl,
   googleReviewsUrl: DEFAULT_GOOGLE_CONFIG.reviewsUrl,
   googleMapsDirectionsUrl: DEFAULT_GOOGLE_CONFIG.directionsUrl,
 
   // SEO & Verification Config
   googleSiteVerification: '',
+  bingSiteVerification: '',
   googleAnalyticsId: '',
   metaPixelId: '',
   canonicalBaseUrl: getProductionDomain(),
@@ -88,9 +90,9 @@ export const SERVICES_DATA: ServiceItem[] = [
     titleBn: 'পানির ট্যাংক পরিষ্কার সার্ভিস',
     shortDesc: 'Underground and overhead water tank cleaning service for residences, apartments, and commercial buildings.',
     shortDescBn: 'বাসা, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের আন্ডারগ্রাউন্ড এবং ওভারহেড পানির ট্যাংক পরিষ্কারের সার্ভিস।',
-    fullDesc: 'Complete mechanized deep cleaning by professional water tank cleaner experts for both rooftop overhead tanks (PVC and concrete RCC) and underground reserve tanks. Our specialized team uses modern high-pressure rotary water jets, sludge extraction pumps, and food-grade sanitization for hygienic water storage.',
-    whatIsThis: 'Water Tank Cleaning Service by our certified water tank cleaner team is a mechanized deep-cleaning service specifically designed for both rooftop and subterranean water storage reservoirs.',
-    whatIsThisBn: 'পানির ট্যাংক পরিষ্কার সার্ভিস হলো বাসা, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের আন্ডারগ্রাউন্ড এবং ওভারহেড পানির ট্যাংক অভিজ্ঞ ওয়াটার ট্যাংক ক্লিনারের আধুনিক মেশিনে নিখুঁতভাবে পরিষ্কার করার পেশাদার সেবা।',
+    fullDesc: 'Complete mechanized deep cleaning for both rooftop overhead tanks (PVC and concrete RCC) and underground reserve tanks. Our specialized team uses modern high-pressure rotary water jets, sludge extraction pumps, and food-grade sanitization for hygienic water storage.',
+    whatIsThis: 'Water Tank Cleaning Service is a mechanized deep-cleaning service specifically designed for both rooftop and subterranean water storage reservoirs.',
+    whatIsThisBn: 'পানির ট্যাংক পরিষ্কার সার্ভিস হলো বাসা, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের আন্ডারগ্রাউন্ড এবং ওভারহেড পানির ট্যাংক অভিজ্ঞ টেকনিশিয়ানের আধুনিক মেশিনে নিখুঁতভাবে পরিষ্কার করার পেশাদার সেবা।',
     whyNeeded: 'Tanks develop heavy sludge, municipal sand, and green algae that cultivate harmful bacteria, causing foul odors and clogged taps.',
     whyNeededBn: 'নিয়মিত পরিষ্কার না করলে ট্যাংকে ময়লা, কাদা ও শ্যাওলা জমে পানির স্বাভাবিক গন্ধ ও স্বচ্ছতা নষ্ট করে এবং পাইপলাইনে প্রতিবন্ধকতা সৃষ্টি করে।',
     whenNeeded: [
@@ -498,7 +500,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     whatIsThis: 'Both Water Tank Cleaning With Pipeline is an end-to-end water distribution sanitization package. It covers the underground reservoir, the rooftop tank, and every connected internal water pipeline.',
     whatIsThisBn: 'এটি ভবনের পানির সার্বিক বিশুদ্ধতার জন্য আমাদের সেরা প্যাকেজ। এতে মাটির নিচের রিজার্ভার, ছাদের ট্যাংক এবং প্রতিটি বাথরুম ও কিচেনের সরবরাহ পাইপ মেকানাইজড পদ্ধতিতে পরিষ্কার করা হয়।',
     whyNeeded: 'Often customers clean their tanks but still get yellow or smelly water because pipes harbor rust and iron biofilms. Bundling tank cleaning with pipeline descaling provides a complete solution.',
-    whyNeededBn: 'ট্যাংক পরিষ্কার করার পরও অনেকের কলে লালচে বা গন্ধযুক্ত পানি আসে, কারণ পাইপলাইনের ভেতরে মরিচা ও আয়রনের কোটিং জমে থাকে। পাইপলাইন ফ্লাশ না করলে শতভাগ পরিষ্কার পানি পাওয়া যায় না।',
+    whyNeededBn: 'ট্যাংক পরিষ্কার করার পরও অনেকের কলে লালচে বা গন্ধযুক্ত পানি আসে, কারণ পাইপলাইনের ভেতরে মরিচা ও আয়রনের কোটিং জমে থাকে। পাইপলাইন ফ্লাশ না করলে পুরো সিস্টেম পুরোপুরি পরিষ্কার হয় না।',
     whenNeeded: [
       'Rusty, reddish or yellowish water emerging from taps even after tank clean',
       'Low water pressure in showers and washbasin taps due to scale blockage',
@@ -530,7 +532,7 @@ export const SERVICES_DATA: ServiceItem[] = [
       'Significant cost savings compared to booking services separately'
     ],
     benefitsBn: [
-      'ওয়াসার ইনলেট থেকে বাথরুমের কল পর্যন্ত পানির পুরো সিস্টেম শতভাগ পরিষ্কার',
+      'ওয়াসার ইনলেট থেকে বাথরুমের কল পর্যন্ত পানির পুরো সিস্টেম গভীরভাবে পরিষ্কার',
       'পানির পাইপলাইন না ভেঙে ভেতরের মরিচা ও আয়রনের স্তর দূরীকরণ',
       'শাওয়ার ও বেসিনের কমে যাওয়া পানির স্পিড পুনরায় বৃদ্ধি',
       'আলাদা আলাদা সার্ভিসের চেয়ে বান্ডেল প্যাকেজে সর্বোচ্চ সাশ্রয়'

@@ -21,6 +21,7 @@ import { AuditLogsTab } from '../components/AdminPanel/AuditLogsTab';
 import { AdminUsersTab } from '../components/AdminPanel/AdminUsersTab';
 import { ReviewsTab } from '../components/AdminPanel/ReviewsTab';
 import { FreeUsageMonitoringTab } from '../components/AdminPanel/FreeUsageMonitoringTab';
+import { ServiceZoneManagerTab } from '../components/AdminPanel/ServiceZoneManagerTab';
 
 import { QuoteLead, LeadStatus, ServiceItem, ProjectItem, VideoItem } from '../types';
 import { BlogPost } from '../types/blog';
@@ -29,7 +30,7 @@ import { getLeads, updateLeadStatus, updateLeadDetails, deleteLead } from '../se
 import { getServices, saveService, deleteService, fetchServicesFromSupabase } from '../utils/servicesStore';
 import { getProjects, saveProject, deleteProject } from '../utils/portfolioStore';
 import { getVideos, saveVideo, deleteVideo, fetchVideosFromSupabase } from '../utils/videosStore';
-import { getBlogPosts, saveBlogPost, deleteBlogPost, fetchBlogPostsFromSupabase } from '../utils/blogStore';
+import { getBlogPosts, saveBlogPost, deleteBlogPost, fetchBlogPostsFromSupabase, seedDefaultBlogPosts } from '../utils/blogStore';
 import { SeoHead } from '../components/SeoHead';
 
 interface AdminDashboardPageProps {
@@ -58,7 +59,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
         fetchServicesFromSupabase(),
         getProjects(),
         fetchVideosFromSupabase(),
-        fetchBlogPostsFromSupabase(),
+        fetchBlogPostsFromSupabase({ includeUnpublished: true }),
         getAllReviewsForAdmin()
       ]);
       setLeads(leadsData);
@@ -143,6 +144,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
     loadData();
   };
 
+  const handleSeedDefaultPosts = async () => {
+    await seedDefaultBlogPosts();
+    loadData();
+  };
+
   const pendingLeadsCount = leads.filter(l => l.status === 'New' || (l.status as string) === 'new').length;
 
   return (
@@ -169,6 +175,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl overflow-y-auto">
           {currentTab === 'homepage-cms' && <HomepageCmsTab />}
+
+          {currentTab === 'service-zones' && <ServiceZoneManagerTab />}
 
           {currentTab === 'leads' && (
             <LeadsTab
@@ -217,6 +225,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
               posts={posts}
               onSavePost={handleSavePost}
               onDeletePost={handleDeletePost}
+              onSeedDefaults={handleSeedDefaultPosts}
             />
           )}
 

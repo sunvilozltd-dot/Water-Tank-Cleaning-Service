@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, 
   CheckCircle2, 
@@ -25,7 +25,7 @@ import { createLead } from '../services/leadService';
 import { isValidBangladeshiPhone, normalizeBangladeshiPhone } from '../utils/validation';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
-import { trackEvent, trackWhatsAppClick } from '../utils/tracking';
+import { trackEvent, trackLeadSaved, trackPhoneClick, trackWhatsAppClick } from '../utils/tracking';
 import { DHAKA_AREAS } from '../data/config';
 
 interface DynamicServiceBookingModalProps {
@@ -59,12 +59,14 @@ export const DynamicServiceBookingModal: React.FC<DynamicServiceBookingModalProp
   
   // Validation and Submission State
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedLeadNumber, setSubmittedLeadNumber] = useState<string | null>(null);
   const [generatedWhatsAppUrl, setGeneratedWhatsAppUrl] = useState<string>('');
+  const submittingRef = useRef(false);
 
   // Get active form config for this service
-  const formConfig: ServiceBookingFormConfig = service 
+  const formConfig: ServiceBookingFormConfig = service
     ? getServiceBookingForm(service)
     : { enabled: true, fields: [] };
 
@@ -74,6 +76,7 @@ export const DynamicServiceBookingModal: React.FC<DynamicServiceBookingModalProp
       setSubmittedLeadNumber(null);
       setGeneratedWhatsAppUrl('');
       setErrors({});
+      setSubmitError('');
 
       const initialValues: Record<string, any> = {};
       formConfig.fields.forEach(field => {
@@ -106,21 +109,16 @@ export const DynamicServiceBookingModal: React.FC<DynamicServiceBookingModalProp
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // 1. Validate Customer Name
-    if (!customerName.trim()) {
-      newErrors.customerName = lang === 'bn' ? 'আপনার নাম লিখুন' : 'Please enter your name';
-    }
-
-    // 2. Validate Bangladeshi Phone
+    // 1. Validate Bangladeshi Phone (Required)
     if (!customerPhone.trim()) {
       newErrors.customerPhone = lang === 'bn' ? '১১ ডিজিটের মোবাইল নম্বর লিখুন' : 'Please enter 11-digit mobile number';
     } else if (!isValidBangladeshiPhone(customerPhone)) {
       newErrors.customerPhone = lang === 'bn' ? 'সঠিক বাংলাদেশি নম্বর দিন (যেমন: 01712345678)' : 'Valid Bangladeshi phone required (01XXXXXXXXX)';
     }
 
-    // 3. Validate Area
+    // 2. Validate Area (Required)
     if (!selectedArea) {
-      newErrors.selectedArea = lang === 'bn' ? 'আপনার এলাকা নির্বাচন করুন' : 'Please select your area in Dhaka';
+      newErrors.selectedArea = lang === 'bn' ? 'আপনার এলাকা নির্বাচন করুন' : 'Please select your area';
     }
 
     // 4. Validate dynamic custom fields
@@ -141,15 +139,19 @@ export const DynamicServiceBookingModal: React.FC<DynamicServiceBookingModalProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current || isSubmitting) return;
+    setSubmitError('');
 
     if (!validateForm()) {
       return;
     }
 
+    submittingRef.current = true;
     setIsSubmitting(true);
 
     try {
       const normalizedPhone = normalizeBangladeshiPhone(customerPhone);
+      const safeName = customerName.trim() || 'Website Visitor';
       const serviceTitle = lang === 'bn' ? (service.titleBn || service.title) : service.title;
 
       // Construct formatted summary of custom answers
@@ -177,7 +179,7 @@ export const DynamicServiceBookingModal: React.FC<DynamicServiceBookingModalProp
 
       // 1. Submit lead to database/store
       const leadPayload = {
-        name: customerName.trim(),
+        name: safeName,
         phone: normalizedPhone,
         area: selectedArea,
         address: addressDetails.trim(),
@@ -193,19 +195,18 @@ export const DynamicServiceBookingModal: React.FC<DynamicServiceBookingModalProp
         sourceContext: `Custom Form - ${service.title}`
       };
 
-      const result = await createLead(leadPayload);
+      const result = await createLead(leadPayload, `Custom Form - ${service.title}`);
       const generatedLeadNumber = result.leadNumber || `LEAD-${Date.now().toString(36).toUpperCase()}`;
-      setSubmittedLeadNumber(generatedLeadNumber);
 
       // 2. Generate WhatsApp URL with proper Bangladesh country code
       const rawWa = (business.whatsappNumber || '8801609999612').replace(/\D/g, '');
       const validWaNumber = rawWa.startsWith('88') ? rawWa : (rawWa.startsWith('0') ? `88${rawWa}` : `880${rawWa}`);
       const waText = [
-        `*SUNVILOZ Clean Care - সার্ভিস বুকিং রিকোয়েস্ট* 📋`,
+        `*SUNVILOZ Clean Care - সার্ভিস বুকিং রিকোয়েস্ট*`,
         `*অর্ডার নং:* #${generatedLeadNumber}`,
         `--------------------------------`,
         `*সার্ভিস:* ${serviceTitle}`,
-        `*গ্রাহক:* ${customerName.trim()}`,
+        `*গ্রাহক:* ${safeName}`,
         `*মোবাইল:* ${normalizedPhone}`,
         `*এলাকা:* ${selectedArea}`,
         addressDetails ? `*ঠিকানা:* ${addressDetails.trim()}` : null,
@@ -220,6 +221,23 @@ export const DynamicServiceBookingModal: React.FC<DynamicServiceBookingModalProp
       const fullWaUrl = `https://wa.me/${validWaNumber}?text=${encodeURIComponent(waText)}`;
       setGeneratedWhatsAppUrl(fullWaUrl);
 
+      if (!result.isSyncedToCloud) {
+        setSubmitError(
+          lang === 'bn'
+            ? 'সার্ভারে বুকিং সংরক্ষণ করা যায়নি। অনুগ্রহ করে পুনরায় চেষ্টা করুন অথবা সরাসরি WhatsApp বা কল করুন।'
+            : 'Could not save booking to server. Please retry or contact us via WhatsApp / Call.'
+        );
+        return;
+      }
+
+      setSubmittedLeadNumber(generatedLeadNumber);
+
+      trackLeadSaved(generatedLeadNumber, {
+        serviceId: service.id,
+        service: service.title,
+        area: selectedArea,
+        source: `Custom Form - ${service.title}`
+      });
       trackEvent('custom_service_booked', {
         serviceId: service.id,
         serviceTitle: service.title,
@@ -231,9 +249,14 @@ export const DynamicServiceBookingModal: React.FC<DynamicServiceBookingModalProp
       }
     } catch (err) {
       console.error('Failed to submit custom booking form:', err);
-      alert('বুকিং সাবমিট করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
+      setSubmitError(
+        lang === 'bn'
+          ? 'বুকিং সাবমিট করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন অথবা সরাসরি WhatsApp/কল করুন।'
+          : 'Failed to submit booking. Please try again or contact us via WhatsApp/Call.'
+      );
     } finally {
       setIsSubmitting(false);
+      submittingRef.current = false;
     }
   };
 
@@ -294,29 +317,34 @@ export const DynamicServiceBookingModal: React.FC<DynamicServiceBookingModalProp
                   অর্ডার ট্র্যাকিং নং: #{submittedLeadNumber}
                 </span>
                 <h3 className="text-xl sm:text-2xl font-black text-white">
-                  {lang === 'bn' ? 'আপনার বুকিং রিকোয়েস্ট সফলভাবে গৃহীত হয়েছে!' : 'Booking Request Received Successfully!'}
+                  {lang === 'bn' ? 'অনুরোধ গ্রহণ করা হয়েছে!' : 'Booking Request Received!'}
                 </h3>
                 <p className="text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
-                  ধন্যবাদ {customerName}। আমাদের প্রতিনিধি দ্রুত আপনার সাথে যোগাযোগ করে সঠিক কোটেশন ও শিডিউল চূড়ান্ত করবেন।
+                  ধন্যবাদ {customerName.trim() || ''}। আমাদের প্রতিনিধি দ্রুত আপনার সাথে যোগাযোগ করে সঠিক কোটেশন ও শিডিউল চূড়ান্ত করবেন।
                 </p>
               </div>
 
-              {/* 1-Click WhatsApp Button */}
+              {/* 1-Click WhatsApp Button & Call Fallback */}
               {generatedWhatsAppUrl && (
-                <div className="pt-2 max-w-md mx-auto">
+                <div className="pt-2 max-w-md mx-auto space-y-2.5">
                   <a
                     href={generatedWhatsAppUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => trackWhatsAppClick('custom_booking_success_wa')}
+                    onClick={() => trackWhatsAppClick({ source: 'custom_booking_success_wa', leadNumber: submittedLeadNumber || undefined })}
                     className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
                   >
                     <MessageCircle className="w-5 h-5 fill-white" />
-                    <span>{lang === 'bn' ? 'হোয়াটসঅ্যাপে তাৎক্ষণিক কনফার্ম করুন' : 'Confirm Instantly on WhatsApp'}</span>
+                    <span>{lang === 'bn' ? 'WhatsApp-এ কোটেশন নিন' : 'Get Quote on WhatsApp'}</span>
                   </a>
-                  <p className="text-[11px] text-slate-400 mt-2">
-                    {lang === 'bn' ? 'হোয়াটসঅ্যাপে মেসেজ পাঠালে আপনার বুকিং অগ্রাধিকার ভিত্তিতে কনফার্ম করা হবে।' : 'Sending on WhatsApp ensures priority dispatch.'}
-                  </p>
+                  <a
+                    href={`tel:${business.phone}`}
+                    onClick={() => trackPhoneClick({ source: 'custom_booking_success_call' })}
+                    className="w-full py-3 px-6 rounded-xl bg-[#0D2444] hover:bg-[#12315C] border border-cyan-500/30 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all"
+                  >
+                    <Phone className="w-4 h-4 text-cyan-300" />
+                    <span>{lang === 'bn' ? `সরাসরি কল করুন (${business.displayPhone})` : `Call ${business.displayPhone}`}</span>
+                  </a>
                 </div>
               )}
 
@@ -361,29 +389,18 @@ export const DynamicServiceBookingModal: React.FC<DynamicServiceBookingModalProp
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Name */}
+                  {/* Name (Optional) */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-200 mb-1">
-                      আপনার নাম <span className="text-rose-400">*</span>
+                      আপনার নাম (ঐচ্ছিক)
                     </label>
                     <input
                       type="text"
                       value={customerName}
-                      onChange={(e) => {
-                        setCustomerName(e.target.value);
-                        if (errors.customerName) setErrors(prev => ({ ...prev, customerName: '' }));
-                      }}
-                      placeholder={lang === 'bn' ? 'যেমন: মোহাম্মদ রহমান' : 'e.g. John Doe'}
-                      className={`w-full px-3.5 py-2.5 rounded-xl bg-[#040D1A] border text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${
-                        errors.customerName ? 'border-rose-500 ring-1 ring-rose-500' : 'border-cyan-900/50 focus:border-cyan-400'
-                      }`}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder={lang === 'bn' ? 'যেমন: মোহাম্মদ রহমান (ঐচ্ছিক)' : 'e.g. Rahman (Optional)'}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#040D1A] border border-cyan-900/50 focus:border-cyan-400 text-xs text-white placeholder-slate-500 focus:outline-none transition-all"
                     />
-                    {errors.customerName && (
-                      <p className="text-[11px] text-rose-400 mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>{errors.customerName}</span>
-                      </p>
-                    )}
                   </div>
 
                   {/* Phone */}
@@ -644,7 +661,38 @@ export const DynamicServiceBookingModal: React.FC<DynamicServiceBookingModalProp
               )}
 
               {/* SUBMIT BUTTON */}
-              <div className="pt-2">
+              <div className="pt-2 space-y-3">
+                {submitError && (
+                  <div className="p-3.5 rounded-xl bg-rose-950/70 border border-rose-500/50 text-rose-200 text-xs space-y-2.5" role="alert">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                      <span>{submitError}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {generatedWhatsAppUrl && (
+                        <a
+                          href={generatedWhatsAppUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => trackWhatsAppClick({ source: 'custom_booking_error_wa' })}
+                          className="px-3 py-1.5 rounded-lg bg-[#25D366] text-white font-bold text-[11px] inline-flex items-center gap-1"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>WhatsApp-এ কোটেশন নিন</span>
+                        </a>
+                      )}
+                      <a
+                        href={`tel:${business.phone}`}
+                        onClick={() => trackPhoneClick({ source: 'custom_booking_error_call' })}
+                        className="px-3 py-1.5 rounded-lg bg-[#0D2444] border border-cyan-500/30 text-white font-bold text-[11px] inline-flex items-center gap-1"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-cyan-300" />
+                        <span>সরাসরি কল করুন</span>
+                      </a>
+                    </div>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -667,7 +715,7 @@ export const DynamicServiceBookingModal: React.FC<DynamicServiceBookingModalProp
                   )}
                 </button>
                 <p className="text-[11px] text-center text-slate-400 mt-2">
-                  {lang === 'bn' ? '🔒 আপনার তথ্য ১০০% সুরক্ষিত এবং কোনো লুকানো চার্জ নেই' : '🔒 Your details are 100% confidential. No hidden charges.'}
+                  {lang === 'bn' ? 'আপনার তথ্য সম্পূর্ণ সুরক্ষিত এবং কোনো লুকানো চার্জ নেই' : 'Your details are confidential. No hidden charges.'}
                 </p>
               </div>
 

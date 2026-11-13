@@ -20,7 +20,8 @@ import {
   Menu,
   X,
   ChevronDown,
-  Star
+  Star,
+  MapPin
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 
@@ -28,6 +29,7 @@ export type AdminTab =
   | 'leads' 
   | 'reviews'
   | 'homepage-cms' 
+  | 'service-zones'
   | 'services' 
   | 'services-faq'
   | 'booking-forms'
@@ -81,6 +83,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       label: 'Website Images (ছবি পরিবর্তন)', 
       icon: <Camera className="w-4 h-4 text-cyan-400" />, 
       group: 'Assets',
+      highlight: true 
+    },
+    { 
+      id: 'service-zones', 
+      label: 'Service Zone Content Manager', 
+      icon: <MapPin className="w-4 h-4 text-emerald-400" />, 
+      group: 'Content',
       highlight: true 
     },
     { id: 'services', label: 'Services', icon: <Wrench className="w-4 h-4" />, group: 'Content' },
@@ -167,7 +176,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         {mobileMenuOpen && (
           <div className="mt-3 pt-3 border-t border-slate-800/80 max-h-[60vh] overflow-y-auto space-y-1">
             <div className="px-2 pb-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              Select Admin Section (16 Items)
+              Select Admin Section ({navItems.length} Items)
             </div>
             {navItems.map((item) => {
               const isActive = currentTab === item.id;

@@ -33,7 +33,9 @@ export const TrackingTab: React.FC = () => {
             <BarChart3 className="w-5 h-5 text-blue-400" />
             <span>Tracking, Analytics &amp; Conversion Pixels</span>
           </h2>
-          <p className="text-xs text-slate-400">Configure Meta Pixel, Google Analytics 4, and GTM for ad campaign tracking.</p>
+          <p className="text-xs text-slate-400">
+            Configure Meta Pixel, Google Analytics 4, and GTM (Optional — খালি রাখলে ট্র্যাকিং নিরাপদভাবে বন্ধ থাকবে, সাইট বা বিল্ডে কোনো সমস্যা হবে না)।
+          </p>
         </div>
         <button
           onClick={handleSave}

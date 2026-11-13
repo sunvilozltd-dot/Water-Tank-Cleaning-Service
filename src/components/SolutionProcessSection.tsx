@@ -124,7 +124,7 @@ export const SolutionProcessSection: React.FC<SolutionProcessSectionProps> = ({ 
         <div className="mt-12 bg-white rounded-2xl p-6 sm:p-8 border border-[#E2E8F0] shadow-md max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="space-y-1 text-center sm:text-left">
             <h4 className="text-base font-bold text-[#123047]">
-              {lang === 'bn' ? '১০০% নিরাপদ ও স্বাস্থ্যকর পানির নিশ্চয়তা' : 'Trained on Strict Hygiene Protocols'}
+              {lang === 'bn' ? 'নিরাপদ ও স্বাস্থ্যসম্মত মেকানাইজড পরিচ্ছন্নতা' : 'Trained on Strict Hygiene Protocols'}
             </h4>
             <p className="text-xs sm:text-sm text-[#64748B] max-w-lg">
               {lang === 'bn' 

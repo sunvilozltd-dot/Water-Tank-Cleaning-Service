@@ -1,5 +1,8 @@
 import React, { useEffect } from 'react';
 import { BUSINESS_CONFIG } from '../data/config';
+import { useSiteConfig } from '../context/SiteConfigContext';
+import { extractVerificationToken, sanitizeHttpsUrl } from '../utils/htmlSanitizer';
+import { SITE_DOMAIN } from '../config/siteDomain';
 
 export interface SeoProps {
   title?: string;
@@ -7,7 +10,10 @@ export interface SeoProps {
   canonicalPath?: string;
   canonicalUrl?: string;
   ogType?: 'website' | 'article' | 'service';
+  ogTitle?: string;
+  ogDescription?: string;
   ogImage?: string;
+  ogImageAlt?: string;
   noIndex?: boolean;
   serviceSchema?: {
     name: string;
@@ -30,47 +36,105 @@ export const formatSeoTitle = (rawTitle?: string): string => {
   return `${cleaned} | ${brand}`;
 };
 
+const OFFICIAL_LOGO_URL = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png';
+
 export const SeoHead: React.FC<SeoProps> = ({
   title,
   description,
   canonicalPath = '/',
   canonicalUrl: customCanonicalUrl,
   ogType = 'website',
+  ogTitle: customOgTitle,
+  ogDescription: customOgDescription,
   ogImage,
+  ogImageAlt,
   noIndex = false,
   serviceSchema,
   faqSchema,
   breadcrumbs,
 }) => {
-  const fullTitle = formatSeoTitle(title);
-  const metaDesc = description || 
-    'Professional water tank cleaning service in Dhaka. Overhead, underground reserve tank and water pipeline cleaning. Contact SUNVILOZ CLEAN CARE: 01609999612.';
-  const canonicalUrl = customCanonicalUrl || `${BUSINESS_CONFIG.canonicalBaseUrl}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`;
-  const socialImage = ogImage || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png';
+  const siteConfig = useSiteConfig();
+  const business = siteConfig?.business || BUSINESS_CONFIG;
+  const seo = siteConfig?.seo;
+
+  const baseOrigin = (seo?.canonicalBaseUrl || business.canonicalBaseUrl || SITE_DOMAIN).replace(/\/+$/, '');
+  const normalizedPath = canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`;
+  const routeKey = normalizedPath === '/' ? '/' : normalizedPath.replace(/\/+$/, '');
+  const override = seo?.pageSeoOverrides?.[routeKey];
+
+  const resolvedRawTitle = override?.title || title || seo?.defaultMetaTitle;
+  const fullTitle = formatSeoTitle(resolvedRawTitle);
+  const metaDesc =
+    override?.description ||
+    description ||
+    seo?.defaultMetaDescription ||
+    'Professional water tank cleaning service in Dhaka, Narayanganj, Gazipur & Savar. Overhead, underground reserve tank and water pipeline flushing. Contact SUNVILOZ CLEAN CARE: 01609999612.';
+
+  const canonicalUrl =
+    customCanonicalUrl ||
+    `${baseOrigin}${routeKey === '/' ? '/' : routeKey}`;
+
+  const socialImage =
+    sanitizeHttpsUrl(override?.ogImage) ||
+    sanitizeHttpsUrl(ogImage) ||
+    sanitizeHttpsUrl(seo?.socialOgImage) ||
+    OFFICIAL_LOGO_URL;
+
+  const socialImageAlt =
+    override?.ogImageAlt ||
+    ogImageAlt ||
+    seo?.ogImageAlt ||
+    'SUNVILOZ CLEAN CARE — Water Tank & Pipeline Cleaning Service in Dhaka';
+
+  const ogTitle = override?.ogTitle
+    ? formatSeoTitle(override.ogTitle)
+    : customOgTitle
+    ? formatSeoTitle(customOgTitle)
+    : fullTitle;
+  const ogDescription = override?.ogDescription || customOgDescription || metaDesc;
+  const effectiveNoIndex = Boolean(noIndex || override?.noIndex || seo?.indexingAllowed === false);
+
+  const gscToken = extractVerificationToken(business.googleSiteVerification);
+  const bingToken = extractVerificationToken(business.bingSiteVerification);
+  const gbpVerified = Boolean(business.gbpVerified);
+  const gbpUrl = gbpVerified ? sanitizeHttpsUrl(business.googleBusinessProfileUrl) : '';
 
   useEffect(() => {
-    // 1. Update document title
     document.title = fullTitle;
 
-    // 2. Update meta description
-    let descTag = document.querySelector('meta[name="description"]');
-    if (!descTag) {
-      descTag = document.createElement('meta');
-      descTag.setAttribute('name', 'description');
-      document.head.appendChild(descTag);
-    }
-    descTag.setAttribute('content', metaDesc);
+    const upsertMetaByName = (name: string, content: string | null) => {
+      let tag = document.querySelector(`meta[name="${name}"]`);
+      if (!content) {
+        if (tag) tag.remove();
+        return;
+      }
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute('name', name);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', content);
+    };
 
-    // 3. Update Robots meta tag for search engine indexing
-    let robotsTag = document.querySelector('meta[name="robots"]');
-    if (!robotsTag) {
-      robotsTag = document.createElement('meta');
-      robotsTag.setAttribute('name', 'robots');
-      document.head.appendChild(robotsTag);
-    }
-    robotsTag.setAttribute('content', noIndex ? 'noindex, nofollow' : 'index, follow');
+    const upsertMetaByProperty = (property: string, content: string | null) => {
+      let tag = document.querySelector(`meta[property="${property}"]`);
+      if (!content) {
+        if (tag) tag.remove();
+        return;
+      }
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute('property', property);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', content);
+    };
 
-    // 4. Update Canonical link
+    // 1. Description & Robots
+    upsertMetaByName('description', metaDesc);
+    upsertMetaByName('robots', effectiveNoIndex ? 'noindex, nofollow' : 'index, follow');
+
+    // 2. Canonical & Hreflang
     let canonicalTag = document.querySelector('link[rel="canonical"]');
     if (!canonicalTag) {
       canonicalTag = document.createElement('link');
@@ -79,7 +143,6 @@ export const SeoHead: React.FC<SeoProps> = ({
     }
     canonicalTag.setAttribute('href', canonicalUrl);
 
-    // 4B. Update Hreflang alternates (Only for valid existent URLs)
     const setHreflang = (lang: string, href: string) => {
       let tag = document.querySelector(`link[rel="alternate"][hreflang="${lang}"]`);
       if (!tag) {
@@ -90,94 +153,63 @@ export const SeoHead: React.FC<SeoProps> = ({
       }
       tag.setAttribute('href', href);
     };
-
-    // Remove legacy conflicting 'en' hreflang pointing to same URL
     const legacyEnTag = document.querySelector('link[rel="alternate"][hreflang="en"]');
     if (legacyEnTag) legacyEnTag.remove();
-
     setHreflang('bn', canonicalUrl);
     setHreflang('x-default', canonicalUrl);
 
-    // 5. Update OpenGraph Tags
-    const setMeta = (property: string, content: string) => {
-      let tag = document.querySelector(`meta[property="${property}"]`);
-      if (!tag) {
-        tag = document.createElement('meta');
-        tag.setAttribute('property', property);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute('content', content);
-    };
+    // 3. OpenGraph Tags
+    upsertMetaByProperty('og:title', ogTitle);
+    upsertMetaByProperty('og:description', ogDescription);
+    upsertMetaByProperty('og:url', canonicalUrl);
+    upsertMetaByProperty('og:type', ogType);
+    upsertMetaByProperty('og:image', socialImage);
+    upsertMetaByProperty('og:image:alt', socialImageAlt);
+    upsertMetaByProperty('og:site_name', 'SUNVILOZ CLEAN CARE');
 
-    setMeta('og:title', fullTitle);
-    setMeta('og:description', metaDesc);
-    setMeta('og:url', canonicalUrl);
-    setMeta('og:type', ogType);
-    setMeta('og:image', socialImage);
-    setMeta('og:site_name', 'Sunviloz Clean Care');
+    // 4. Twitter Cards
+    upsertMetaByName('twitter:card', 'summary_large_image');
+    upsertMetaByName('twitter:title', ogTitle);
+    upsertMetaByName('twitter:description', ogDescription);
+    upsertMetaByName('twitter:image', socialImage);
+    upsertMetaByName('twitter:image:alt', socialImageAlt);
 
-    // 5B. Update Twitter Cards
-    const setTwitter = (name: string, content: string) => {
-      let tag = document.querySelector(`meta[name="${name}"]`);
-      if (!tag) {
-        tag = document.createElement('meta');
-        tag.setAttribute('name', name);
-        document.head.appendChild(tag);
-      }
-      tag.setAttribute('content', content);
-    };
+    // 5. Search Engine Verification Tokens (Google Search Console & Bing Webmaster Tools)
+    upsertMetaByName('google-site-verification', gscToken || null);
+    upsertMetaByName('msvalidate.01', bingToken || null);
 
-    setTwitter('twitter:card', 'summary_large_image');
-    setTwitter('twitter:title', fullTitle);
-    setTwitter('twitter:description', metaDesc);
-    setTwitter('twitter:image', socialImage);
-
-    // 6. Update Google Site Verification if configured
-    if (BUSINESS_CONFIG.googleSiteVerification) {
-      let gsvTag = document.querySelector('meta[name="google-site-verification"]');
-      if (!gsvTag) {
-        gsvTag = document.createElement('meta');
-        gsvTag.setAttribute('name', 'google-site-verification');
-        document.head.appendChild(gsvTag);
-      }
-      gsvTag.setAttribute('content', BUSINESS_CONFIG.googleSiteVerification);
-    }
-
-    // 7. JSON-LD Schemas
-    const officialLogoUrl = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png';
-    const localBusinessSchema = {
+    // 6. Schema.org JSON-LD (Strict Truthfulness: no unverified priceRange, openingHours, or unverified GBP links)
+    const localBusinessSchema: Record<string, any> = {
       '@context': 'https://schema.org',
       '@type': ['LocalBusiness', 'HomeAndConstructionBusiness'],
+      '@id': `${SITE_DOMAIN}/#localbusiness`,
       name: 'SUNVILOZ CLEAN CARE',
-      description: 'Professional water tank cleaning service in Dhaka, Gazipur, Savar and Narayanganj for rooftop overhead tanks, underground reserve tanks, and water pipeline flushing.',
-      url: BUSINESS_CONFIG.canonicalBaseUrl,
-      telephone: '+88' + BUSINESS_CONFIG.phone,
-      image: officialLogoUrl,
-      logo: officialLogoUrl,
-      sameAs: [
-        BUSINESS_CONFIG.googleBusinessProfileUrl || 'https://www.google.com/maps/place/Sunviloz+Clean+Care/@23.8267734,90.4179331,17z/data=!4m8!3m7!1s0x4caea8c73c1a3949:0x3a92e0082947d375!8m2!3d23.8267734!4d90.4179331!9m1!1b1!16s%2Fg%2F11zdmdqbwt'
-      ],
-      hasMap: BUSINESS_CONFIG.googleBusinessProfileUrl || 'https://www.google.com/maps/place/Sunviloz+Clean+Care/@23.8267734,90.4179331,17z/data=!4m8!3m7!1s0x4caea8c73c1a3949:0x3a92e0082947d375!8m2!3d23.8267734!4d90.4179331!9m1!1b1!16s%2Fg%2F11zdmdqbwt',
+      description:
+        'Professional water tank cleaning and pipeline flushing service in Dhaka, Narayanganj, Gazipur and Savar for overhead and underground water storage tanks.',
+      url: baseOrigin,
+      telephone: `+88${(business.phone || '01609999612').replace(/^\+?88/, '')}`,
+      email: business.email || 'sunvilozltd@gmail.com',
+      image: OFFICIAL_LOGO_URL,
+      logo: OFFICIAL_LOGO_URL,
       contactPoint: {
         '@type': 'ContactPoint',
-        telephone: '+88' + BUSINESS_CONFIG.phone,
+        telephone: `+88${(business.phone || '01609999612').replace(/^\+?88/, '')}`,
         contactType: 'customer service',
-        areaServed: ['Dhaka', 'Gazipur', 'Savar', 'Narayanganj'],
+        areaServed: ['Dhaka', 'Narayanganj', 'Gazipur', 'Savar'],
         availableLanguage: ['Bengali', 'English']
       },
-      priceRange: 'BDT 1200 - 15000',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Dhaka',
-        addressRegion: 'Dhaka Division',
-        addressCountry: 'BD'
-      },
       areaServed: [
-        'Dhaka', 'Gazipur', 'Savar', 'Narayanganj', 'Uttara', 'Gulshan', 'Banani', 
-        'Mirpur', 'Bashundhara', 'Mohammadpur', 'Dhanmondi', 'Badda', 'Baridhara', 
-        'Khilkhet', 'Rampura'
+        { '@type': 'City', name: 'Dhaka' },
+        { '@type': 'City', name: 'Narayanganj' },
+        { '@type': 'City', name: 'Gazipur' },
+        { '@type': 'City', name: 'Savar' }
       ]
     };
+
+    if (gbpVerified && gbpUrl) {
+      localBusinessSchema.sameAs = [gbpUrl];
+      localBusinessSchema.hasMap = gbpUrl;
+    }
 
     let breadcrumbSchema = null;
     if (breadcrumbs && breadcrumbs.length > 0) {
@@ -188,7 +220,7 @@ export const SeoHead: React.FC<SeoProps> = ({
           '@type': 'ListItem',
           position: index + 1,
           name: bc.name,
-          item: `${BUSINESS_CONFIG.canonicalBaseUrl}${bc.path.startsWith('/') ? bc.path : `/${bc.path}`}`
+          item: `${baseOrigin}${bc.path.startsWith('/') ? bc.path : `/${bc.path}`}`
         }))
       };
     }
@@ -203,15 +235,16 @@ export const SeoHead: React.FC<SeoProps> = ({
         description: serviceSchema.description,
         provider: {
           '@type': 'HomeAndConstructionBusiness',
-          name: BUSINESS_CONFIG.name,
-          telephone: '+88' + BUSINESS_CONFIG.phone,
-          url: BUSINESS_CONFIG.canonicalBaseUrl
+          '@id': `${SITE_DOMAIN}/#localbusiness`,
+          name: 'SUNVILOZ CLEAN CARE',
+          telephone: `+88${(business.phone || '01609999612').replace(/^\+?88/, '')}`,
+          url: baseOrigin
         },
         areaServed: [
           { '@type': 'City', name: 'Dhaka' },
+          { '@type': 'City', name: 'Narayanganj' },
           { '@type': 'City', name: 'Gazipur' },
-          { '@type': 'City', name: 'Savar' },
-          { '@type': 'City', name: 'Narayanganj' }
+          { '@type': 'City', name: 'Savar' }
         ]
       };
     }
@@ -256,7 +289,27 @@ export const SeoHead: React.FC<SeoProps> = ({
       const faqEl = document.getElementById('jsonld-faq');
       if (faqEl && !faqSchema) faqEl.remove();
     };
-  }, [fullTitle, metaDesc, canonicalUrl, ogType, noIndex, serviceSchema, faqSchema, breadcrumbs]);
+  }, [
+    fullTitle,
+    metaDesc,
+    canonicalUrl,
+    ogType,
+    ogTitle,
+    ogDescription,
+    socialImage,
+    socialImageAlt,
+    effectiveNoIndex,
+    gscToken,
+    bingToken,
+    gbpVerified,
+    gbpUrl,
+    baseOrigin,
+    business.phone,
+    business.email,
+    serviceSchema,
+    faqSchema,
+    breadcrumbs
+  ]);
 
   return null;
 };

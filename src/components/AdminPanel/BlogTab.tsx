@@ -7,12 +7,14 @@ interface BlogTabProps {
   posts: BlogPost[];
   onSavePost: (post: BlogPost) => void;
   onDeletePost: (id: string) => void;
+  onSeedDefaults?: () => Promise<void>;
 }
 
 export const BlogTab: React.FC<BlogTabProps> = ({
   posts,
   onSavePost,
-  onDeletePost
+  onDeletePost,
+  onSeedDefaults
 }) => {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,17 +60,28 @@ export const BlogTab: React.FC<BlogTabProps> = ({
           <p className="text-xs text-slate-400 max-w-sm mx-auto">
             You do not have any published articles yet. Write helpful hygiene guides to boost your Google search visibility.
           </p>
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedPost(null);
-              setIsModalOpen(true);
-            }}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg inline-flex items-center gap-1.5 shadow"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Write First Article</span>
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedPost(null);
+                setIsModalOpen(true);
+              }}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg inline-flex items-center gap-1.5 shadow cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Write First Article</span>
+            </button>
+            {onSeedDefaults && (
+              <button
+                type="button"
+                onClick={onSeedDefaults}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg inline-flex items-center gap-1.5 border border-slate-700 cursor-pointer"
+              >
+                <span>Load Starter Articles</span>
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -82,9 +95,18 @@ export const BlogTab: React.FC<BlogTabProps> = ({
 
               <div className="p-4 flex-1 flex flex-col justify-between">
                 <div>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-400 block mb-1">
-                    {post.category} • {post.publishedAt}
-                  </span>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-400 truncate">
+                      {post.category} • {post.publishedAt}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 ${
+                      post.published !== false
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                    }`}>
+                      {post.published !== false ? 'Published' : 'Draft'}
+                    </span>
+                  </div>
                   <h3 className="font-bold text-white text-sm line-clamp-2">{post.title}</h3>
                   <p className="text-xs text-slate-400 line-clamp-2 mt-1">{post.excerpt}</p>
                 </div>

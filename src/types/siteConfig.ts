@@ -92,8 +92,10 @@ export interface BusinessConfig {
   operatingHours: string;
   operatingHoursBn: string;
   googleSiteVerification?: string;
+  bingSiteVerification?: string;
   googleAnalyticsId?: string;
   metaPixelId?: string;
+  gbpVerified?: boolean;
   googleBusinessProfileUrl?: string;
   googleReviewsUrl?: string;
   googleMapsDirectionsUrl?: string;
@@ -122,12 +124,27 @@ export interface WhyChooseUsItem {
   icon: string;
 }
 
+export interface PageSeoOverride {
+  title?: string;
+  description?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  ogImageAlt?: string;
+  noIndex?: boolean;
+}
+
 export interface SeoConfig {
   defaultMetaTitle?: string;
   defaultMetaDescription?: string;
   canonicalBaseUrl?: string;
   indexingAllowed?: boolean;
   socialOgImage?: string;
+  ogImageAlt?: string;
+  indexNowEnabled?: boolean;
+  indexNowKey?: string;
+  llmsSummary?: string;
+  pageSeoOverrides?: Record<string, PageSeoOverride>;
 }
 
 export interface SiteImagesConfig {

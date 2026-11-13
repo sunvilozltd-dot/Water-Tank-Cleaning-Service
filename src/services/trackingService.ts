@@ -12,11 +12,11 @@ export const OPEN_CONSENT_MODAL_EVENT = 'sunviloz_open_consent_preferences';
 
 export const DEFAULT_TRACKING_SETTINGS: TrackingSettings = {
   id: 'primary',
-  metaEnabled: true,
+  metaEnabled: false,
   metaPixelId: '',
   metaTestEventCode: '',
   metaCapiEnabled: false,
-  googleAnalyticsEnabled: true,
+  googleAnalyticsEnabled: false,
   ga4MeasurementId: '',
   googleTagManagerEnabled: false,
   gtmContainerId: '',
@@ -67,11 +67,14 @@ const recentEventTimestamps = new Map<string, number>();
 function isDuplicateConversionEvent(eventName: string, params: Record<string, any>): boolean {
   const conversionEvents = [
     'lead_saved', 
+    'lead_submit_success',
     'quote_submitted', 
     'quote_form_submit',
     'contact_form_submit', 
     'phone_call_click', 
+    'click_call',
     'whatsapp_click',
+    'click_whatsapp',
     'google_maps_click',
     'google_review_click',
     'booking_confirmed'
@@ -218,13 +221,17 @@ export async function getTrackingSettings(): Promise<TrackingSettings> {
     }
   }
 
-  // Also check environment variables for fallback IDs
+  // Optional environment fallbacks: auto-enable only when a non-empty ID is provided
   if (typeof import.meta !== 'undefined' && import.meta.env) {
-    if (!settings.ga4MeasurementId && import.meta.env.VITE_GA_MEASUREMENT_ID) {
-      settings.ga4MeasurementId = String(import.meta.env.VITE_GA_MEASUREMENT_ID).trim();
+    const envGaId = String(import.meta.env.VITE_GA_MEASUREMENT_ID || '').trim();
+    const envPixelId = String(import.meta.env.VITE_META_PIXEL_ID || '').trim();
+    if (!settings.ga4MeasurementId && envGaId) {
+      settings.ga4MeasurementId = envGaId;
+      settings.googleAnalyticsEnabled = true;
     }
-    if (!settings.metaPixelId && import.meta.env.VITE_META_PIXEL_ID) {
-      settings.metaPixelId = String(import.meta.env.VITE_META_PIXEL_ID).trim();
+    if (!settings.metaPixelId && envPixelId) {
+      settings.metaPixelId = envPixelId;
+      settings.metaEnabled = true;
     }
   }
 
@@ -237,14 +244,16 @@ export async function getTrackingSettings(): Promise<TrackingSettings> {
         .maybeSingle();
 
       if (!error && data) {
+        const dbPixelId = (data.meta_pixel_id || '').trim();
+        const dbGa4Id = (data.ga4_measurement_id || '').trim();
         settings = {
           id: data.id || 'primary',
-          metaEnabled: Boolean(data.meta_enabled),
-          metaPixelId: data.meta_pixel_id || settings.metaPixelId,
+          metaEnabled: dbPixelId ? Boolean(data.meta_enabled) : Boolean(settings.metaPixelId),
+          metaPixelId: dbPixelId || settings.metaPixelId,
           metaTestEventCode: data.meta_test_event_code || '',
           metaCapiEnabled: Boolean(data.meta_capi_enabled),
-          googleAnalyticsEnabled: Boolean(data.google_analytics_enabled),
-          ga4MeasurementId: data.ga4_measurement_id || settings.ga4MeasurementId,
+          googleAnalyticsEnabled: dbGa4Id ? Boolean(data.google_analytics_enabled) : Boolean(settings.ga4MeasurementId),
+          ga4MeasurementId: dbGa4Id || settings.ga4MeasurementId,
           googleTagManagerEnabled: Boolean(data.google_tag_manager_enabled),
           gtmContainerId: data.gtm_container_id || '',
           googleAdsEnabled: Boolean(data.google_ads_enabled),
@@ -362,8 +371,7 @@ export function applyTrackingScripts(settings: TrackingSettings): void {
       gtag('js', new Date());
       gtag('config', ga4Id, { send_page_view: false });
     }
-  } else if (!consent.analytics) {
-    // If analytics consent is not granted, remove injected script tag if present
+  } else {
     const existing = document.getElementById('sunviloz-ga4-script');
     if (existing) existing.remove();
   }
@@ -407,7 +415,7 @@ export function applyTrackingScripts(settings: TrackingSettings): void {
       `;
       document.head.appendChild(pScript);
     }
-  } else if (!consent.marketing) {
+  } else {
     const existing = document.getElementById('sunviloz-meta-pixel');
     if (existing) existing.remove();
   }
@@ -494,11 +502,16 @@ export function trackEvent(
     try {
       const w = window as any;
       if (typeof w.fbq === 'function') {
-        if (eventName === 'quote_submitted' || eventName === 'quote_form_submit' || eventName === 'lead_saved') {
+        if (
+          eventName === 'quote_submitted' ||
+          eventName === 'quote_form_submit' ||
+          eventName === 'lead_saved' ||
+          eventName === 'lead_submit_success'
+        ) {
           w.fbq('track', 'Lead', safeParams, { eventID: eventId });
-        } else if (eventName === 'whatsapp_click') {
+        } else if (eventName === 'whatsapp_click' || eventName === 'click_whatsapp') {
           w.fbq('track', 'Contact', { channel: 'whatsapp', ...safeParams }, { eventID: eventId });
-        } else if (eventName === 'phone_call_click' || eventName === 'phone_click') {
+        } else if (eventName === 'phone_call_click' || eventName === 'phone_click' || eventName === 'click_call') {
           w.fbq('track', 'Contact', { channel: 'phone', ...safeParams }, { eventID: eventId });
         } else if (eventName === 'booking_confirmed') {
           w.fbq('track', 'Schedule', safeParams, { eventID: eventId });
@@ -539,4 +552,78 @@ export function trackVideoPlay(title: string, videoId: string): void {
     video_id: videoId
   });
 }
+
+const recentCtaLogMap = new Map<string, number>();
+
+/**
+ * Logs non-PII CTA click counters (click_call / click_whatsapp) to Supabase cta_events
+ * so call/WhatsApp engagement is tracked separately from submitted form leads.
+ */
+export async function logCtaEvent(
+  eventName: 'click_call' | 'click_whatsapp',
+  metadata: { sourcePage?: string; area?: string; service?: string } = {}
+): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  const dedupKey = `${eventName}_${metadata.sourcePage || ''}`;
+  const now = Date.now();
+  const prev = recentCtaLogMap.get(dedupKey) || 0;
+  if (now - prev < 2500) return;
+  recentCtaLogMap.set(dedupKey, now);
+
+  try {
+    await supabase.from('cta_events').insert([
+      {
+        event_name: eventName,
+        source_page: metadata.sourcePage
+          ? String(metadata.sourcePage).slice(0, 120)
+          : (typeof window !== 'undefined' ? window.location.pathname : '/'),
+        area: metadata.area ? String(metadata.area).slice(0, 100) : null,
+        service: metadata.service ? String(metadata.service).slice(0, 120) : null
+      }
+    ]);
+  } catch {
+    // Non-blocking telemetry failure
+  }
+}
+
+export interface CtaEventCounts {
+  callTotal: number;
+  whatsappTotal: number;
+  callLast30Days: number;
+  whatsappLast30Days: number;
+}
+
+/**
+ * Fetches aggregate click_call and click_whatsapp counts from Supabase cta_events (admin only).
+ */
+export async function fetchCtaEventCounts(): Promise<CtaEventCounts> {
+  const empty: CtaEventCounts = {
+    callTotal: 0,
+    whatsappTotal: 0,
+    callLast30Days: 0,
+    whatsappLast30Days: 0
+  };
+  if (!isSupabaseConfigured()) return empty;
+
+  try {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const [callTotalRes, waTotalRes, call30Res, wa30Res] = await Promise.all([
+      supabase.from('cta_events').select('id', { count: 'exact', head: true }).eq('event_name', 'click_call'),
+      supabase.from('cta_events').select('id', { count: 'exact', head: true }).eq('event_name', 'click_whatsapp'),
+      supabase.from('cta_events').select('id', { count: 'exact', head: true }).eq('event_name', 'click_call').gte('created_at', thirtyDaysAgo),
+      supabase.from('cta_events').select('id', { count: 'exact', head: true }).eq('event_name', 'click_whatsapp').gte('created_at', thirtyDaysAgo)
+    ]);
+
+    return {
+      callTotal: callTotalRes.count || 0,
+      whatsappTotal: waTotalRes.count || 0,
+      callLast30Days: call30Res.count || 0,
+      whatsappLast30Days: wa30Res.count || 0
+    };
+  } catch {
+    return empty;
+  }
+}
+
+
 

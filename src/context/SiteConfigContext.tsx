@@ -5,7 +5,8 @@ import {
   BusinessConfig, 
   HeroConfig, 
   AnnouncementConfig,
-  WhyChooseUsItem 
+  WhyChooseUsItem,
+  SeoConfig
 } from '../types/siteConfig';
 import { 
   getStoredSiteConfig, 
@@ -35,6 +36,7 @@ interface SiteConfigContextType {
   reviews: ReviewItem[];
   areas: AreaInfo[];
   pricing: BusinessConfig['pricing'];
+  seo?: SeoConfig;
   images: NonNullable<FullSiteConfig['images']>;
   updateSiteImages: (updates: Partial<NonNullable<FullSiteConfig['images']>>) => void;
   
@@ -295,6 +297,7 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         reviews: config.reviews,
         areas: config.areas,
         pricing: config.business.pricing,
+        seo: config.seo,
         images: imagesValue,
         updateSiteImages,
         toggleSection,

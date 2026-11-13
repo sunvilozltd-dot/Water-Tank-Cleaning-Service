@@ -14,7 +14,9 @@ import {
   ChevronDown,
   Sparkles,
   Droplets,
-  ShieldCheck
+  ShieldCheck,
+  Building2,
+  MapPin
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
@@ -345,14 +347,19 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
 
       {/* Related Services */}
       <section className="space-y-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-[#123047]">
-          সম্পর্কিত অন্যান্য সেবা
-        </h2>
+        <div className="space-y-1">
+          <span className="text-xs font-bold text-[#0D9488] uppercase tracking-wider block">
+            সম্পর্কিত সেবা
+          </span>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#123047]">
+            {lang === 'bn' ? 'সম্পর্কিত ওয়াটার ট্যাংক ক্লিনিং সার্ভিসসমূহ' : 'Related Water Tank Cleaning Services'}
+          </h2>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           <button
             type="button"
-            onClick={() => handleNavigate('/water-tank-cleaning-service')}
+            onClick={() => handleNavigate('/services/water-tank-cleaning')}
             className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
             <Droplets className="w-8 h-8 text-[#0D9488] shrink-0" />
@@ -361,42 +368,88 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
                 Water Tank Cleaning Service
               </h3>
               <p className="text-xs text-[#64748B] mt-1">
-                ছাদ ও ভূগর্ভস্থ পানির ট্যাংকের গভীর পরিষ্কার ও স্যানিটাইজেশন।
+                ছাদ ও ভূগর্ভস্থ পানির ট্যাংকের গভীর মেকানাইজড পরিষ্কার ও খাদ্য-বান্ধব স্যানিটাইজেশন।
               </p>
             </div>
           </button>
 
           <button
             type="button"
-            onClick={() => handleNavigate('/services/home-deep-cleaning')}
+            onClick={() => handleNavigate('/services/overhead-tank-cleaning')}
             className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
-            <Sparkles className="w-8 h-8 text-[#16A34A] shrink-0" />
+            <Building2 className="w-8 h-8 text-[#0D9488] shrink-0" />
             <div>
               <h3 className="font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors text-base">
-                Professional Deep Cleaning
+                Overhead Water Tank Cleaning Service
               </h3>
               <p className="text-xs text-[#64748B] mt-1">
-                সম্পূর্ণ বাড়ির ফ্লোর স্ক্রাবিং ও গভীর পরিচ্ছন্নতা সেবা।
+                ছাদের পিভিসি ও আরসিসি ট্যাংকের রোটারি প্রেশার ওয়াশ ও শ্যাওলা পরিষ্কার।
               </p>
             </div>
           </button>
 
           <button
             type="button"
-            onClick={() => handleNavigate('/services/bathroom-cleaning-service')}
+            onClick={() => handleNavigate('/services/underground-water-tank-cleaning')}
             className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
-            <Droplets className="w-8 h-8 text-[#38BDF8] shrink-0" />
+            <ShieldCheck className="w-8 h-8 text-[#0D9488] shrink-0" />
             <div>
               <h3 className="font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors text-base">
-                Bathroom Deep Cleaning
+                Underground Water Tank Cleaning Service
               </h3>
               <p className="text-xs text-[#64748B] mt-1">
-                টাইলসের হলুদ আয়রন দাগ ও বাথরুম স্যানিটারি সামগ্রী ক্লিনিং।
+                মাটির নিচের আরসিসি রিজার্ভার ও রিজার্ভ ট্যাংকের ভারী কাদা ভ্যাকুয়াম ও স্লাজ উত্তোলন।
               </p>
             </div>
           </button>
+        </div>
+      </section>
+
+      {/* Service Areas Hub Linking */}
+      <section className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-8 space-y-5 shadow-sm">
+        <div className="flex items-center gap-2 text-xs font-bold text-[#0D9488] uppercase tracking-wider">
+          <MapPin className="w-4 h-4 text-[#0D9488]" />
+          <span>সার্ভিস কভারেজ ও এলাকাভিত্তিক পাইপলাইন টিম</span>
+        </div>
+        <h2 className="text-xl sm:text-2xl font-extrabold text-[#123047]">
+          {lang === 'bn' ? 'ঢাকা ও সংলগ্ন এলাকায় পাইপলাইন ক্লিনিং কভারেজ' : 'Pipeline Cleaning Coverage Across Dhaka Locations'}
+        </h2>
+        <p className="text-xs sm:text-sm text-[#64748B] max-w-3xl leading-relaxed">
+          {lang === 'bn'
+            ? 'আমাদের মোবাইল ভ্যান ও হাইড্রো-পালস মেশিনারিজ সহ ঢাকা শহরের সকল প্রধান এলাকা ও সংলগ্ন জোনে দ্রুততম সময়ে পাইপলাইন ফ্লাশিং সার্ভিস প্রদান করা হয়:'
+            : 'Non-invasive hydro-pulse pipeline descaling available across all prime Dhaka metropolitan areas:'}
+        </p>
+
+        <div className="flex flex-wrap gap-2 pt-1">
+          {[
+            { name: 'উত্তরা (Uttara)', slug: 'uttara' },
+            { name: 'গুলশান (Gulshan)', slug: 'gulshan' },
+            { name: 'বনানী (Banani)', slug: 'banani' },
+            { name: 'ধানমন্ডি (Dhanmondi)', slug: 'dhanmondi' },
+            { name: 'মিরপুর (Mirpur)', slug: 'mirpur' },
+            { name: 'বসুন্ধরা (Bashundhara)', slug: 'bashundhara' },
+            { name: 'মোহাম্মদপুর (Mohammadpur)', slug: 'mohammadpur' },
+            { name: 'বাড্ডা ও রামপুরা (Badda)', slug: 'badda' },
+            { name: 'বারিধারা (Baridhara)', slug: 'baridhara' },
+            { name: 'খিলক্ষেত (Khilkhet)', slug: 'khilkhet' },
+            { name: 'রামপুরা (Rampura)', slug: 'rampura' },
+            { name: 'গাজীপুর (Gazipur)', slug: 'gazipur' },
+            { name: 'সাভার (Savar)', slug: 'savar' },
+            { name: 'নারায়ণগঞ্জ (Narayanganj)', slug: 'narayanganj' },
+            { name: 'ঢাকা মেট্রো (Dhaka All)', slug: 'dhaka' }
+          ].map((area, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => handleNavigate(`/service-areas/${area.slug}`)}
+              className="px-3.5 py-2 rounded-xl bg-[#F5FAFC] hover:bg-[#E8F5F3] border border-[#E2E8F0] hover:border-[#0D9488]/40 text-xs font-semibold text-[#123047] hover:text-[#0D9488] transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <MapPin className="w-3.5 h-3.5 text-[#0D9488] shrink-0" />
+              <span>{area.name}</span>
+            </button>
+          ))}
         </div>
       </section>
 

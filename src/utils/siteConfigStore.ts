@@ -77,8 +77,8 @@ export const DEFAULT_HERO_CONFIG: HeroConfig = {
   overlayColor: 'navy',
   visualHeadingBn: 'অত্যাধুনিক মেকানাইজড ওয়াটার ট্যাংক ক্লিনিং',
   visualHeadingEn: 'Advanced Hygienic Water Tank Cleaning Technology',
-  visualSubtitleBn: '১৫০ বার রোটারি জেট ও ফুড-গ্রেড জীবাণুমুক্তকরণে শতভাগ নিরাপদ পানি',
-  visualSubtitleEn: 'High-pressure rotary jet washing with certified food-grade disinfectant for pure safe water'
+  visualSubtitleBn: '১৫০ বার রোটারি জেট ও ফুড-গ্রেড স্যানিটাইজেশনে স্বাস্থ্যসম্মত ট্যাংক পরিচ্ছন্নতা',
+  visualSubtitleEn: 'High-pressure rotary jet washing with food-grade disinfectant for hygienic water storage'
 };
 
 export const DEFAULT_ANNOUNCEMENT_CONFIG: AnnouncementConfig = {
@@ -104,11 +104,16 @@ export const INITIAL_FULL_SITE_CONFIG: FullSiteConfig = {
   reviews: [...REVIEWS_DATA],
   areas: [...DHAKA_AREAS],
   seo: {
-    defaultMetaTitle: 'Professional Water Tank Cleaning Service in Dhaka | Sunviloz Clean Care',
-    defaultMetaDescription: 'Professional rooftop & underground water tank cleaning, pipeline cleaning, and sanitization in Dhaka. Transparent pricing, modern equipment, hygienic service.',
+    defaultMetaTitle: 'Water Tank Cleaning Service in Dhaka | Sunviloz Clean Care',
+    defaultMetaDescription: 'Professional overhead & underground water tank cleaning and pipeline flushing service in Dhaka, Narayanganj, Gazipur & Savar. Transparent WhatsApp quotation.',
     canonicalBaseUrl: 'https://sunvilozcleancare.com',
     indexingAllowed: true,
-    socialOgImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png'
+    socialOgImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png',
+    ogImageAlt: 'Sunviloz Clean Care — Water Tank & Pipeline Cleaning Service',
+    indexNowEnabled: true,
+    indexNowKey: '',
+    llmsSummary: '',
+    pageSeoOverrides: {}
   },
   images: {
     heroPoster: 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg',
@@ -152,6 +157,7 @@ export const sanitizeAndMergeConfig = (parsed: Partial<FullSiteConfig>): FullSit
   const sanitizedSeo = {
     ...INITIAL_FULL_SITE_CONFIG.seo,
     ...(parsed.seo || {}),
+    indexNowKey: '',
     canonicalBaseUrl: (!parsed.seo?.canonicalBaseUrl || parsed.seo.canonicalBaseUrl.includes('water-tank-cleaning-service.vercel.app'))
       ? 'https://sunvilozcleancare.com'
       : parsed.seo.canonicalBaseUrl
@@ -312,7 +318,8 @@ export const saveSiteConfig = async (config: FullSiteConfig): Promise<{ success:
         }, { onConflict: 'id' });
 
       if (setErr) {
-        console.warn('Supabase site_settings save notice:', setErr.message);
+        console.warn('Supabase site_settings save error:', setErr.message);
+        return { success: false, error: `Supabase-এ সেটিংস সংরক্ষণ করা যায়নি: ${setErr.message}` };
       }
 
       // 2. Sync to homepage_sections (sec-hero) as persistent database store
@@ -359,6 +366,7 @@ export const saveSiteConfig = async (config: FullSiteConfig): Promise<{ success:
       }
     } catch (err: any) {
       console.warn('Supabase site config save notice:', err);
+      return { success: false, error: err?.message || 'Supabase সংযোগে সমস্যা হয়েছে।' };
     }
   }
 

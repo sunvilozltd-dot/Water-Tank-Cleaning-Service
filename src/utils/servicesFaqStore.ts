@@ -23,7 +23,7 @@ export const INITIAL_SERVICES_FAQS: ServiceFaqItem[] = [
     categoryTitleEn: 'Water Tank Cleaning',
     questionBn: 'পানির ট্যাংক কত দিন পরপর পরিষ্কার করা উচিত?',
     questionEn: 'How frequently should a water tank be cleaned?',
-    answerBn: 'স্বাস্থ্যসম্মত ও নিরাপদ ব্যবহারের জন্য বছরে অন্তত ২ বার (প্রতি ৬ মাস অন্তর) ছাদ ও ভূগর্ভস্থ রিজার্ভার ডিপ ক্লিন ও জীবাণুমুক্ত করা বিশ্ব স্বাস্থ্য মানদণ্ড অনুযায়ী সুপারিশকৃত।',
+    answerBn: 'স্বাস্থ্যসম্মত ও নিরাপদ ব্যবহারের জন্য বছরে অন্তত ২ বার (প্রতি ৬ মাস অন্তর) ছাদ ও ভূগর্ভস্থ রিজার্ভার ডিপ ক্লিন ও জীবাণুমুক্ত করা নিয়মিত রক্ষণাবেক্ষণের জন্য সুপারিশকৃত।',
     answerEn: 'Water tanks should ideally be thoroughly cleaned and sanitized at least twice a year (every 6 months) to avoid sludge sediment, slime and bacterial contamination.',
     order: 1,
     isActive: true

@@ -20,7 +20,7 @@ export const getStoredProjects = async (): Promise<ProjectItem[]> => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
+      if (!error && Array.isArray(data)) {
         const mapped: ProjectItem[] = data.map((d: any) => ({
           id: d.id,
           title: d.title,
