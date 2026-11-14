@@ -4,6 +4,7 @@ import { Breadcrumbs } from '../components/Breadcrumbs';
 import { SmartQuoteWizard } from '../components/SmartQuoteWizard';
 import { DynamicServiceBookingModal } from '../components/DynamicServiceBookingModal';
 import { useServices } from '../utils/servicesStore';
+import { AUTHORITATIVE_SERVICES } from '../services/serviceRegistry';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { NotFoundPage } from './NotFoundPage';
@@ -58,15 +59,30 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
     }
   };
 
-  // Find service by slug or match normalized aliases
-  const service = services.find(s => {
-    if (s.slug === slug || s.id === slug) return true;
-    if (slug === 'overhead-water-tank-cleaning' && (s.slug === 'overhead-tank-cleaning' || s.id === 'srv-overhead-water-tank')) return true;
-    if (slug === 'overhead-tank-cleaning' && (s.slug === 'overhead-water-tank-cleaning' || s.id === 'srv-overhead-water-tank')) return true;
-    if (slug === 'water-pipeline-cleaning' && (s.slug === 'pipeline-cleaning' || s.id === 'srv-water-pipeline')) return true;
-    if (slug === 'underground-tank-cleaning' && s.slug === 'underground-water-tank-cleaning') return true;
-    return false;
-  }) || null;
+  const CORE_SERVICE_FALLBACK_SLUGS = new Set([
+    'overhead-tank-cleaning',
+    'overhead-water-tank-cleaning',
+    'underground-water-tank-cleaning',
+    'underground-tank-cleaning',
+    'pipeline-cleaning',
+    'water-pipeline-cleaning',
+    'pipe-line-cleaning',
+  ]);
+
+  const matchServiceBySlug = (list: typeof services) =>
+    list.find(s => {
+      if (s.slug === slug || s.id === slug) return true;
+      if (slug === 'overhead-water-tank-cleaning' && (s.slug === 'overhead-tank-cleaning' || s.id === 'srv-overhead-water-tank')) return true;
+      if (slug === 'overhead-tank-cleaning' && (s.slug === 'overhead-water-tank-cleaning' || s.id === 'srv-overhead-water-tank')) return true;
+      if ((slug === 'water-pipeline-cleaning' || slug === 'pipe-line-cleaning') && (s.slug === 'pipeline-cleaning' || s.id === 'srv-water-pipeline')) return true;
+      if (slug === 'underground-tank-cleaning' && s.slug === 'underground-water-tank-cleaning') return true;
+      return false;
+    }) || null;
+
+  // Find service by slug or match normalized aliases; fallback to core registry only for canonical service slugs
+  const service =
+    matchServiceBySlug(services) ||
+    (!loading && CORE_SERVICE_FALLBACK_SLUGS.has(slug) ? matchServiceBySlug(AUTHORITATIVE_SERVICES) : null);
 
   if (loading && !service) {
     return (
@@ -84,8 +100,12 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
   }
 
   const title = lang === 'bn' ? (service.titleBn || service.title) : service.title;
-  const description = lang === 'bn' ? (service.descriptionBn || service.description) : service.description;
-  const whyNeeded = lang === 'bn' ? (service.whyNeededBn || service.whyNeeded) : service.whyNeeded;
+  const description = lang === 'bn'
+    ? ((service as any).descriptionBn || service.fullDescBn || service.shortDescBn || (service as any).description || service.fullDesc || service.shortDesc)
+    : ((service as any).description || service.fullDesc || service.shortDesc);
+  const whyNeeded = lang === 'bn'
+    ? ((service as any).whyNeededBn || service.fullDescBn || service.shortDescBn)
+    : ((service as any).whyNeeded || service.fullDesc || service.shortDesc);
   const benefits = (lang === 'bn' && service.benefitsBn && service.benefitsBn.length > 0)
     ? service.benefitsBn
     : service.benefits || [
@@ -95,9 +115,9 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
       'নির্ধারিত শিডিউল ও সময়মতো সার্ভিস প্রদান'
     ];
 
-  const processSteps = (lang === 'bn' && service.processStepsBn && service.processStepsBn.length > 0)
-    ? service.processStepsBn
-    : service.processSteps || [
+  const processSteps = (lang === 'bn' && ((service as any).processStepsBn?.length || service.processBn?.length))
+    ? ((service as any).processStepsBn || service.processBn)
+    : ((service as any).processSteps?.length ? (service as any).processSteps : service.process) || [
       'প্রাথমিক সাইট ও স্টোরেজ পরিদর্শন',
       'পানির সাপ্লাই লাইন সুরক্ষিত রাখা',
       'মেকানিক্যাল স্কাউরিং ও স্লাজ ড্রেইনেজ',
@@ -105,6 +125,9 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
     ];
 
   const rawNumber = (business.whatsappNumber || '8801609999612').replace(/[^0-9]/g, '');
+  const whatsappDisplay = rawNumber.startsWith('880')
+    ? rawNumber.slice(2).replace(/^(\d{5})(\d+)$/, '$1-$2')
+    : (rawNumber || '01609-999612');
   const waMessage = `আসসালামু আলাইকুম। আমি SUNVILOZ Clean & Care-এর "${service.title}" সার্ভিস সম্পর্কে বিস্তারিত জানতে ও বুকিং করতে চাই।`;
   const whatsappUrl = `https://wa.me/${rawNumber}?text=${encodeURIComponent(waMessage)}`;
 
@@ -149,9 +172,13 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-14">
       <SeoHead
-        title={`${title} | SUNVILOZ CLEAN CARE`}
+        title={service.metaTitle || `${title} | SUNVILOZ CLEAN CARE`}
         description={service.metaDesc || service.shortDesc || description || ''}
+        canonicalPath={`/services/${service.slug}`}
         canonicalUrl={`https://sunvilozcleancare.com/services/${service.slug}`}
+        ogType="service"
+        ogImage={service.image || undefined}
+        ogImageAlt={title}
         serviceSchema={{
           name: service.title,
           serviceType: service.title,
@@ -221,7 +248,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
                 className="px-5 py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center gap-2"
               >
                 <MessageCircle className="w-4 h-4 text-white" />
-                <span>WhatsApp: {business.whatsappNumber || '01609999612'}</span>
+                <span>WhatsApp: {whatsappDisplay}</span>
               </a>
 
               <a
@@ -343,15 +370,19 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
             { name: 'নারায়ণগঞ্জ', slug: 'narayanganj' },
             { name: 'সকল সার্ভিস এরিয়া', slug: 'dhaka' }
           ].map((item, idx) => (
-            <button
+            <a
               key={idx}
-              type="button"
-              onClick={() => handleNavigate(`/service-areas/${item.slug}`)}
+              href={`/service-areas/${item.slug}`}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                handleNavigate(`/service-areas/${item.slug}`);
+              }}
               className="px-3 py-1.5 rounded-xl bg-[#F5FAFC] hover:bg-[#E8F5F3] border border-[#E2E8F0] hover:border-[#0D9488]/40 text-xs font-semibold text-[#123047] hover:text-[#0D9488] transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <MapPin className="w-3 h-3 text-[#0D9488] shrink-0" />
               <span>{item.name}</span>
-            </button>
+            </a>
           ))}
         </div>
       </section>
@@ -442,10 +473,14 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {relatedServices.map((rel) => (
-              <button
+              <a
                 key={rel.id}
-                type="button"
-                onClick={() => handleNavigate(`/services/${rel.slug}`)}
+                href={`/services/${rel.slug}`}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  handleNavigate(`/services/${rel.slug}`);
+                }}
                 className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex flex-col justify-between cursor-pointer shadow-sm hover:shadow-md"
               >
                 <div>
@@ -460,7 +495,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
                   <span>বিস্তারিত দেখুন</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
-              </button>
+              </a>
             ))}
           </div>
         </section>

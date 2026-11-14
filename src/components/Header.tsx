@@ -60,17 +60,30 @@ export const Header: React.FC<HeaderProps> = ({
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
-  const handleNavClick = (item: NavItem) => {
-    setMobileMenuOpen(false);
-    setActiveDropdownId(null);
+  const resolveNavHref = (url?: string): string => {
+    if (!url) return '/';
+    if (url.startsWith('#') && url !== '#quote') return `/${url}`;
+    return url;
+  };
 
+  const handleNavClick = (item: NavItem, e?: React.MouseEvent<HTMLElement>) => {
     const href = item.url;
     if (!href) return;
 
-    if (item.openNewTab || href.startsWith('http://') || href.startsWith('https://')) {
-      window.open(href, '_blank', 'noopener,noreferrer');
+    const isExternal = Boolean(item.openNewTab || href.startsWith('http://') || href.startsWith('https://'));
+    if (isExternal) {
+      setMobileMenuOpen(false);
+      setActiveDropdownId(null);
       return;
     }
+
+    if (e && (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)) {
+      return;
+    }
+
+    if (e) e.preventDefault();
+    setMobileMenuOpen(false);
+    setActiveDropdownId(null);
 
     if (href === '#quote') {
       onOpenQuoteModal();
@@ -208,9 +221,11 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           
           {/* Logo & Brand Display */}
-          <button 
-            type="button"
-            onClick={() => {
+          <a 
+            href="/"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
               if (onNavigate) {
                 onNavigate('/');
               } else if (setActiveView) {
@@ -276,7 +291,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </p>
               </div>
             )}
-          </button>
+          </a>
 
           {/* Desktop Navigation Links */}
           <nav className="hidden lg:flex items-center gap-1" aria-label="Desktop Navigation">
@@ -308,32 +323,67 @@ export const Header: React.FC<HeaderProps> = ({
                         onMouseLeave={() => setActiveDropdownId(null)}
                         className="absolute left-0 top-full mt-1 w-56 bg-white rounded-2xl shadow-xl border border-[#E2E8F0] py-2 z-50 animate-scaleUp"
                       >
-                        {item.children!.filter(c => c.isVisible).map(child => (
-                          <button
-                            key={child.id}
-                            type="button"
-                            onClick={() => handleNavClick(child)}
-                            className="w-full text-left px-4 py-2.5 text-xs font-bold text-[#172B3A] hover:text-[#0D9488] hover:bg-[#F5FAFC] transition-colors flex items-center justify-between cursor-pointer"
-                          >
-                            <span>{lang === 'bn' ? child.labelBn : (child.labelEn || child.label)}</span>
-                            {child.openNewTab && <ExternalLink className="w-3 h-3 text-[#0D9488]" />}
-                          </button>
-                        ))}
+                        {item.children!.filter(c => c.isVisible).map(child => {
+                          const childHref = resolveNavHref(child.url);
+                          const isChildExternal = Boolean(child.openNewTab || childHref.startsWith('http://') || childHref.startsWith('https://'));
+                          if (child.url === '#quote') {
+                            return (
+                              <button
+                                key={child.id}
+                                type="button"
+                                onClick={() => handleNavClick(child)}
+                                className="w-full text-left px-4 py-2.5 text-xs font-bold text-[#172B3A] hover:text-[#0D9488] hover:bg-[#F5FAFC] transition-colors flex items-center justify-between cursor-pointer"
+                              >
+                                <span>{lang === 'bn' ? child.labelBn : (child.labelEn || child.label)}</span>
+                              </button>
+                            );
+                          }
+                          return (
+                            <a
+                              key={child.id}
+                              href={childHref}
+                              target={isChildExternal ? '_blank' : undefined}
+                              rel={isChildExternal ? 'noopener noreferrer' : undefined}
+                              onClick={(e) => handleNavClick(child, e)}
+                              className="w-full text-left px-4 py-2.5 text-xs font-bold text-[#172B3A] hover:text-[#0D9488] hover:bg-[#F5FAFC] transition-colors flex items-center justify-between cursor-pointer"
+                            >
+                              <span>{lang === 'bn' ? child.labelBn : (child.labelEn || child.label)}</span>
+                              {child.openNewTab && <ExternalLink className="w-3 h-3 text-[#0D9488]" />}
+                            </a>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
                 );
               }
 
+              if (item.url === '#quote') {
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleNavClick(item)}
+                    className="px-3 py-2 text-sm font-semibold rounded-lg transition-colors cursor-pointer text-[#172B3A] hover:text-[#0D9488] hover:bg-[#F5FAFC] focus-visible:outline-2 focus-visible:outline-[#0D9488]"
+                  >
+                    {itemLabel}
+                  </button>
+                );
+              }
+
+              const itemHref = resolveNavHref(item.url);
+              const isItemExternal = Boolean(item.openNewTab || itemHref.startsWith('http://') || itemHref.startsWith('https://'));
               return (
-                <button
+                <a
                   key={item.id}
-                  type="button"
-                  onClick={() => handleNavClick(item)}
+                  href={itemHref}
+                  target={isItemExternal ? '_blank' : undefined}
+                  rel={isItemExternal ? 'noopener noreferrer' : undefined}
+                  onClick={(e) => handleNavClick(item, e)}
                   className="px-3 py-2 text-sm font-semibold rounded-lg transition-colors cursor-pointer text-[#172B3A] hover:text-[#0D9488] hover:bg-[#F5FAFC] focus-visible:outline-2 focus-visible:outline-[#0D9488]"
                 >
                   {itemLabel}
-                </button>
+                </a>
               );
             })}
           </nav>
@@ -462,16 +512,20 @@ export const Header: React.FC<HeaderProps> = ({
                 const itemLabel = lang === 'bn' ? item.labelBn : (item.labelEn || item.label);
 
                 if (hasChildren) {
+                  const parentHref = resolveNavHref(item.url);
+                  const isParentExternal = Boolean(item.openNewTab || parentHref.startsWith('http://') || parentHref.startsWith('https://'));
                   return (
                     <div key={item.id} className="space-y-1">
                       <div className="flex items-center justify-between rounded-xl hover:bg-[#F5FAFC]">
-                        <button
-                          type="button"
-                          onClick={() => handleNavClick(item)}
+                        <a
+                          href={parentHref}
+                          target={isParentExternal ? '_blank' : undefined}
+                          rel={isParentExternal ? 'noopener noreferrer' : undefined}
+                          onClick={(e) => handleNavClick(item, e)}
                           className="flex-1 text-left py-2.5 px-3 min-h-[44px] flex items-center text-sm font-semibold text-[#172B3A] cursor-pointer"
                         >
                           {itemLabel}
-                        </button>
+                        </a>
                         <button
                           type="button"
                           onClick={(e) => toggleMobileSubmenu(item.id, e)}
@@ -484,32 +538,67 @@ export const Header: React.FC<HeaderProps> = ({
 
                       {isExpanded && (
                         <div className="pl-6 space-y-1 border-l-2 border-[#E2E8F0] ml-3">
-                          {item.children!.filter(c => c.isVisible).map(child => (
-                            <button
-                              key={child.id}
-                              type="button"
-                              onClick={() => handleNavClick(child)}
-                              className="w-full text-left py-2 px-3 rounded-lg text-xs font-semibold text-[#64748B] hover:text-[#0D9488] hover:bg-[#F5FAFC] flex items-center justify-between cursor-pointer"
-                            >
-                              <span>{lang === 'bn' ? child.labelBn : (child.labelEn || child.label)}</span>
-                              {child.openNewTab && <ExternalLink className="w-3 h-3 text-[#0D9488]" />}
-                            </button>
-                          ))}
+                          {item.children!.filter(c => c.isVisible).map(child => {
+                            const childHref = resolveNavHref(child.url);
+                            const isChildExternal = Boolean(child.openNewTab || childHref.startsWith('http://') || childHref.startsWith('https://'));
+                            if (child.url === '#quote') {
+                              return (
+                                <button
+                                  key={child.id}
+                                  type="button"
+                                  onClick={() => handleNavClick(child)}
+                                  className="w-full text-left py-2 px-3 rounded-lg text-xs font-semibold text-[#64748B] hover:text-[#0D9488] hover:bg-[#F5FAFC] flex items-center justify-between cursor-pointer"
+                                >
+                                  <span>{lang === 'bn' ? child.labelBn : (child.labelEn || child.label)}</span>
+                                </button>
+                              );
+                            }
+                            return (
+                              <a
+                                key={child.id}
+                                href={childHref}
+                                target={isChildExternal ? '_blank' : undefined}
+                                rel={isChildExternal ? 'noopener noreferrer' : undefined}
+                                onClick={(e) => handleNavClick(child, e)}
+                                className="w-full text-left py-2 px-3 rounded-lg text-xs font-semibold text-[#64748B] hover:text-[#0D9488] hover:bg-[#F5FAFC] flex items-center justify-between cursor-pointer"
+                              >
+                                <span>{lang === 'bn' ? child.labelBn : (child.labelEn || child.label)}</span>
+                                {child.openNewTab && <ExternalLink className="w-3 h-3 text-[#0D9488]" />}
+                              </a>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
                   );
                 }
 
+                if (item.url === '#quote') {
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleNavClick(item)}
+                      className="text-left py-2.5 px-3 min-h-[44px] flex items-center rounded-xl text-sm font-semibold text-[#172B3A] hover:text-[#0D9488] hover:bg-[#F5FAFC] cursor-pointer"
+                    >
+                      {itemLabel}
+                    </button>
+                  );
+                }
+
+                const itemHref = resolveNavHref(item.url);
+                const isItemExternal = Boolean(item.openNewTab || itemHref.startsWith('http://') || itemHref.startsWith('https://'));
                 return (
-                  <button
+                  <a
                     key={item.id}
-                    type="button"
-                    onClick={() => handleNavClick(item)}
+                    href={itemHref}
+                    target={isItemExternal ? '_blank' : undefined}
+                    rel={isItemExternal ? 'noopener noreferrer' : undefined}
+                    onClick={(e) => handleNavClick(item, e)}
                     className="text-left py-2.5 px-3 min-h-[44px] flex items-center rounded-xl text-sm font-semibold text-[#172B3A] hover:text-[#0D9488] hover:bg-[#F5FAFC] cursor-pointer"
                   >
                     {itemLabel}
-                  </button>
+                  </a>
                 );
               })}
             </nav>

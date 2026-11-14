@@ -146,34 +146,83 @@ export const Footer: React.FC<FooterProps> = ({
               </h3>
               <ul className="space-y-2 text-xs">
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => handleLink('/services/water-tank-cleaning')}
+                  <a
+                    href="/services/water-tank-cleaning"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleLink('/services/water-tank-cleaning');
+                    }}
                     className="hover:text-[#38BDF8] transition-colors text-left cursor-pointer"
                   >
-                    Water Tank Cleaning
-                  </button>
+                    Water Tank Cleaning Service
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => handleLink('/services/pipeline-cleaning')}
+                  <a
+                    href="/services/overhead-tank-cleaning"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleLink('/services/overhead-tank-cleaning');
+                    }}
                     className="hover:text-[#38BDF8] transition-colors text-left cursor-pointer"
                   >
-                    Pipeline Cleaning Service
-                  </button>
+                    Overhead Water Tank Cleaning
+                  </a>
                 </li>
-                {services.slice(2, 6).map((srv) => (
-                  <li key={srv.id}>
-                    <button
-                      type="button"
-                      onClick={() => handleLink(`/services/${srv.slug}`)}
-                      className="hover:text-[#38BDF8] transition-colors text-left cursor-pointer"
-                    >
-                      {srv.title}
-                    </button>
-                  </li>
-                ))}
+                <li>
+                  <a
+                    href="/services/underground-water-tank-cleaning"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleLink('/services/underground-water-tank-cleaning');
+                    }}
+                    className="hover:text-[#38BDF8] transition-colors text-left cursor-pointer"
+                  >
+                    Underground Tank Cleaning
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/services/pipeline-cleaning"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleLink('/services/pipeline-cleaning');
+                    }}
+                    className="hover:text-[#38BDF8] transition-colors text-left cursor-pointer"
+                  >
+                    Water Pipeline Cleaning
+                  </a>
+                </li>
+                {services
+                  .filter(srv => ![
+                    'water-tank-cleaning',
+                    'overhead-tank-cleaning',
+                    'overhead-water-tank-cleaning',
+                    'underground-water-tank-cleaning',
+                    'underground-tank-cleaning',
+                    'pipeline-cleaning',
+                    'water-pipeline-cleaning'
+                  ].includes(srv.slug))
+                  .slice(0, 2)
+                  .map((srv) => (
+                    <li key={srv.id}>
+                      <a
+                        href={`/services/${srv.slug}`}
+                        onClick={(e) => {
+                          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                          e.preventDefault();
+                          handleLink(`/services/${srv.slug}`);
+                        }}
+                        className="hover:text-[#38BDF8] transition-colors text-left cursor-pointer"
+                      >
+                        {srv.title}
+                      </a>
+                    </li>
+                  ))}
               </ul>
             </div>
 
@@ -184,58 +233,95 @@ export const Footer: React.FC<FooterProps> = ({
               </h3>
               <ul className="space-y-2 text-xs">
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => handleLink('/')}
+                  <a
+                    href="/"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleLink('/');
+                    }}
                     className="hover:text-[#38BDF8] transition-colors cursor-pointer"
                   >
                     {lang === 'bn' ? 'হোম পেইজ' : 'Home'}
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => handleLink('/about')}
+                  <a
+                    href="/about"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleLink('/about');
+                    }}
                     className="hover:text-[#38BDF8] transition-colors cursor-pointer"
                   >
                     {lang === 'bn' ? 'আমাদের সম্পর্কে' : 'About Us'}
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => handleLink('/get-quote')}
+                  <a
+                    href="/get-quote"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleLink('/get-quote');
+                    }}
                     className="hover:text-[#38BDF8] transition-colors cursor-pointer"
                   >
                     {lang === 'bn' ? 'ফ্রি কোটেশন নিন' : 'Get Free Quote'}
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => handleLink('/service-areas')}
+                  <a
+                    href="/service-areas"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleLink('/service-areas');
+                    }}
                     className="hover:text-[#38BDF8] transition-colors cursor-pointer"
                   >
                     {lang === 'bn' ? 'সার্ভিস এরিয়া (ঢাকা)' : 'Service Areas'}
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => handleLink('/blog')}
+                  <a
+                    href="/blog"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleLink('/blog');
+                    }}
                     className="hover:text-[#38BDF8] transition-colors cursor-pointer"
                   >
                     {lang === 'bn' ? 'পানি সচেতনতা ব্লগ' : 'Water Hygiene Blog'}
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => handleLink('/contact')}
+                  <a
+                    href="/faq"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleLink('/faq');
+                    }}
+                    className="hover:text-[#38BDF8] transition-colors cursor-pointer"
+                  >
+                    {lang === 'bn' ? 'সাধারণ প্রশ্নোত্তর (FAQ)' : 'FAQ'}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/contact"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleLink('/contact');
+                    }}
                     className="hover:text-[#38BDF8] transition-colors cursor-pointer"
                   >
                     {lang === 'bn' ? 'যোগাযোগ করুন' : 'Contact Us'}
-                  </button>
+                  </a>
                 </li>
               </ul>
             </div>
@@ -347,15 +433,20 @@ export const Footer: React.FC<FooterProps> = ({
                 {lang === 'bn' ? 'কুকি সেটিংস ও সম্মতি' : 'Cookie Preferences'}
               </button>
               <span aria-hidden="true">•</span>
-              <button
-                type="button"
-                onClick={() => handleLink('/admin/login')}
+              <a
+                href="/admin/login"
+                rel="nofollow"
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  handleLink('/admin/login');
+                }}
                 className="flex items-center gap-1 text-slate-400 hover:text-[#38BDF8] transition-colors cursor-pointer"
                 title="Website Admin Panel"
               >
                 <Settings className="w-3.5 h-3.5 text-[#38BDF8]" aria-hidden="true" />
                 <span>এডমিন প্যানেল</span>
-              </button>
+              </a>
             </div>
           </div>
 

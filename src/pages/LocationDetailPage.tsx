@@ -209,6 +209,7 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
       <SeoHead
         title={seoTitle}
         description={seoDescription}
+        canonicalPath={`/service-areas/${resolvedArea.slug}`}
         canonicalUrl={`${SITE_DOMAIN}/service-areas/${resolvedArea.slug}`}
         ogTitle={content.ogTitle || seoTitle}
         ogDescription={content.ogDescription || seoDescription}
@@ -627,9 +628,13 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
-          <button
-            type="button"
-            onClick={() => handleNavigate('/services/water-tank-cleaning')}
+          <a
+            href="/services/water-tank-cleaning"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/services/water-tank-cleaning');
+            }}
             className="p-4 rounded-2xl bg-[#F8FAFC] hover:bg-[#E8F5F3] border border-[#E2E8F0] hover:border-[#0D9488]/40 text-left transition-all group flex flex-col justify-between cursor-pointer"
           >
             <div className="space-y-2">
@@ -643,11 +648,15 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
               <span>বিস্তারিত দেখুন</span>
               <ArrowRight className="w-3 h-3" />
             </span>
-          </button>
+          </a>
 
-          <button
-            type="button"
-            onClick={() => handleNavigate('/services/overhead-tank-cleaning')}
+          <a
+            href="/services/overhead-tank-cleaning"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/services/overhead-tank-cleaning');
+            }}
             className="p-4 rounded-2xl bg-[#F8FAFC] hover:bg-[#E8F5F3] border border-[#E2E8F0] hover:border-[#0D9488]/40 text-left transition-all group flex flex-col justify-between cursor-pointer"
           >
             <div className="space-y-2">
@@ -661,11 +670,15 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
               <span>বিস্তারিত দেখুন</span>
               <ArrowRight className="w-3 h-3" />
             </span>
-          </button>
+          </a>
 
-          <button
-            type="button"
-            onClick={() => handleNavigate('/services/underground-water-tank-cleaning')}
+          <a
+            href="/services/underground-water-tank-cleaning"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/services/underground-water-tank-cleaning');
+            }}
             className="p-4 rounded-2xl bg-[#F8FAFC] hover:bg-[#E8F5F3] border border-[#E2E8F0] hover:border-[#0D9488]/40 text-left transition-all group flex flex-col justify-between cursor-pointer"
           >
             <div className="space-y-2">
@@ -679,11 +692,15 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
               <span>বিস্তারিত দেখুন</span>
               <ArrowRight className="w-3 h-3" />
             </span>
-          </button>
+          </a>
 
-          <button
-            type="button"
-            onClick={() => handleNavigate('/services/pipeline-cleaning')}
+          <a
+            href="/services/pipeline-cleaning"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/services/pipeline-cleaning');
+            }}
             className="p-4 rounded-2xl bg-[#F8FAFC] hover:bg-[#E8F5F3] border border-[#E2E8F0] hover:border-[#0D9488]/40 text-left transition-all group flex flex-col justify-between cursor-pointer"
           >
             <div className="space-y-2">
@@ -697,7 +714,7 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
               <span>বিস্তারিত দেখুন</span>
               <ArrowRight className="w-3 h-3" />
             </span>
-          </button>
+          </a>
         </div>
       </section>
 
@@ -714,15 +731,19 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
           {otherAreas
             .filter(l => l.slug !== resolvedArea.slug)
             .map(loc => (
-              <button
+              <a
                 key={loc.slug}
-                type="button"
-                onClick={() => handleNavigate(`/service-areas/${loc.slug}`)}
+                href={`/service-areas/${loc.slug}`}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  handleNavigate(`/service-areas/${loc.slug}`);
+                }}
                 className="px-3 py-1.5 rounded-xl bg-[#F5FAFC] hover:bg-[#E8F5F3] border border-[#E2E8F0] hover:border-[#0D9488]/40 text-xs font-semibold text-[#123047] hover:text-[#0D9488] transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <MapPin className="w-3 h-3 text-[#0D9488] shrink-0" />
                 <span>{lang === 'bn' ? loc.areaNameBn : loc.areaName}</span>
-              </button>
+              </a>
             ))}
         </div>
       </section>

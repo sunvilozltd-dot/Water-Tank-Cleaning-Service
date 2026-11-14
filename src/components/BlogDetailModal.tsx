@@ -75,11 +75,6 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const shareOnWhatsApp = () => {
-    const text = `${title}\n\nRead this cleaning guide: ${window.location.origin}/blog/${post.slug}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-  };
-
   const handleTriggerBooking = () => {
     onClose();
     if (onOpenQuoteModal) {
@@ -236,14 +231,15 @@ export const BlogDetailModal: React.FC<BlogDetailModalProps> = ({
               {lang === 'bn' ? 'আর্টিকেলটি শেয়ার করুন:' : 'Share this article:'}
             </span>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={shareOnWhatsApp}
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`${title}\n\nRead this cleaning guide: https://sunvilozcleancare.com/blog/${post.slug}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="min-h-[40px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold transition-colors cursor-pointer"
               >
                 <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>WhatsApp</span>
-              </button>
+              </a>
               <button
                 type="button"
                 onClick={handleCopyLink}

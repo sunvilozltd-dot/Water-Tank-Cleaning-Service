@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ServiceItem } from '../types';
 import { 
   AUTHORITATIVE_SERVICES, 
@@ -13,24 +13,45 @@ import {
   CENTRAL_IMAGES_EVENT,
   isDemoOrStockUrl 
 } from '../services/imageSyncService';
-import { enqueueIndexNowUrls } from '../services/indexnowService';
 
 const STORAGE_KEY = 'sunviloz_authoritative_services_v9';
 const EVENT_NAME = 'sunviloz_services_changed';
 
 export const INITIAL_SERVICES: ExtensibleServiceItem[] = AUTHORITATIVE_SERVICES;
 
+const normalizeCoreServiceSlug = (rawSlug: string): string => {
+  if (rawSlug === 'overhead-water-tank-cleaning') return 'overhead-tank-cleaning';
+  if (rawSlug === 'water-pipeline-cleaning') return 'pipeline-cleaning';
+  return rawSlug;
+};
+
+const getRegistryImageForService = (
+  serviceImages: Record<string, string> | undefined,
+  s: { id: string; slug: string }
+): string | undefined => {
+  if (!serviceImages) return undefined;
+  const legacyKey =
+    s.slug === 'overhead-tank-cleaning'
+      ? 'overhead-water-tank-cleaning'
+      : s.slug === 'pipeline-cleaning'
+      ? 'water-pipeline-cleaning'
+      : undefined;
+  return serviceImages[s.id] || serviceImages[s.slug] || (legacyKey ? serviceImages[legacyKey] : undefined);
+};
+
 /**
  * Ensures canonical image assets for the core 3 services
  */
 const sanitizeStoredService = (s: ExtensibleServiceItem): ExtensibleServiceItem => {
+  const normalizedSlug = normalizeCoreServiceSlug(s.slug);
   const reg = getStoredImageRegistry();
-  const rawOverride = reg?.serviceImages?.[s.id] || reg?.serviceImages?.[s.slug];
+  const rawOverride = getRegistryImageForService(reg?.serviceImages, { id: s.id, slug: normalizedSlug });
   const overrideImg = rawOverride && !isDemoOrStockUrl(rawOverride) ? rawOverride : undefined;
 
   if (overrideImg) {
     return {
       ...s,
+      slug: normalizedSlug,
       image: overrideImg,
       featured_image: overrideImg
     };
@@ -39,32 +60,36 @@ const sanitizeStoredService = (s: ExtensibleServiceItem): ExtensibleServiceItem 
   const cleanExistingImg = (s.image && !isDemoOrStockUrl(s.image)) ? s.image : undefined;
   const cleanExistingFeatured = (s.featured_image && !isDemoOrStockUrl(s.featured_image)) ? s.featured_image : undefined;
 
-  if (s.id === 'srv-overhead-water-tank' || s.slug === 'overhead-water-tank-cleaning') {
+  if (s.id === 'srv-overhead-water-tank' || normalizedSlug === 'overhead-tank-cleaning') {
     const fallback = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg';
     return {
       ...s,
+      slug: normalizedSlug,
       image: cleanExistingImg || fallback,
       featured_image: cleanExistingFeatured || cleanExistingImg || fallback
     };
   }
-  if (s.id === 'srv-underground-water-tank' || s.slug === 'underground-water-tank-cleaning') {
+  if (s.id === 'srv-underground-water-tank' || normalizedSlug === 'underground-water-tank-cleaning') {
     const fallback = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png';
     return {
       ...s,
+      slug: normalizedSlug,
       image: cleanExistingImg || fallback,
       featured_image: cleanExistingFeatured || cleanExistingImg || fallback
     };
   }
-  if (s.id === 'srv-water-pipeline' || s.slug === 'water-pipeline-cleaning') {
+  if (s.id === 'srv-water-pipeline' || normalizedSlug === 'pipeline-cleaning') {
     const fallback = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg';
     return {
       ...s,
+      slug: normalizedSlug,
       image: cleanExistingImg || fallback,
       featured_image: cleanExistingFeatured || cleanExistingImg || fallback
     };
   }
   return {
     ...s,
+    slug: normalizedSlug,
     image: cleanExistingImg || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     featured_image: cleanExistingFeatured || cleanExistingImg || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
   };
@@ -76,7 +101,7 @@ const sanitizeStoredService = (s: ExtensibleServiceItem): ExtensibleServiceItem 
 function mapRowToService(d: any): ExtensibleServiceItem {
   return sanitizeStoredService({
     id: d.id,
-    slug: d.slug,
+    slug: normalizeCoreServiceSlug(d.slug),
     title: d.title,
     titleBn: d.title_bn || d.title,
     name: d.name || d.title,
@@ -170,6 +195,16 @@ function mapServiceToRow(s: ExtensibleServiceItem): any {
  * Retrieve cached services when Supabase is configured, or bundled defaults strictly in offline/unconfigured mode.
  */
 export const getStoredServices = (): ExtensibleServiceItem[] => {
+  const globalSnap = (globalThis as any).__INITIAL_SERVICES__;
+  if (Array.isArray(globalSnap)) {
+    return globalSnap.map((item: any) => sanitizeStoredService(item));
+  }
+  if (typeof window !== 'undefined') {
+    const winSnap = (window as any).__INITIAL_SERVICES__;
+    if (Array.isArray(winSnap)) {
+      return winSnap.map((item: any) => sanitizeStoredService(item));
+    }
+  }
   if (typeof window === 'undefined') {
     return isSupabaseConfigured() ? [] : INITIAL_SERVICES;
   }
@@ -231,7 +266,7 @@ export const fetchServicesWithStatus = async (): Promise<ServiceFetchResult> => 
 
     if (list.length > 0 && Object.keys(registryServiceImages).length > 0) {
       list = list.map(item => {
-        const rawUrl = registryServiceImages[item.id] || registryServiceImages[item.slug];
+        const rawUrl = getRegistryImageForService(registryServiceImages, item);
         const customUrl = rawUrl && !isDemoOrStockUrl(rawUrl) ? rawUrl : undefined;
         if (customUrl) {
           return {
@@ -414,12 +449,16 @@ export const addNewService = async (serviceData: Partial<ExtensibleServiceItem>)
   }
 
   if (newService.is_active !== false && newService.slug) {
-    enqueueIndexNowUrls(['/services', `/services/${newService.slug}`], {
-      action: 'publish_service',
-      entityType: 'service',
-      entitySlug: newService.slug,
-      verifyPublic: true
-    }).catch(() => {});
+    import('../services/indexnowService')
+      .then(({ enqueueIndexNowUrls }) =>
+        enqueueIndexNowUrls(['/services', `/services/${newService.slug}`], {
+          action: 'publish_service',
+          entityType: 'service',
+          entitySlug: newService.slug,
+          verifyPublic: true
+        })
+      )
+      .catch(() => {});
   }
 
   return newService;
@@ -454,12 +493,16 @@ export const updateService = async (id: string, updates: Partial<ExtensibleServi
 
   if (updatedItem.slug) {
     const isActive = updatedItem.is_active !== false;
-    enqueueIndexNowUrls(['/services', `/services/${updatedItem.slug}`], {
-      action: isActive ? 'update_service' : 'hide_service',
-      entityType: 'service',
-      entitySlug: updatedItem.slug,
-      verifyPublic: isActive
-    }).catch(() => {});
+    import('../services/indexnowService')
+      .then(({ enqueueIndexNowUrls }) =>
+        enqueueIndexNowUrls(['/services', `/services/${updatedItem.slug}`], {
+          action: isActive ? 'update_service' : 'hide_service',
+          entityType: 'service',
+          entitySlug: updatedItem.slug,
+          verifyPublic: isActive
+        })
+      )
+      .catch(() => {});
   }
 
   return true;
@@ -498,12 +541,16 @@ export const deleteService = async (id: string): Promise<boolean> => {
     await saveAllServices(filtered);
   }
 
-  enqueueIndexNowUrls(['/services', ...(targetSlug ? [`/services/${targetSlug}`] : [])], {
-    action: 'delete_service',
-    entityType: 'service',
-    entitySlug: targetSlug || id,
-    verifyPublic: false
-  }).catch(() => {});
+  import('../services/indexnowService')
+    .then(({ enqueueIndexNowUrls }) =>
+      enqueueIndexNowUrls(['/services', ...(targetSlug ? [`/services/${targetSlug}`] : [])], {
+        action: 'delete_service',
+        entityType: 'service',
+        entitySlug: targetSlug || id,
+        verifyPublic: false
+      })
+    )
+    .catch(() => {});
 
   return true;
 };
@@ -598,13 +645,26 @@ export const useServices = () => {
     };
   }, []);
 
-  const activeServices = allServices
-    .filter(s => s.is_active !== false)
-    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+  const activeServices = useMemo(
+    () =>
+      allServices
+        .filter(s => s.is_active !== false)
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0)),
+    [allServices]
+  );
 
-  const homepageServices = activeServices.filter(s => s.show_on_homepage !== false);
-  const navigationServices = activeServices.filter(s => s.show_in_navigation !== false);
-  const quoteFormServices = activeServices.filter(s => s.show_in_quote_form !== false);
+  const homepageServices = useMemo(
+    () => activeServices.filter(s => s.show_on_homepage !== false),
+    [activeServices]
+  );
+  const navigationServices = useMemo(
+    () => activeServices.filter(s => s.show_in_navigation !== false),
+    [activeServices]
+  );
+  const quoteFormServices = useMemo(
+    () => activeServices.filter(s => s.show_in_quote_form !== false),
+    [activeServices]
+  );
 
   return {
     services: activeServices,

@@ -19,8 +19,7 @@ export const ContactPage: React.FC = () => {
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-12">
       <SeoHead
-        title="Contact Us | SUNVILOZ CLEAN CARE — Hotline 01609999612"
-        description="Contact SUNVILOZ CLEAN CARE for water tank and pipeline cleaning in Dhaka, Narayanganj, Gazipur & Savar. Call 01609999612 or WhatsApp for quick quotation."
+        canonicalPath="/contact"
         canonicalUrl="https://sunvilozcleancare.com/contact"
         breadcrumbs={[
           { name: lang === 'bn' ? 'হোম' : 'Home', path: '/' },
@@ -56,9 +55,9 @@ export const ContactPage: React.FC = () => {
               </div>
               <div>
                 <span className="text-[11px] text-[#64748B] block font-medium">
-                  {lang === 'bn' ? 'সরাসরি কল করুন (সকাল ৮টা – রাত ১০টা)' : 'Call Direct (8:00 AM - 10:00 PM)'}
+                  {lang === 'bn' ? 'সরাসরি হটলাইন কল (সকাল ৮টা – রাত ১০টা)' : 'Call Hotline (8:00 AM - 10:00 PM)'}
                 </span>
-                <span className="text-base font-bold text-[#123047] font-mono">{business.phone}</span>
+                <span className="text-base font-bold text-[#123047] font-mono">{business.displayPhone || '09649-112288'}</span>
               </div>
             </a>
 

@@ -18,8 +18,7 @@ export const ServiceAreaPage: React.FC<ServiceAreaPageProps> = ({
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
       <SeoHead
-        title="Water Tank Cleaning Service Areas in Dhaka | SUNVILOZ CLEAN CARE"
-        description="Water tank and pipeline cleaning coverage across all Dhaka locations: Gulshan, Banani, Uttara, Dhanmondi, Bashundhara, Mirpur, Mohammadpur, Gazipur, Savar, Narayanganj. 01609999612."
+        canonicalPath="/service-areas"
         canonicalUrl="https://sunvilozcleancare.com/service-areas"
         breadcrumbs={[
           { name: lang === 'bn' ? 'হোম' : 'Home', path: '/' },

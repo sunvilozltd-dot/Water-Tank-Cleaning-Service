@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   HelpCircle, 
   ArrowRight, 
@@ -15,9 +15,13 @@ import { useSiteConfig } from '../context/SiteConfigContext';
 
 interface AllServicesFaqSectionProps {
   onNavigate?: (path: string) => void;
+  onVisibleFaqsChange?: (visibleFaqs: { question: string; answer: string }[]) => void;
 }
 
-export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({ onNavigate }) => {
+export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({
+  onNavigate,
+  onVisibleFaqsChange
+}) => {
   const { lang } = useLanguage();
   const { business } = useSiteConfig();
   const { faqs, tankFaqs, pipelineFaqs } = useServicesFaqs();
@@ -44,25 +48,58 @@ export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({ on
     );
   };
 
-  const relevantFaqs = faqs.filter(f => 
-    (f.category === 'water-tank-cleaning' || f.category === 'pipeline-cleaning') && 
-    f.isActive !== false
+  const relevantFaqs = useMemo(
+    () =>
+      faqs.filter(
+        f =>
+          (f.category === 'water-tank-cleaning' || f.category === 'pipeline-cleaning') &&
+          f.isActive !== false
+      ),
+    [faqs]
   );
 
-  const filteredFaqs = relevantFaqs.filter(faq => {
-    if (activeCategory !== 'all' && faq.category !== activeCategory) {
-      return false;
+  const filteredFaqs = useMemo(
+    () =>
+      relevantFaqs.filter(faq => {
+        if (activeCategory !== 'all' && faq.category !== activeCategory) {
+          return false;
+        }
+        if (!searchQuery.trim()) return true;
+
+        const query = searchQuery.toLowerCase();
+        const qBn = faq.questionBn.toLowerCase();
+        const qEn = faq.questionEn.toLowerCase();
+        const aBn = faq.answerBn.toLowerCase();
+        const aEn = faq.answerEn.toLowerCase();
+
+        return qBn.includes(query) || qEn.includes(query) || aBn.includes(query) || aEn.includes(query);
+      }),
+    [relevantFaqs, activeCategory, searchQuery]
+  );
+
+  const visibleFaqSchemaItems = useMemo(
+    () =>
+      filteredFaqs
+        .map(faq => ({
+          question: lang === 'bn' ? faq.questionBn || faq.questionEn : faq.questionEn || faq.questionBn,
+          answer: lang === 'bn' ? faq.answerBn || faq.answerEn : faq.answerEn || faq.answerBn
+        }))
+        .filter(item => Boolean(item.question && item.answer)),
+    [filteredFaqs, lang]
+  );
+
+  const onVisibleFaqsChangeRef = useRef(onVisibleFaqsChange);
+  onVisibleFaqsChangeRef.current = onVisibleFaqsChange;
+  const lastEmittedFaqsKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const serialized = JSON.stringify(visibleFaqSchemaItems);
+    if (lastEmittedFaqsKeyRef.current === serialized) {
+      return;
     }
-    if (!searchQuery.trim()) return true;
-
-    const query = searchQuery.toLowerCase();
-    const qBn = faq.questionBn.toLowerCase();
-    const qEn = faq.questionEn.toLowerCase();
-    const aBn = faq.answerBn.toLowerCase();
-    const aEn = faq.answerEn.toLowerCase();
-
-    return qBn.includes(query) || qEn.includes(query) || aBn.includes(query) || aEn.includes(query);
-  });
+    lastEmittedFaqsKeyRef.current = serialized;
+    onVisibleFaqsChangeRef.current?.(visibleFaqSchemaItems);
+  }, [visibleFaqSchemaItems]);
 
   const tankCount = tankFaqs.length;
   const pipeCount = pipelineFaqs.length;
@@ -248,21 +285,26 @@ export const AllServicesFaqSection: React.FC<AllServicesFaqSectionProps> = ({ on
 
           <div className="flex flex-wrap items-center justify-center gap-2.5">
             <a
-              href={`tel:${business?.phone || '01609999612'}`}
+              href={`tel:${business?.phone || '+8809649112288'}`}
               className="px-4 py-2.5 rounded-xl bg-[#123047] hover:bg-[#0f2638] text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors shadow-xs"
             >
               <Phone className="w-4 h-4 text-[#38BDF8]" />
               <span>{lang === 'bn' ? 'সরাসরি কল করুন' : 'Call Now'}</span>
             </a>
 
-            <button
-              type="button"
-              onClick={() => handleNavigate('/get-quote')}
-              className="px-5 py-2.5 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+            <a
+              href="/get-quote"
+              onClick={(e) => {
+                if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+                  e.preventDefault();
+                  handleNavigate('/get-quote');
+                }
+              }}
+              className="px-5 py-2.5 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all shadow-xs"
             >
               <span>{lang === 'bn' ? 'ফ্রি কোটেশন নিন' : 'Get Free Quote'}</span>
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </a>
           </div>
         </div>
 

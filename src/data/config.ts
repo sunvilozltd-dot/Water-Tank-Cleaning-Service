@@ -7,8 +7,8 @@ export const BUSINESS_CONFIG = {
   taglineBn: 'ঢাকা ও আশপাশের এলাকায় পেশাদার পানির ট্যাংক ও পাইপলাইন পরিষ্কার সার্ভিস',
   
   // Contact Configuration (Central & Configurable)
-  phone: '01609999612',
-  displayPhone: '01609-999612',
+  phone: '+8809649112288',
+  displayPhone: '09649-112288',
   whatsappNumber: '8801609999612',
   whatsappUrl: 'https://wa.me/8801609999612',
   messengerUrl: 'https://m.me/sunvilozcleancare',
@@ -1071,8 +1071,8 @@ export const FAQS_DATA: FaqItem[] = [
     id: 10,
     question: 'How can I book your service?',
     questionBn: 'কীভাবে বুকিং বা কোটেশন নেওয়া যাবে?',
-    answer: 'Booking is simple! You can fill out our Quick Quote form on this website, call our team directly at 01609-999612, or send us a message on WhatsApp or Messenger. We will confirm your location, tank details, preferred time slot, and provide a transparent quote.',
-    answerBn: 'খুব সহজ! ওয়েবসাইটের কোটেশন বাটনে চাপুন, অথবা সরাসরি 01609-999612 নম্বরে কল বা হোয়াটসঅ্যাপ করুন। আপনার ঠিকানা ও ট্যাংকের বিবরণ দিলে তৎক্ষণাৎ শিডিউল ও কোটেশন দেওয়া হবে।',
+    answer: 'Booking is simple! You can fill out our Quick Quote form on this website, call our hotline directly at 09649-112288, or send us a message on WhatsApp (01609-999612) or Messenger. We will confirm your location, tank details, preferred time slot, and provide a transparent quote.',
+    answerBn: 'খুব সহজ! ওয়েবসাইটের কোটেশন বাটনে চাপুন, অথবা সরাসরি হটলাইন 09649-112288 নম্বরে কল করুন বা 01609-999612 নম্বরে হোয়াটসঅ্যাপ করুন। আপনার ঠিকানা ও ট্যাংকের বিবরণ দিলে দ্রুত শিডিউল ও কোটেশন দেওয়া হবে।',
     category: 'Booking'
   }
 ];

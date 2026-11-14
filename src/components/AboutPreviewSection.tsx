@@ -123,14 +123,18 @@ export const AboutPreviewSection: React.FC<AboutPreviewSectionProps> = ({
             {/* CTA Buttons */}
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               {/* Primary CTA: Fresh Teal #0D9488 */}
-              <button
-                type="button"
-                onClick={handleGoServices}
+              <a
+                href="/services"
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  handleGoServices();
+                }}
                 className="min-h-[48px] px-6 py-3 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] active:scale-95 text-white font-bold text-sm tracking-wide shadow-md shadow-[#0D9488]/20 transition-all flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#0D9488]"
               >
                 <span>{lang === 'bn' ? 'আমাদের সকল সেবা দেখুন' : 'Explore All Services'}</span>
                 <ArrowRight className="w-4 h-4 text-white" aria-hidden="true" />
-              </button>
+              </a>
 
               {/* Secondary CTA: WhatsApp Green #25D366 */}
               <a

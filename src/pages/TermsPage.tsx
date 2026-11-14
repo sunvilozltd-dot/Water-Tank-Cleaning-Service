@@ -14,8 +14,7 @@ export const TermsPage: React.FC<TermsPageProps> = ({ onNavigate }) => {
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-10 px-4 sm:px-6 max-w-4xl mx-auto space-y-8">
       <SeoHead
-        title={lang === 'bn' ? 'শর্তাবলী | সানভিলোজ ক্লিন কেয়ার' : 'Terms & Conditions - Sunviloz Clean Care Dhaka'}
-        description="Terms and conditions for water tank cleaning services provided by Sunviloz Clean Care in Dhaka."
+        canonicalPath="/terms"
         canonicalUrl="https://sunvilozcleancare.com/terms"
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'শর্তাবলী' : 'Terms & Conditions', href: '/terms' }]} />

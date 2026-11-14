@@ -1,16 +1,24 @@
-import { BUSINESS_CONFIG } from '../data/config';
+import { BUSINESS_CONFIG, FAQS_DATA } from '../data/config';
 import { PROBLEM_QA_ITEMS } from '../data/problemQaData';
+import { INITIAL_SERVICES_FAQS } from '../utils/servicesFaqStore';
 import {
   LiveSeoDataset,
   getCanonicalBaseUrl,
   isSliceAvailable
 } from './siteDataFetcher';
 import { escapeAttr, safeJsonForHtmlScript } from './safeSerialize';
+import {
+  resolveAuthoritativeHotline,
+  resolveAuthoritativeHotlineDisplay
+} from './seoResolver';
+import { buildCoreRouteDefaults, resolveRouteMetadata } from './sharedRouteMetadata';
 
 export interface ResolvedSeoRoute {
   path: string;
   title: string;
   description: string;
+  ogTitle?: string;
+  ogDescription?: string;
   h1: string;
   summary: string;
   features?: string[];
@@ -45,6 +53,7 @@ const DEFAULT_LOGO_URL =
 const STATIC_REDIRECTS: Record<string, { destination: string; statusCode: 301 | 302 }> = {
   '/water-tank-cleaning-service': { destination: '/services/water-tank-cleaning', statusCode: 301 },
   '/pipeline-cleaning-service': { destination: '/services/pipeline-cleaning', statusCode: 301 },
+  '/services/water-pipeline-cleaning': { destination: '/services/pipeline-cleaning', statusCode: 301 },
   '/services/pipe-line-cleaning': { destination: '/services/pipeline-cleaning', statusCode: 301 },
   '/services/underground-tank-cleaning': { destination: '/services/underground-water-tank-cleaning', statusCode: 301 },
   '/services/overhead-water-tank-cleaning': { destination: '/services/overhead-tank-cleaning', statusCode: 301 },
@@ -84,262 +93,147 @@ function resolveAbsoluteImageUrl(rawUrl: string | undefined, baseUrl: string): s
 
 export function buildAllRoutes(dataset: LiveSeoDataset): ResolvedSeoRoute[] {
   const seoCfg = dataset.siteConfig?.seo;
-  const overrides = seoCfg?.pageSeoOverrides || {};
   const globalOgImage = seoCfg?.socialOgImage || DEFAULT_LOGO_URL;
-  const phoneDisplay = dataset.siteConfig?.business?.phone || BUSINESS_CONFIG.phone;
+  const phoneDisplay = resolveAuthoritativeHotlineDisplay(
+    dataset.siteConfig?.business?.displayPhone,
+    dataset.siteConfig?.business?.phone
+  );
+  const coreDefaults = buildCoreRouteDefaults(phoneDisplay);
 
   const problemFaqs = PROBLEM_QA_ITEMS.map(item => ({
     question: item.questionBn,
     answer: item.directAnswerBn
   }));
 
+  const rawServicesFaqs =
+    dataset.status?.configured && isSliceAvailable(dataset.status, 'servicesFaqs')
+      ? dataset.servicesFaqs || []
+      : INITIAL_SERVICES_FAQS;
+
+  const homeVisibleFaqs = [...rawServicesFaqs]
+    .filter(
+      f =>
+        (f.category === 'water-tank-cleaning' || f.category === 'pipeline-cleaning') &&
+        f.isActive !== false
+    )
+    .sort((a, b) => (a.order ?? 1) - (b.order ?? 1))
+    .map(f => ({
+      question: f.questionBn || f.questionEn,
+      answer: f.answerBn || f.answerEn
+    }))
+    .filter(item => Boolean(item.question && item.answer));
+
+  const siteFaqList =
+    Array.isArray(dataset.siteConfig?.faqs) && dataset.siteConfig.faqs.length > 0
+      ? dataset.siteConfig.faqs
+      : FAQS_DATA;
+
+  const fullFaqHubItems = [
+    ...problemFaqs,
+    ...siteFaqList.map(f => ({
+      question: f.questionBn || f.question,
+      answer: f.answerBn || f.answer
+    }))
+  ];
+
+  const makeCoreRoute = (
+    path: string,
+    extra: Partial<ResolvedSeoRoute> = {}
+  ): ResolvedSeoRoute => {
+    const def = coreDefaults[path];
+    return {
+      path,
+      title: def.title,
+      description: def.description,
+      h1: def.h1,
+      summary: def.summary,
+      breadcrumbs: def.breadcrumbs,
+      serviceType: def.serviceType,
+      priority: def.priority,
+      changefreq: def.changefreq,
+      ...extra
+    };
+  };
+
   const routes: ResolvedSeoRoute[] = [
-    {
-      path: '/',
-      title: `Water Tank Cleaning Service in Dhaka, Narayanganj, Gazipur & Savar | SUNVILOZ CLEAN CARE`,
-      description: `পানির ট্যাংক পরিষ্কার ও ওয়াটার পাইপলাইন ক্লিনিং সার্ভিস—ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভারে ওভারহেড, আন্ডারগ্রাউন্ড রিজার্ভ ট্যাংক ও পাইপলাইন পরিষ্কার। কল করুন: ${phoneDisplay}।`,
+    makeCoreRoute('/', {
       h1:
         dataset.siteConfig?.hero?.headingBn ||
-        'ঢাকায় প্রফেশনাল ওয়াটার ট্যাংক ও পাইপলাইন পরিষ্কার সার্ভিস — Water Tank Cleaning Service in Dhaka',
+        coreDefaults['/'].h1,
       summary:
         dataset.siteConfig?.hero?.subheadingBn ||
-        'ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভার জুড়ে আবাসিক ভবন, অ্যাপার্টমেন্ট ও বাণিজ্যিক স্থাপনায় ছাদের ওভারহেড ট্যাংক, আন্ডারগ্রাউন্ড রিজার্ভার ও পানির পাইপলাইন আধুনিক মেকানাইজড রোটারি ওয়াটার জেট এবং ফুড-গ্রেড স্যানিটাইজারে পরিষ্কার সেবা।',
+        coreDefaults['/'].summary,
       features: [
         'আন্ডারগ্রাউন্ড রিজার্ভ ও ওভারহেড পানির ট্যাংক পরিষ্কার সার্ভিস (Water Tank Cleaning Service)',
         'হাইড্রো-পালস প্রেসারাইজড ওয়াটার পাইপলাইন ফ্লাশিং — দেয়াল বা টাইলস না ভেঙে',
         'হাই-প্রেসার রোটারি ওয়াটার জেট ও সাবমারসিবল স্লাজ পাম্পে কাদা-শ্যাওলা অপসারণ',
         'ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভার জুড়ে নির্ধারিত শিডিউলে মোবাইল টিম সার্ভিস'
       ],
-      faqs: problemFaqs.slice(0, 6),
-      breadcrumbs: [{ name: 'Home', path: '/' }],
-      lastmod: dataset.homepageRevision?.publishedAt || dataset.siteConfigUpdatedAt || null,
-      priority: 1.0,
-      changefreq: 'daily'
-    },
-    {
-      path: '/services/water-tank-cleaning',
-      title: 'Water Tank Cleaning Service in Dhaka | Overhead & Underground Tank Wash | SUNVILOZ CLEAN CARE',
-      description: `পানির ট্যাংক পরিষ্কার সার্ভিস ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভারে। ওভারহেড PVC/RCC এবং আন্ডারগ্রাউন্ড রিজার্ভ ট্যাংক মেকানাইজড জেট ওয়াশ ও স্যানিটাইজিং। কল: ${phoneDisplay}।`,
-      h1: 'পানির ট্যাংক পরিষ্কার সার্ভিস (Water Tank Cleaning Service in Dhaka)',
-      summary:
-        'বাসাবাড়ি, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের ওভারহেড ও আন্ডারগ্রাউন্ড পানির রিজার্ভ ট্যাংকের কাদা, বালু, শ্যাওলা ও জীবাণু মেকানাইজড রোটারি জেট ও ফুড-গ্রেড স্যানিটাইজারের মাধ্যমে পরিষ্কার সেবা।',
+      faqs: homeVisibleFaqs,
+      lastmod: dataset.homepageRevision?.publishedAt || dataset.siteConfigUpdatedAt || null
+    }),
+    makeCoreRoute('/services/water-tank-cleaning', {
       faqs: problemFaqs.slice(0, 4),
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'Services', path: '/services' },
-        { name: 'Water Tank Cleaning', path: '/services/water-tank-cleaning' }
-      ],
-      serviceType: 'Water Tank Cleaning Service',
-      lastmod: dataset.siteConfigUpdatedAt || null,
-      priority: 0.95,
-      changefreq: 'weekly'
-    },
-    {
-      path: '/services/pipeline-cleaning',
-      title: 'Water Pipeline Cleaning Service in Dhaka | পানির পাইপলাইন পরিষ্কার | SUNVILOZ CLEAN CARE',
-      description: `দেয়াল বা টাইলস না ভেঙে পানির পাইপলাইন পরিষ্কার ও হাইড্রো-পালস ফ্লাশিং সার্ভিস ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভারে। আয়রন ও মরিচা দূর করতে কল করুন: ${phoneDisplay}।`,
-      h1: 'পানির পাইপলাইন পরিষ্কার ও ফ্লাশিং সার্ভিস (Water Pipeline Cleaning Service in Dhaka)',
-      summary:
-        'বাড়ির ভেতরের পানির লাইনে জমে থাকা আয়রন, মরিচা ও বায়ো-স্লাজ দেয়াল বা টাইলস না ভেঙে হাইড্রো-পালস প্রেসারাইজড ফ্লাশিংয়ের মাধ্যমে পরিষ্কার।',
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'Services', path: '/services' },
-        { name: 'Pipeline Cleaning', path: '/services/pipeline-cleaning' }
-      ],
-      serviceType: 'Water Pipeline Cleaning Service',
-      lastmod: dataset.siteConfigUpdatedAt || null,
-      priority: 0.9,
-      changefreq: 'weekly'
-    },
-    {
-      path: '/services/overhead-tank-cleaning',
-      title: 'Overhead Water Tank Cleaning Service in Dhaka | ছাদের পানির ট্যাংক পরিষ্কার | SUNVILOZ CLEAN CARE',
-      description: `ছাদের PVC ও RCC ওভারহেড পানির ট্যাংক পরিষ্কার সার্ভিস ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভারে। শ্যাওলা, বালু ও দুর্গন্ধ দূর করতে WhatsApp বা কল: ${phoneDisplay}।`,
-      h1: 'ওভারহেড ও ছাদের পানির ট্যাংক পরিষ্কার সার্ভিস (Overhead Water Tank Cleaning Service)',
-      summary:
-        'ছাদের পিভিসি ও আরসিসি ট্যাংকের রোদজনিত সবুজ শ্যাওলা, তলদেশের পলি ও দুর্গন্ধ হাই-প্রেসার রোটারি ওয়াটার জেটে পরিষ্কার।',
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'Services', path: '/services' },
-        { name: 'Overhead Tank Cleaning', path: '/services/overhead-tank-cleaning' }
-      ],
-      serviceType: 'Overhead Water Tank Cleaning Service',
-      lastmod: dataset.siteConfigUpdatedAt || null,
-      priority: 0.9,
-      changefreq: 'weekly'
-    },
-    {
-      path: '/services/underground-water-tank-cleaning',
-      title: 'Underground & Reserve Water Tank Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE',
-      description: `আন্ডারগ্রাউন্ড রিজার্ভ পানির ট্যাংক পরিষ্কার সার্ভিস ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভারে। হেভি স্লাজ পাম্প ও রোটারি জেট ওয়াশ। কল: ${phoneDisplay}।`,
-      h1: 'আন্ডারগ্রাউন্ড ও রিজার্ভ পানির ট্যাংক পরিষ্কার সার্ভিস (Underground & Reserve Tank Cleaning Service)',
-      summary:
-        'ভূগর্ভস্থ আরসিসি রিজার্ভার ও রিজার্ভ ট্যাংকের তলদেশের ভারী কাদা, পলি ও দুর্গন্ধ ভ্যাকুমিং, রোটারি প্রেশার ওয়াশ ও ফুড-গ্রেড স্যানিটাইজেশন।',
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'Services', path: '/services' },
-        { name: 'Underground Tank Cleaning', path: '/services/underground-water-tank-cleaning' }
-      ],
-      serviceType: 'Underground Water Tank Cleaning Service',
-      lastmod: dataset.siteConfigUpdatedAt || null,
-      priority: 0.9,
-      changefreq: 'weekly'
-    },
-    {
-      path: '/services',
-      title: 'Water Tank & Pipeline Cleaning Services | SUNVILOZ CLEAN CARE',
-      description: `ওভারহেড ট্যাংক, আন্ডারগ্রাউন্ড রিজার্ভার ও পানির পাইপলাইন পরিষ্কারের সম্পূর্ণ সার্ভিস তালিকা — ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভার। ${phoneDisplay}।`,
-      h1: 'সানভিলোজ ক্লিন কেয়ারের পানির ট্যাংক ও পাইপলাইন পরিষ্কার সেবাসমূহ',
-      summary:
-        'আবাসিক অ্যাপার্টমেন্ট, বাড়ি, অফিস ও প্রতিষ্ঠানের জন্য নিরাপদ পানির ট্যাংক ও পাইপলাইন রক্ষণাবেক্ষণ ও পরিষ্কার সেবা।',
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'Services', path: '/services' }
-      ],
-      lastmod: dataset.services[0]?.updatedAt || dataset.siteConfigUpdatedAt || null,
-      priority: 0.9,
-      changefreq: 'weekly'
-    },
-    {
-      path: '/service-areas',
-      title: 'Service Areas — Dhaka, Narayanganj, Gazipur & Savar | SUNVILOZ CLEAN CARE',
-      description: `ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভারের সকল আবাসিক ও বাণিজ্যিক এলাকায় পানির ট্যাংক ও পাইপলাইন পরিষ্কার সার্ভিস। কল: ${phoneDisplay}।`,
-      h1: 'আমাদের সার্ভিস এরিয়া — ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভার',
-      summary:
-        'ঢাকা শহরের প্রধান আবাসিক জোন ছাড়াও নারায়ণগঞ্জ, গাজীপুর ও সাভারে আমাদের মোবাইল টিম নির্ধারিত শিডিউলে ওয়াটার ট্যাংক ও পাইপলাইন পরিষ্কার সেবা দিচ্ছে।',
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'Service Areas', path: '/service-areas' }
-      ],
-      lastmod: dataset.areas[0]?.updatedAt || dataset.zones[0]?.updatedAt || null,
-      priority: 0.9,
-      changefreq: 'weekly'
-    },
-    {
-      path: '/get-quote',
-      title: 'Water Tank Cleaning Cost & Free Quotation | SUNVILOZ CLEAN CARE',
-      description: `আপনার ওভারহেড বা আন্ডারগ্রাউন্ড পানির ট্যাংক ও পাইপলাইন পরিষ্কারের আনুমানিক খরচ জানুন ও দ্রুত কোটেশন নিন। WhatsApp বা কল: ${phoneDisplay}।`,
-      h1: 'পানির ট্যাংক ও পাইপলাইন পরিষ্কারের ফ্রি কোটেশন',
-      summary:
-        'ট্যাংকের ধরন, ধারণক্ষমতা ও এলাকা নির্বাচন করে স্বচ্ছ খরচের ধারণা নিন এবং দ্রুত বুকিং অনুরোধ পাঠান।',
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'Get Quote', path: '/get-quote' }
-      ],
-      lastmod: dataset.siteConfigUpdatedAt || null,
-      priority: 0.9,
-      changefreq: 'weekly'
-    },
-    {
-      path: '/faq',
-      title: 'পানির ট্যাংক ও পাইপলাইনের সমস্যা এবং সমাধান (FAQ & Q&A) | SUNVILOZ CLEAN CARE',
-      description:
-        'পানির ট্যাংকে ময়লা, দুর্গন্ধ, সবুজ শ্যাওলা, পোকা ও পাইপলাইনে আয়রন বা কম প্রেশারের বাস্তব কারণ এবং সমাধান সম্পর্কে সরাসরি প্রশ্নোত্তর।',
-      h1: 'পানির ট্যাংক ও পাইপলাইনের সাধারণ সমস্যা এবং সমাধান (FAQ & AI Overview Q&A)',
-      summary:
-        'বাসাবাড়ির রিজার্ভার, ছাদের ট্যাংক ও পাইপলাইনের বাস্তব সমস্যা, পরিষ্কার-বহির্ভূত কারণ ও ব্যবহারিক করণীয়।',
-      faqs: problemFaqs,
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'FAQ', path: '/faq' }
-      ],
-      lastmod: dataset.siteConfigUpdatedAt || null,
-      priority: 0.8,
-      changefreq: 'weekly'
-    },
-    {
-      path: '/portfolio',
-      title: 'Before & After Tank Cleaning Portfolio | SUNVILOZ CLEAN CARE',
-      description:
-        'ঢাকা ও আশপাশের এলাকায় সম্পন্ন ওভারহেড ও আন্ডারগ্রাউন্ড পানির ট্যাংক পরিষ্কার কাজের বাস্তব আগে ও পরের নমুনা দেখুন।',
-      h1: 'সম্পন্ন পানির ট্যাংক পরিষ্কার কাজের নমুনা (Portfolio)',
-      summary: 'আবাসিক ও বাণিজ্যিক ভবনের ট্যাংক থেকে কাদা, শ্যাওলা ও পলি অপসারণের বাস্তব উদাহরণ।',
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'Portfolio', path: '/portfolio' }
-      ],
-      priority: 0.75,
-      changefreq: 'weekly'
-    },
-    {
-      path: '/about',
-      title: 'About Us | SUNVILOZ CLEAN CARE — Water Tank & Pipeline Cleaning Service',
-      description:
-        '২০২০ সাল থেকে ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভারে মেকানাইজড ওয়াটার ট্যাংক ও পাইপলাইন পরিষ্কার সেবা প্রদানকারী প্রতিষ্ঠান SUNVILOZ CLEAN CARE।',
-      h1: 'আমাদের সম্পর্কে — SUNVILOZ CLEAN CARE',
-      summary: 'আবাসিক ও বাণিজ্যিক ভবনের পানি সংরক্ষণ ব্যবস্থা পরিষ্কার ও রক্ষণাবেক্ষণে স্বচ্ছ কোটেশন ও দায়িত্বশীল সেবা।',
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'About Us', path: '/about' }
-      ],
-      priority: 0.8,
-      changefreq: 'monthly'
-    },
-    {
-      path: '/contact',
-      title: `Contact Us | SUNVILOZ CLEAN CARE — Hotline ${phoneDisplay}`,
-      description: `পানির ট্যাংক ও পাইপলাইন পরিষ্কার সার্ভিসের কোটেশন ও বুকিংয়ের জন্য যোগাযোগ করুন। সরাসরি কল বা WhatsApp: ${phoneDisplay}।`,
-      h1: 'আমাদের সাথে যোগাযোগ করুন (Contact & WhatsApp Quote)',
-      summary: 'ঢাকা, নারায়ণগঞ্জ, গাজীপুর ও সাভারের যেকোনো এলাকায় সার্ভিসের জন্য WhatsApp-এ কোটেশন নিন অথবা সরাসরি কল করুন।',
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'Contact', path: '/contact' }
-      ],
-      lastmod: dataset.siteConfigUpdatedAt || null,
-      priority: 0.8,
-      changefreq: 'monthly'
-    },
-    {
-      path: '/blog',
-      title: 'পানির ট্যাংক পরিষ্কার ও রক্ষণাবেক্ষণ গাইড | Blog | SUNVILOZ CLEAN CARE',
-      description:
-        'পানির ট্যাংক ও পাইপলাইন পরিষ্কার রাখার নিয়ম, পানির পলি ও আয়রন সমস্যা এবং মৌসুমভিত্তিক সতর্কতা নিয়ে পরামর্শ।',
-      h1: 'পানির ট্যাংক ও পাইপলাইন পরিষ্কারের ব্যবহারিক গাইড ও প্রবন্ধ',
-      summary: 'ট্যাংক পরিষ্কার ও পানি সংরক্ষণ স্বাস্থ্যবিধি নিয়ে বাস্তবমুখী তথ্য ও পরামর্শ।',
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'Blog', path: '/blog' }
-      ],
-      lastmod: dataset.blogPosts[0]?.updatedAt || dataset.blogPosts[0]?.publishedAt || null,
-      priority: 0.8,
-      changefreq: 'weekly'
-    },
-    {
-      path: '/privacy-policy',
-      title: 'Privacy Policy | SUNVILOZ CLEAN CARE',
-      description: 'Privacy Policy and data handling disclosure for SUNVILOZ CLEAN CARE website visitors and service inquiries.',
-      h1: 'Privacy Policy — SUNVILOZ CLEAN CARE',
-      summary: 'How SUNVILOZ CLEAN CARE collects and protects inquiry contact details and consent preferences.',
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'Privacy Policy', path: '/privacy-policy' }
-      ],
-      priority: 0.4,
-      changefreq: 'monthly'
-    },
-    {
-      path: '/terms',
-      title: 'Terms & Conditions | SUNVILOZ CLEAN CARE',
-      description: 'Service terms, scheduling policy, and scope disclosure for SUNVILOZ CLEAN CARE water tank and pipeline cleaning services.',
-      h1: 'Terms & Conditions — SUNVILOZ CLEAN CARE',
-      summary: 'Service terms, quotation conditions, and customer responsibilities.',
-      breadcrumbs: [
-        { name: 'Home', path: '/' },
-        { name: 'Terms & Conditions', path: '/terms' }
-      ],
-      priority: 0.4,
-      changefreq: 'monthly'
-    }
+      lastmod: dataset.siteConfigUpdatedAt || null
+    }),
+    makeCoreRoute('/services/pipeline-cleaning', {
+      lastmod: dataset.siteConfigUpdatedAt || null
+    }),
+    makeCoreRoute('/services/overhead-tank-cleaning', {
+      lastmod: dataset.siteConfigUpdatedAt || null
+    }),
+    makeCoreRoute('/services/underground-water-tank-cleaning', {
+      lastmod: dataset.siteConfigUpdatedAt || null
+    }),
+    makeCoreRoute('/services', {
+      lastmod: dataset.services[0]?.updatedAt || dataset.siteConfigUpdatedAt || null
+    }),
+    makeCoreRoute('/service-areas', {
+      lastmod: dataset.areas[0]?.updatedAt || dataset.zones[0]?.updatedAt || null
+    }),
+    makeCoreRoute('/get-quote', {
+      lastmod: dataset.siteConfigUpdatedAt || null
+    }),
+    makeCoreRoute('/faq', {
+      faqs: fullFaqHubItems,
+      lastmod: dataset.siteConfigUpdatedAt || null
+    }),
+    makeCoreRoute('/portfolio'),
+    makeCoreRoute('/about'),
+    makeCoreRoute('/contact', {
+      lastmod: dataset.siteConfigUpdatedAt || null
+    }),
+    makeCoreRoute('/blog', {
+      lastmod: dataset.blogPosts[0]?.updatedAt || dataset.blogPosts[0]?.publishedAt || null
+    }),
+    makeCoreRoute('/privacy-policy'),
+    makeCoreRoute('/terms')
   ];
 
   // Dynamic Active Services added/edited in Admin (excluding slugs redirected statically)
   for (const srv of dataset.services) {
-    const routePath = `/services/${srv.slug}`;
-    if (STATIC_REDIRECTS[routePath] || CORE_SERVICE_SLUGS.has(srv.slug)) {
-      // Update lastmod on matching core service route if available
+    const normalizedSlug =
+      srv.slug === 'overhead-water-tank-cleaning'
+        ? 'overhead-tank-cleaning'
+        : srv.slug === 'water-pipeline-cleaning'
+        ? 'pipeline-cleaning'
+        : srv.slug;
+    const routePath = `/services/${normalizedSlug}`;
+    if (STATIC_REDIRECTS[routePath] || CORE_SERVICE_SLUGS.has(normalizedSlug)) {
       const existing = routes.find(r => r.path === routePath);
-      if (existing && (srv.updatedAt || srv.publishedAt)) {
-        existing.lastmod = srv.updatedAt || srv.publishedAt || existing.lastmod;
+      if (existing) {
+        if (srv.metaTitle?.trim()) existing.title = srv.metaTitle.trim();
+        if (srv.metaDesc?.trim()) existing.description = srv.metaDesc.trim();
+        if (srv.image?.trim()) existing.ogImage = srv.image.trim();
+        if (Array.isArray(srv.faqs) && srv.faqs.length > 0) {
+          existing.faqs = srv.faqs.map(f => ({
+            question: f.questionBn || f.question,
+            answer: f.answerBn || f.answer
+          }));
+        }
+        if (srv.updatedAt || srv.publishedAt) {
+          existing.lastmod = srv.updatedAt || srv.publishedAt || existing.lastmod;
+        }
       }
       continue;
     }
@@ -354,6 +248,12 @@ export function buildAllRoutes(dataset: LiveSeoDataset): ResolvedSeoRoute[] {
         `${srv.title} — SUNVILOZ CLEAN CARE`,
       h1: srv.titleBn || srv.title,
       summary: srv.shortDescBn || srv.shortDesc || '',
+      faqs: Array.isArray(srv.faqs) && srv.faqs.length > 0
+        ? srv.faqs.map(f => ({
+            question: f.questionBn || f.question,
+            answer: f.answerBn || f.answer
+          }))
+        : undefined,
       breadcrumbs: [
         { name: 'Home', path: '/' },
         { name: 'Services', path: '/services' },
@@ -383,6 +283,8 @@ export function buildAllRoutes(dataset: LiveSeoDataset): ResolvedSeoRoute[] {
       description:
         content.metaDesc ||
         `Water tank cleaning and pipeline cleaning service in ${area.areaName}. WhatsApp or call ${phoneDisplay}.`,
+      ogTitle: content.ogTitle,
+      ogDescription: content.ogDescription,
       h1: content.titleBn || `${area.areaNameBn} এলাকায় পানির ট্যাংক পরিষ্কার সার্ভিস`,
       summary:
         content.introBn ||
@@ -437,19 +339,32 @@ export function buildAllRoutes(dataset: LiveSeoDataset): ResolvedSeoRoute[] {
     });
   }
 
-  // Apply admin per-route SEO overrides safely
+  // Resolve final route metadata via shared resolver (pageSeoOverrides[routeKey] > entitySeo > routeDefault, zero `/` bleed)
   for (const r of routes) {
-    const ov = overrides[r.path];
-    if (ov) {
-      if (ov.title) r.title = ov.title;
-      if (ov.description) r.description = ov.description;
-      if (ov.ogImage) r.ogImage = ov.ogImage;
-      if (ov.ogImageAlt) r.ogImageAlt = ov.ogImageAlt;
-      if (ov.noIndex) r.noIndex = true;
-    }
-    if (!r.ogImage) {
-      r.ogImage = globalOgImage;
-    }
+    const resolved = resolveRouteMetadata({
+      routeKey: r.path,
+      seoConfig: seoCfg,
+      entitySeo: {
+        title: r.path === '/' ? undefined : r.title,
+        description: r.path === '/' ? undefined : r.description,
+        ogTitle: r.ogTitle,
+        ogDescription: r.ogDescription,
+        ogImage: r.ogImage,
+        ogImageAlt: r.ogImageAlt,
+        noIndex: r.noIndex
+      },
+      routeDefault: coreDefaults[r.path] || {
+        title: r.title,
+        description: r.description
+      }
+    });
+    r.title = resolved.title;
+    r.description = resolved.description;
+    r.ogTitle = resolved.ogTitle;
+    r.ogDescription = resolved.ogDescription;
+    r.ogImage = resolved.ogImage || globalOgImage;
+    r.ogImageAlt = resolved.ogImageAlt;
+    if (resolved.noIndex) r.noIndex = true;
   }
 
   return routes;
@@ -582,8 +497,8 @@ export function resolveRoute(rawPath: string, dataset: LiveSeoDataset): RouteRes
 function renderCrawlableBody(route: ResolvedSeoRoute, dataset: LiveSeoDataset, baseUrl: string): string {
   const isHome = route.path === '/';
   const biz = dataset.siteConfig?.business;
-  const phone = biz?.phone || BUSINESS_CONFIG.phone;
-  const displayPhone = biz?.displayPhone || BUSINESS_CONFIG.displayPhone;
+  const phone = resolveAuthoritativeHotline(biz?.phone);
+  const displayPhone = resolveAuthoritativeHotlineDisplay(biz?.displayPhone, biz?.phone);
   const whatsappUrl = biz?.whatsappUrl || BUSINESS_CONFIG.whatsappUrl;
   const logoUrl = resolveAbsoluteImageUrl(dataset.siteConfig?.images?.logo, baseUrl);
 
@@ -709,29 +624,42 @@ export function renderRouteHtmlFromTemplate(
   const canonicalUrl = `${baseUrl}${route.path === '/' ? '/' : route.path}`;
   const biz = dataset.siteConfig?.business;
   const seoCfg = dataset.siteConfig?.seo;
-  const phone = biz?.phone || BUSINESS_CONFIG.phone;
+  const hotlineE164 = resolveAuthoritativeHotline(biz?.phone);
   const logoUrl = resolveAbsoluteImageUrl(dataset.siteConfig?.images?.logo, baseUrl);
   const resolvedSocialImage = resolveAbsoluteImageUrl(route.ogImage || seoCfg?.socialOgImage, baseUrl);
   const ogAlt = route.ogImageAlt || seoCfg?.ogImageAlt || 'SUNVILOZ CLEAN CARE — Water Tank & Pipeline Cleaning Service';
   const gbpVerified = Boolean(biz?.gbpVerified && biz?.googleBusinessProfileUrl);
   const indexingDisabled = seoCfg?.indexingAllowed === false || route.noIndex;
+  const ogType = route.articleMeta ? 'article' : 'website';
+  const resolvedOgTitle = route.ogTitle || route.title;
+  const resolvedOgDescription = route.ogDescription || route.description;
 
   let html = baseTemplate.replace(/<title>.*?<\/title>/i, `<title>${escapeAttr(route.title)}</title>`);
   html = html.replace(
     /<meta\s+name="description"\s+content=".*?"\s*\/?>/i,
     `<meta name="description" content="${escapeAttr(route.description)}" />`
   );
+  html = html.replace(/<link\s+rel="alternate"\s+hreflang="[^"]*"\s+href="[^"]*"\s*\/?>\s*/gi, '');
+  html = html.replace(/<meta\s+name="robots"\s+content="[^"]*"\s*\/?>\s*/gi, '');
+  if (indexingDisabled) {
+    html = html.replace(/<link\s+rel="canonical"\s+href=".*?"\s*\/?>\s*/i, '');
+  } else {
+    html = html.replace(
+      /<link\s+rel="canonical"\s+href=".*?"\s*\/?>/i,
+      `<link rel="canonical" href="${escapeAttr(canonicalUrl)}" />`
+    );
+  }
   html = html.replace(
-    /<link\s+rel="canonical"\s+href=".*?"\s*\/?>/i,
-    `<link rel="canonical" href="${escapeAttr(canonicalUrl)}" />`
+    /<meta\s+property="og:type"\s+content=".*?"\s*\/?>/i,
+    `<meta property="og:type" content="${ogType}" />`
   );
   html = html.replace(
     /<meta\s+property="og:title"\s+content=".*?"\s*\/?>/i,
-    `<meta property="og:title" content="${escapeAttr(route.title)}" />`
+    `<meta property="og:title" content="${escapeAttr(resolvedOgTitle)}" />`
   );
   html = html.replace(
     /<meta\s+property="og:description"\s+content=".*?"\s*\/?>/i,
-    `<meta property="og:description" content="${escapeAttr(route.description)}" />`
+    `<meta property="og:description" content="${escapeAttr(resolvedOgDescription)}" />`
   );
   html = html.replace(
     /<meta\s+property="og:url"\s+content=".*?"\s*\/?>/i,
@@ -747,11 +675,11 @@ export function renderRouteHtmlFromTemplate(
   );
   html = html.replace(
     /<meta\s+name="twitter:title"\s+content=".*?"\s*\/?>/i,
-    `<meta name="twitter:title" content="${escapeAttr(route.title)}" />`
+    `<meta name="twitter:title" content="${escapeAttr(resolvedOgTitle)}" />`
   );
   html = html.replace(
     /<meta\s+name="twitter:description"\s+content=".*?"\s*\/?>/i,
-    `<meta name="twitter:description" content="${escapeAttr(route.description)}" />`
+    `<meta name="twitter:description" content="${escapeAttr(resolvedOgDescription)}" />`
   );
   html = html.replace(
     /<meta\s+name="twitter:image"\s+content=".*?"\s*\/?>/i,
@@ -783,7 +711,7 @@ export function renderRouteHtmlFromTemplate(
     '@id': `${baseUrl}/#localbusiness`,
     name: biz?.name || 'SUNVILOZ CLEAN CARE',
     url: baseUrl,
-    telephone: `+88${phone}`,
+    telephone: hotlineE164,
     email: biz?.email || BUSINESS_CONFIG.email,
     image: logoUrl,
     logo: logoUrl,
@@ -801,50 +729,62 @@ export function renderRouteHtmlFromTemplate(
     localBusinessSchema.hasMap = biz.googleBusinessProfileUrl;
   }
 
-  const schemas: any[] = [localBusinessSchema];
+  const schemaEntries: { id: string; data: Record<string, any> }[] = [
+    { id: 'jsonld-local-business', data: localBusinessSchema }
+  ];
 
   if (route.breadcrumbs && route.breadcrumbs.length > 0) {
-    schemas.push({
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: route.breadcrumbs.map((bc, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        name: bc.name,
-        item: `${baseUrl}${bc.path.startsWith('/') ? bc.path : `/${bc.path}`}`
-      }))
+    schemaEntries.push({
+      id: 'jsonld-breadcrumbs',
+      data: {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: route.breadcrumbs.map((bc, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: bc.name,
+          item: `${baseUrl}${bc.path.startsWith('/') ? bc.path : `/${bc.path}`}`
+        }))
+      }
     });
   }
 
   if (route.serviceType) {
-    schemas.push({
-      '@context': 'https://schema.org',
-      '@type': 'Service',
-      name: route.serviceType,
-      serviceType: route.serviceType,
-      description: route.summary,
-      provider: {
-        '@type': 'HomeAndConstructionBusiness',
-        name: biz?.name || 'SUNVILOZ CLEAN CARE',
-        telephone: `+88${phone}`,
-        url: baseUrl
-      },
-      areaServed: CORE_CITIES.map(c => ({ '@type': 'City', name: c }))
+    schemaEntries.push({
+      id: 'jsonld-service',
+      data: {
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        name: route.serviceType,
+        serviceType: route.serviceType,
+        description: route.summary,
+        provider: {
+          '@type': 'HomeAndConstructionBusiness',
+          '@id': `${baseUrl}/#localbusiness`,
+          name: biz?.name || 'SUNVILOZ CLEAN CARE',
+          telephone: hotlineE164,
+          url: baseUrl
+        },
+        areaServed: CORE_CITIES.map(c => ({ '@type': 'City', name: c }))
+      }
     });
   }
 
   if (route.faqs && route.faqs.length > 0) {
-    schemas.push({
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: route.faqs.map(faq => ({
-        '@type': 'Question',
-        name: faq.question,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: faq.answer
-        }
-      }))
+    schemaEntries.push({
+      id: 'jsonld-faq',
+      data: {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: route.faqs.map(faq => ({
+          '@type': 'Question',
+          name: faq.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: faq.answer
+          }
+        }))
+      }
     });
   }
 
@@ -879,22 +819,30 @@ export function renderRouteHtmlFromTemplate(
     if (route.articleMeta.updatedAt || route.articleMeta.publishedAt) {
       blogPosting.dateModified = route.articleMeta.updatedAt || route.articleMeta.publishedAt;
     }
-    schemas.push(blogPosting);
+    schemaEntries.push({ id: 'jsonld-blog-posting', data: blogPosting });
   }
 
-  const schemasMarkup = schemas
-    .map(
-      s =>
-        `\n    <script type="application/ld+json">\n    ${safeJsonForHtmlScript(s, true).replace(/\n/g, '\n    ')}\n    </script>`
-    )
-    .join('\n');
+  // Strip secondary managed jsonld-* blocks (preserve unrelated third-party scripts) before injecting current route schemas
+  html = html.replace(
+    /<script\s+id="jsonld-(?:breadcrumbs|service|faq|blog-posting)"[^>]*>[\s\S]*?<\/script>\s*/gi,
+    ''
+  );
+
+  const schemasMarkup = indexingDisabled
+    ? ''
+    : schemaEntries
+        .map(
+          entry =>
+            `\n    <script id="${entry.id}" type="application/ld+json">\n    ${safeJsonForHtmlScript(entry.data, true).replace(/\n/g, '\n    ')}\n    </script>`
+        )
+        .join('\n');
 
   html = html.replace(/<script\s+id="jsonld-local-business"[^>]*>[\s\S]*?<\/script>/i, schemasMarkup);
 
   const rootBody = renderedRootHtmlOverride || renderCrawlableBody(route, dataset, baseUrl);
   html = html.replace(/<div\s+id="root">[\s\S]*?<\/div>/i, `<div id="root">${rootBody}</div>`);
 
-  // Safe hydration snapshots using safeJsonForHtmlScript (prevents </script> and XSS breakout)
+  // Safe public hydration snapshots using safeJsonForHtmlScript (prevents </script> breakout and strips secrets)
   const snapshotScripts: string[] = [];
   if (dataset.homepageSections.length > 0) {
     snapshotScripts.push(
@@ -904,6 +852,31 @@ export function renderRouteHtmlFromTemplate(
   if (dataset.imageRegistry) {
     snapshotScripts.push(
       `window.__INITIAL_IMAGE_REGISTRY__ = ${safeJsonForHtmlScript(dataset.imageRegistry)};`
+    );
+  }
+  if (dataset.status?.configured && isSliceAvailable(dataset.status, 'servicesFaqs')) {
+    snapshotScripts.push(
+      `window.__INITIAL_SERVICES_FAQS__ = ${safeJsonForHtmlScript(dataset.servicesFaqs)};`
+    );
+  }
+  if (dataset.status?.configured && isSliceAvailable(dataset.status, 'services')) {
+    snapshotScripts.push(
+      `window.__INITIAL_SERVICES__ = ${safeJsonForHtmlScript(dataset.services)};`
+    );
+  }
+  if (dataset.siteConfig) {
+    const publicSiteConfig: Record<string, any> = {
+      business: dataset.siteConfig.business || undefined,
+      announcement: dataset.siteConfig.announcement || undefined,
+      hero: dataset.siteConfig.hero || undefined,
+      faqs: dataset.siteConfig.faqs || undefined,
+      images: dataset.siteConfig.images || undefined,
+      seo: dataset.siteConfig.seo
+        ? { ...dataset.siteConfig.seo, indexNowKey: '' }
+        : undefined
+    };
+    snapshotScripts.push(
+      `window.__INITIAL_SITE_CONFIG__ = ${safeJsonForHtmlScript(publicSiteConfig)};`
     );
   }
 
@@ -930,7 +903,13 @@ export function render404HtmlFromTemplate(
     /<meta\s+name="description"\s+content=".*?"\s*\/?>/i,
     '<meta name="description" content="Requested page could not be found on SUNVILOZ CLEAN CARE." />'
   );
-  html = html.replace(/<link\s+rel="canonical"\s+href=".*?"\s*\/?>/i, '');
+  html = html.replace(/<link\s+rel="canonical"\s+href=".*?"\s*\/?>\s*/i, '');
+  html = html.replace(/<link\s+rel="alternate"\s+hreflang="[^"]*"\s+href="[^"]*"\s*\/?>\s*/gi, '');
+  html = html.replace(/<meta\s+name="robots"\s+content="[^"]*"\s*\/?>\s*/gi, '');
+  html = html.replace(
+    /<script\s+id="jsonld-(?:local-business|breadcrumbs|service|faq|blog-posting)"[^>]*>[\s\S]*?<\/script>\s*/gi,
+    ''
+  );
   html = html.replace('</head>', '  <meta name="robots" content="noindex, nofollow" />\n</head>');
 
   const fallback404Body = `
@@ -958,8 +937,11 @@ export function render503HtmlFromTemplate(
 ): string {
   const baseUrl = getCanonicalBaseUrl();
   const logoUrl = resolveAbsoluteImageUrl(dataset.siteConfig?.images?.logo, baseUrl);
-  const phone = dataset.siteConfig?.business?.phone || BUSINESS_CONFIG.phone;
-  const displayPhone = dataset.siteConfig?.business?.displayPhone || BUSINESS_CONFIG.displayPhone;
+  const phone = resolveAuthoritativeHotline(dataset.siteConfig?.business?.phone);
+  const displayPhone = resolveAuthoritativeHotlineDisplay(
+    dataset.siteConfig?.business?.displayPhone,
+    dataset.siteConfig?.business?.phone
+  );
 
   let html = baseTemplate.replace(
     /<title>.*?<\/title>/i,
@@ -969,7 +951,13 @@ export function render503HtmlFromTemplate(
     /<meta\s+name="description"\s+content=".*?"\s*\/?>/i,
     '<meta name="description" content="This page is temporarily unavailable while reconnecting to the content database. Please retry shortly." />'
   );
-  html = html.replace(/<link\s+rel="canonical"\s+href=".*?"\s*\/?>/i, '');
+  html = html.replace(/<link\s+rel="canonical"\s+href=".*?"\s*\/?>\s*/i, '');
+  html = html.replace(/<link\s+rel="alternate"\s+hreflang="[^"]*"\s+href="[^"]*"\s*\/?>\s*/gi, '');
+  html = html.replace(/<meta\s+name="robots"\s+content="[^"]*"\s*\/?>\s*/gi, '');
+  html = html.replace(
+    /<script\s+id="jsonld-(?:local-business|breadcrumbs|service|faq|blog-posting)"[^>]*>[\s\S]*?<\/script>\s*/gi,
+    ''
+  );
   html = html.replace('</head>', '  <meta name="robots" content="noindex, nofollow" />\n</head>');
 
   const fallback503Body = `

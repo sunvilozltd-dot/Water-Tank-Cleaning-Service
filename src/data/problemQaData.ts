@@ -297,7 +297,7 @@ export const PROBLEM_QA_ITEMS: ProblemQaItem[] = [
     keyPointsEn: [
       'Tank count, capacity, or floors/flats help refine the quote quickly (optional)',
       'No email or account sign-in is required to submit a quotation request',
-      'You can also send a photo directly via WhatsApp or call 01609-999612'
+      'Send a photo directly via WhatsApp (01609-999612) or call Hotline 09649-112288'
     ],
     nonCleaningCausesBn:
       'জরুরি পানি বন্ধের সময় নির্ধারণ করতে ভবনের কেয়ারটেকার বা ম্যানেজারের সাথে আগে থেকেই ২–৩ ঘণ্টার উইন্ডো সমন্বয় করে নেওয়া সুবিধাজনক।',

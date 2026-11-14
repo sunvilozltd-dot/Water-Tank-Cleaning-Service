@@ -67,6 +67,11 @@
       "headers": { "Location": "/services/pipeline-cleaning" }
     },
     {
+      "src": "^/services/water-pipeline-cleaning/?$",
+      "status": 301,
+      "headers": { "Location": "/services/pipeline-cleaning" }
+    },
+    {
       "src": "^/services/underground-tank-cleaning/?$",
       "status": 301,
       "headers": { "Location": "/services/underground-water-tank-cleaning" }

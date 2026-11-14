@@ -349,7 +349,7 @@ export const LOCATIONS_DATA: LocationPageData[] = [
     faqs: [
       {
         question: 'How quickly can your cleaning team arrive at our Dhaka property?',
-        answer: 'We provide both same-day dispatch and scheduled appointments across Dhaka. Calling our hotline at 01609-999612 gets rapid confirmation.'
+        answer: 'We provide both same-day dispatch and scheduled appointments across Dhaka. Calling our hotline at 09649-112288 or messaging WhatsApp (01609-999612) gets rapid confirmation.'
       },
       {
         question: 'Do you bring your own water pump and power equipment?',
@@ -452,7 +452,7 @@ export const LOCATIONS_DATA: LocationPageData[] = [
     faqs: [
       {
         question: 'How long does a typical tank cleaning take in Narayanganj?',
-        answer: 'A standard residential overhead tank takes 45 to 60 minutes. An underground reservoir takes 1.5 to 2.5 hours depending on capacity and sediment thickness.'
+        answer: 'A standard residential overhead tank takes 1.5 to 2.5 hours. An underground reservoir takes 3 to 5 hours depending on capacity, sludge thickness, and pumping requirements.'
       },
       {
         question: 'Is the disinfectant safe for domestic cooking and bathing?',

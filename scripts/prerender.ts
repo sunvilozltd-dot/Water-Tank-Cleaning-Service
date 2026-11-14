@@ -4,13 +4,23 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import App, { AppProps, SsrPageComponents } from '../src/App';
 import { PROBLEM_QA_ITEMS } from '../src/data/problemQaData';
-import { fetchLiveSeoDataset, getCanonicalBaseUrl } from '../src/seo/siteDataFetcher';
+import {
+  CRITICAL_PRERENDER_SLICES,
+  fetchLiveSeoDataset,
+  getCanonicalBaseUrl,
+  hasUnrecoveredCriticalFailure,
+  isSliceAvailable
+} from '../src/seo/siteDataFetcher';
 import {
   buildAllRoutes,
   renderRouteHtmlFromTemplate,
   render404HtmlFromTemplate
 } from '../src/seo/routeMetadata';
 import { buildSitemapXml, buildLlmsTxt } from '../src/seo/seoGenerators';
+import {
+  SsrHomepageSectionComponents,
+  SsrHomepageSectionsProvider
+} from '../src/context/SsrHomepageSectionsContext';
 
 // Synchronous page imports specifically for Node SSR prerendering (bypasses Suspense)
 import { AboutPage } from '../src/pages/AboutPage';
@@ -30,6 +40,20 @@ import { ServiceDetailPage } from '../src/pages/ServiceDetailPage';
 import { GetQuotePage } from '../src/pages/GetQuotePage';
 import { NotFoundPage } from '../src/pages/NotFoundPage';
 
+// Synchronous below-the-fold homepage sections specifically for Node SSR prerendering
+import { AboutPreviewSection } from '../src/components/AboutPreviewSection';
+import { WhyChooseUsSection } from '../src/components/WhyChooseUsSection';
+import { AllServicesFaqSection } from '../src/components/AllServicesFaqSection';
+import { TrustSection } from '../src/components/TrustSection';
+import { ProjectVideoSliderSection } from '../src/components/ProjectVideoSliderSection';
+import { ReviewsSection } from '../src/components/ReviewsSection';
+import { SmartQuoteWizard } from '../src/components/SmartQuoteWizard';
+import { ServiceAreaSection } from '../src/components/ServiceAreaSection';
+import { BlogSection } from '../src/components/BlogSection';
+import { OurWorkVideosSection } from '../src/components/OurWorkVideosSection';
+import { FinalCtaSection } from '../src/components/FinalCtaSection';
+import { CustomSectionRenderer } from '../src/components/CustomSectionRenderer';
+
 const ssrComponents: SsrPageComponents = {
   AboutPage,
   ServicesPage,
@@ -47,6 +71,21 @@ const ssrComponents: SsrPageComponents = {
   ServiceDetailPage,
   GetQuotePage,
   NotFoundPage
+};
+
+const ssrHomepageSections: SsrHomepageSectionComponents = {
+  AboutPreviewSection,
+  WhyChooseUsSection,
+  AllServicesFaqSection,
+  TrustSection,
+  ProjectVideoSliderSection,
+  ReviewsSection,
+  SmartQuoteWizard,
+  ServiceAreaSection,
+  BlogSection,
+  OurWorkVideosSection,
+  FinalCtaSection,
+  CustomSectionRenderer
 };
 
 async function runPrerender() {
@@ -88,20 +127,67 @@ async function runPrerender() {
 
   if (dataset.status.errors.length > 0) {
     console.warn('[SEO Prerender] Database fetch notices:', dataset.status.errors.join(' | '));
-    if (isStrictProd && !dataset.status.zonesOk && !dataset.status.servicesOk) {
-      console.error('[SEO Prerender Error] Critical Supabase queries failed in strict production mode.');
-      process.exit(1);
-    }
   }
 
-  // Expose live snapshots globally for synchronous React SSR pass
-  (global as any).__INITIAL_IMAGE_REGISTRY__ = dataset.imageRegistry;
-  (global as any).__INITIAL_HOMEPAGE_SECTIONS__ = dataset.homepageSections;
-  (global as any).__HOMEPAGE_REVISION__ = dataset.homepageRevision;
-  (global as any).window = (global as any).window || {};
-  (global as any).window.__INITIAL_IMAGE_REGISTRY__ = dataset.imageRegistry;
-  (global as any).window.__INITIAL_HOMEPAGE_SECTIONS__ = dataset.homepageSections;
-  (global as any).window.__HOMEPAGE_REVISION__ = dataset.homepageRevision;
+  if (isStrictProd && hasUnrecoveredCriticalFailure(dataset.status, CRITICAL_PRERENDER_SLICES)) {
+    console.error(
+      '[SEO Prerender Error] Critical Supabase slices failed without LKG fallback in strict production mode:',
+      JSON.stringify(dataset.status.sliceDetails)
+    );
+    process.exit(1);
+  }
+
+  // Expose live snapshots globally for synchronous React SSR pass (never leak secrets such as indexNowKey)
+  const publicSiteConfigSnapshot = dataset.siteConfig
+    ? {
+        business: dataset.siteConfig.business || undefined,
+        announcement: dataset.siteConfig.announcement || undefined,
+        hero: dataset.siteConfig.hero || undefined,
+        faqs: dataset.siteConfig.faqs || undefined,
+        images: dataset.siteConfig.images || undefined,
+        seo: dataset.siteConfig.seo ? { ...dataset.siteConfig.seo, indexNowKey: '' } : undefined
+      }
+    : undefined;
+
+  const initialServicesFaqs =
+    dataset.status.configured && isSliceAvailable(dataset.status, 'servicesFaqs')
+      ? dataset.servicesFaqs
+      : undefined;
+  const initialServices =
+    dataset.status.configured && isSliceAvailable(dataset.status, 'services')
+      ? dataset.services
+      : undefined;
+
+  const globalAny = global as any;
+  globalAny.window = globalAny.window || {};
+
+  const assignGlobalSnapshot = (key: string, value: any) => {
+    if (value !== undefined) {
+      globalAny[key] = value;
+      globalAny.window[key] = value;
+    } else {
+      delete globalAny[key];
+      delete globalAny.window[key];
+    }
+  };
+
+  assignGlobalSnapshot('__INITIAL_IMAGE_REGISTRY__', dataset.imageRegistry);
+  assignGlobalSnapshot('__INITIAL_HOMEPAGE_SECTIONS__', dataset.homepageSections);
+  assignGlobalSnapshot('__HOMEPAGE_REVISION__', dataset.homepageRevision);
+  assignGlobalSnapshot('__INITIAL_SERVICES_FAQS__', initialServicesFaqs);
+  assignGlobalSnapshot('__INITIAL_SERVICES__', initialServices);
+  assignGlobalSnapshot('__INITIAL_SITE_CONFIG__', publicSiteConfigSnapshot);
+
+  const renderAppWithSsrProviders = (initialPath: string) =>
+    renderToString(
+      React.createElement(
+        SsrHomepageSectionsProvider,
+        {
+          components: ssrHomepageSections,
+          children: React.createElement<AppProps>(App, { initialPath, ssrComponents })
+        }
+      )
+    );
 
   const baseUrl = getCanonicalBaseUrl();
   const routes = buildAllRoutes(dataset);
@@ -111,7 +197,7 @@ async function runPrerender() {
   for (const route of routes) {
     let renderedRootHtml: string | undefined;
     try {
-      renderedRootHtml = renderToString(React.createElement<AppProps>(App, { initialPath: route.path, ssrComponents }));
+      renderedRootHtml = renderAppWithSsrProviders(route.path);
     } catch (renderError) {
       console.warn(`[SEO Prerender] SSR component fallback for ${route.path}:`, renderError);
     }
@@ -135,7 +221,7 @@ async function runPrerender() {
   // 3. True 404.html fallback
   let notFoundRoot: string | undefined;
   try {
-    notFoundRoot = renderToString(React.createElement<AppProps>(App, { initialPath: '/404-not-found', ssrComponents }));
+    notFoundRoot = renderAppWithSsrProviders('/404-not-found');
   } catch {
     notFoundRoot = undefined;
   }

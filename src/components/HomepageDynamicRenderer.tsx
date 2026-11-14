@@ -1,92 +1,116 @@
 import React from 'react';
 import { useHomepageCms } from '../context/HomepageCmsContext';
+import { useSsrHomepageSections } from '../context/SsrHomepageSectionsContext';
 import { Hero } from './Hero';
 import { RunningSpecialOffers } from './RunningSpecialOffers';
 import { PopularServicesSection } from './PopularServicesSection';
-import { DiamondSeparator } from './DiamondSeparator';
-import { OtherServicesSection } from './OtherServicesSection';
-import { AboutPreviewSection } from './AboutPreviewSection';
-import { WhyChooseUsSection } from './WhyChooseUsSection';
-import { AllServicesFaqSection } from './AllServicesFaqSection';
-import { TrustSection } from './TrustSection';
-import { SmartQuoteWizard } from './SmartQuoteWizard';
-import { ServiceAreaSection } from './ServiceAreaSection';
-import { ReviewsSection } from './ReviewsSection';
-import { BlogSection } from './BlogSection';
-import { ProjectVideoSliderSection } from './ProjectVideoSliderSection';
-import { OurWorkVideosSection } from './OurWorkVideosSection';
-import { FinalCtaSection } from './FinalCtaSection';
-import { CustomSectionRenderer } from './CustomSectionRenderer';
 import { WaterWaveDivider } from './WaterWaveDivider';
+
+const LazyAboutPreviewSection = React.lazy(() =>
+  import('./AboutPreviewSection').then(m => ({ default: m.AboutPreviewSection }))
+);
+const LazyWhyChooseUsSection = React.lazy(() =>
+  import('./WhyChooseUsSection').then(m => ({ default: m.WhyChooseUsSection }))
+);
+const LazyAllServicesFaqSection = React.lazy(() =>
+  import('./AllServicesFaqSection').then(m => ({ default: m.AllServicesFaqSection }))
+);
+const LazyTrustSection = React.lazy(() =>
+  import('./TrustSection').then(m => ({ default: m.TrustSection }))
+);
+const LazySmartQuoteWizard = React.lazy(() =>
+  import('./SmartQuoteWizard').then(m => ({ default: m.SmartQuoteWizard }))
+);
+const LazyServiceAreaSection = React.lazy(() =>
+  import('./ServiceAreaSection').then(m => ({ default: m.ServiceAreaSection }))
+);
+const LazyReviewsSection = React.lazy(() =>
+  import('./ReviewsSection').then(m => ({ default: m.ReviewsSection }))
+);
+const LazyBlogSection = React.lazy(() =>
+  import('./BlogSection').then(m => ({ default: m.BlogSection }))
+);
+const LazyProjectVideoSliderSection = React.lazy(() =>
+  import('./ProjectVideoSliderSection').then(m => ({ default: m.ProjectVideoSliderSection }))
+);
+const LazyOurWorkVideosSection = React.lazy(() =>
+  import('./OurWorkVideosSection').then(m => ({ default: m.OurWorkVideosSection }))
+);
+const LazyFinalCtaSection = React.lazy(() =>
+  import('./FinalCtaSection').then(m => ({ default: m.FinalCtaSection }))
+);
+const LazyCustomSectionRenderer = React.lazy(() =>
+  import('./CustomSectionRenderer').then(m => ({ default: m.CustomSectionRenderer }))
+);
 
 interface HomepageDynamicRendererProps {
   onOpenQuoteModal: (serviceName?: string) => void;
   onOpenBlogModal?: (post: any) => void;
   onNavigate?: (path: string) => void;
+  onVisibleFaqsChange?: (visibleFaqs: { question: string; answer: string }[]) => void;
 }
 
 export const HomepageDynamicRenderer: React.FC<HomepageDynamicRendererProps> = ({
   onOpenQuoteModal,
   onOpenBlogModal,
-  onNavigate
+  onNavigate,
+  onVisibleFaqsChange
 }) => {
   const { sections, loading } = useHomepageCms();
+  const ssr = useSsrHomepageSections();
 
-  // Standard ordered homepage flow strictly respecting user requirements:
-  // 1. Hero
-  // 2. Running Special Offers (immediately connected beneath/within hero)
-  // 3. Popular Services
-  // [Diamond line separator in #0D9488 / #38BDF8]
-  // 4. Our Other Services
-  // 5. About SUNVILOZ Clean Care (immediately after Our Other Services)
-  // 6. Why SUNVILOZ Clean Care? (immediately after About)
-  // 7. All Services FAQ Section (concise discovery + button to /services-faq, no full 9-step or full FAQ on home)
-  // 8. Remaining sections: Reviews, Calculator, Service Areas, Videos, Blog, Final CTA
+  const AboutPreview = ssr?.AboutPreviewSection || LazyAboutPreviewSection;
+  const WhyChooseUs = ssr?.WhyChooseUsSection || LazyWhyChooseUsSection;
+  const AllServicesFaq = ssr?.AllServicesFaqSection || LazyAllServicesFaqSection;
+  const Trust = ssr?.TrustSection || LazyTrustSection;
+  const SmartQuote = ssr?.SmartQuoteWizard || LazySmartQuoteWizard;
+  const ServiceArea = ssr?.ServiceAreaSection || LazyServiceAreaSection;
+  const Reviews = ssr?.ReviewsSection || LazyReviewsSection;
+  const Blog = ssr?.BlogSection || LazyBlogSection;
+  const ProjectVideoSlider = ssr?.ProjectVideoSliderSection || LazyProjectVideoSliderSection;
+  const OurWorkVideos = ssr?.OurWorkVideosSection || LazyOurWorkVideosSection;
+  const FinalCta = ssr?.FinalCtaSection || LazyFinalCtaSection;
+  const CustomSection = ssr?.CustomSectionRenderer || LazyCustomSectionRenderer;
+
+  const wrapLazy = (node: React.ReactNode) =>
+    ssr ? <>{node}</> : <React.Suspense fallback={null}>{node}</React.Suspense>;
+
+  // Standard ordered homepage flow strictly respecting existing layout and visual hierarchy:
   const renderStandardHomepage = () => (
     <>
-      {/* 1. Hero Section */}
+      {/* 1. Hero Section (Eager above-the-fold) */}
       <Hero onOpenQuoteModal={() => onOpenQuoteModal()} />
 
-      {/* 2. Running Special Offers */}
+      {/* 2. Running Special Offers (Eager above-the-fold) */}
       <RunningSpecialOffers onNavigate={onNavigate} />
 
-      {/* 3. Popular Services */}
+      {/* 3. Popular Services (Eager above-the-fold) */}
       <PopularServicesSection onOpenQuoteModal={onOpenQuoteModal} onNavigate={onNavigate} />
 
-      {/* 5. About SUNVILOZ Clean Care */}
-      <AboutPreviewSection 
-        onNavigate={onNavigate} 
-        onOpenQuoteModal={() => onOpenQuoteModal()} 
-      />
-
-      {/* 6. Why SUNVILOZ Clean Care? */}
-      <WhyChooseUsSection />
-
-      {/* 7. All Services FAQ Section with button to /services-faq */}
-      <AllServicesFaqSection onNavigate={onNavigate} />
-
-      {/* 8. Remaining Useful Sections */}
-      <TrustSection />
-      {/* Project Video Slider Section (Direct Video Documentation) */}
-      <ProjectVideoSliderSection />
-      <ReviewsSection />
-      {/* Water Wave Divider leading into Smart Quote Section */}
-      <WaterWaveDivider variant="flowing" fillColor="#FFFFFF" />
-
-      {/* 8. Smart Instant Quote Wizard Section */}
-      <section id="quote" className="py-14 sm:py-20 bg-white border-b border-[#E2E8F0] relative overflow-hidden" aria-label="Smart Quote Wizard">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <SmartQuoteWizard />
-        </div>
-      </section>
-
-      {/* Note: Lower OurWorkVideosSection removed to prevent duplication */}
-      <ServiceAreaSection />
-      <BlogSection onNavigate={onNavigate} onOpenPostModal={onOpenBlogModal} />
-
-      {/* Wave transition into Final CTA */}
-      <WaterWaveDivider variant="crest" fillColor="#123047" />
-      <FinalCtaSection onOpenQuoteModal={onOpenQuoteModal} />
+      {/* 4+. Below-the-fold sections (Code-split in browser, eager via context in SSR) */}
+      {wrapLazy(
+        <>
+          <AboutPreview
+            onNavigate={onNavigate}
+            onOpenQuoteModal={() => onOpenQuoteModal()}
+          />
+          <WhyChooseUs />
+          <AllServicesFaq onNavigate={onNavigate} onVisibleFaqsChange={onVisibleFaqsChange} />
+          <Trust />
+          <ProjectVideoSlider />
+          <Reviews />
+          <WaterWaveDivider variant="flowing" fillColor="#FFFFFF" />
+          <section id="quote" className="py-14 sm:py-20 bg-white border-b border-[#E2E8F0] relative overflow-hidden" aria-label="Smart Quote Wizard">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+              <SmartQuote />
+            </div>
+          </section>
+          <ServiceArea />
+          <Blog onNavigate={onNavigate} onOpenPostModal={onOpenBlogModal} />
+          <WaterWaveDivider variant="crest" fillColor="#123047" />
+          <FinalCta onOpenQuoteModal={onOpenQuoteModal} />
+        </>
+      )}
     </>
   );
 
@@ -94,12 +118,10 @@ export const HomepageDynamicRenderer: React.FC<HomepageDynamicRendererProps> = (
     return renderStandardHomepage();
   }
 
-  // If custom sections configured, render with exact section ordering logic
   const sortedSections = [...sections]
     .filter(s => s.isEnabled)
     .sort((a, b) => (a.sortOrder ?? a.order ?? 0) - (b.sortOrder ?? b.order ?? 0));
 
-  // If CMS sections don't have specialOffers or allServicesFaq, fallback to standard flow for consistency
   const hasCustomRequiredFlow = sortedSections.some(s => s.sectionKey === 'popularServices' || s.sectionKey === 'offers');
   if (!hasCustomRequiredFlow) {
     return renderStandardHomepage();
@@ -120,6 +142,7 @@ export const HomepageDynamicRenderer: React.FC<HomepageDynamicRendererProps> = (
           case 'specialOffers':
             return <RunningSpecialOffers key={section.id} onNavigate={onNavigate} />;
           case 'popularServices':
+          case 'services':
             return (
               <React.Fragment key={section.id}>
                 <PopularServicesSection onOpenQuoteModal={onOpenQuoteModal} onNavigate={onNavigate} />
@@ -127,59 +150,58 @@ export const HomepageDynamicRenderer: React.FC<HomepageDynamicRendererProps> = (
             );
           case 'otherServices':
             return null;
-          case 'services':
-            return (
-              <React.Fragment key={section.id}>
-                <PopularServicesSection onOpenQuoteModal={onOpenQuoteModal} onNavigate={onNavigate} />
-              </React.Fragment>
-            );
           case 'about':
-            return (
-              <AboutPreviewSection 
-                key={section.id} 
-                onNavigate={onNavigate} 
-                onOpenQuoteModal={() => onOpenQuoteModal()} 
+            return wrapLazy(
+              <AboutPreview
+                key={section.id}
+                onNavigate={onNavigate}
+                onOpenQuoteModal={() => onOpenQuoteModal()}
               />
             );
           case 'whyChoose':
-            return <WhyChooseUsSection key={section.id} />;
+            return wrapLazy(<WhyChooseUs key={section.id} />);
           case 'allServicesFaq':
-            return <AllServicesFaqSection key={section.id} onNavigate={onNavigate} />;
+            return wrapLazy(
+              <AllServicesFaq
+                key={section.id}
+                onNavigate={onNavigate}
+                onVisibleFaqsChange={onVisibleFaqsChange}
+              />
+            );
           case 'trust':
-            return <TrustSection key={section.id} />;
+            return wrapLazy(<Trust key={section.id} />);
           case 'beforeAfter':
           case 'projectVideos':
           case 'videos':
-            return <ProjectVideoSliderSection key={section.id} />;
+            return wrapLazy(<ProjectVideoSlider key={section.id} />);
           case 'pricing':
             return null;
           case 'calculator':
-            return (
+            return wrapLazy(
               <React.Fragment key={section.id}>
                 <WaterWaveDivider variant="flowing" fillColor="#FFFFFF" />
                 <section id="quote" className="py-14 sm:py-20 bg-white border-b border-[#E2E8F0] relative overflow-hidden" aria-label="Smart Quote Wizard">
                   <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <SmartQuoteWizard />
+                    <SmartQuote />
                   </div>
                 </section>
               </React.Fragment>
             );
           case 'video':
-            // If beforeAfter already placed the videos section, do not duplicate
             if (sortedSections.some(s => s.sectionKey === 'beforeAfter' && s.isEnabled)) {
               return null;
             }
-            return <OurWorkVideosSection key={section.id} />;
+            return wrapLazy(<OurWorkVideos key={section.id} />);
           case 'reviews':
-            return <ReviewsSection key={section.id} />;
+            return wrapLazy(<Reviews key={section.id} />);
           case 'areas':
-            return <ServiceAreaSection key={section.id} />;
+            return wrapLazy(<ServiceArea key={section.id} />);
           case 'blog':
-            return <BlogSection key={section.id} onNavigate={onNavigate} onOpenPostModal={onOpenBlogModal} />;
+            return wrapLazy(<Blog key={section.id} onNavigate={onNavigate} onOpenPostModal={onOpenBlogModal} />);
           case 'cta':
-            return <FinalCtaSection key={section.id} onOpenQuoteModal={onOpenQuoteModal} />;
+            return wrapLazy(<FinalCta key={section.id} onOpenQuoteModal={onOpenQuoteModal} />);
           case 'custom':
-            return <CustomSectionRenderer key={section.id} section={section} onOpenQuoteModal={onOpenQuoteModal} />;
+            return wrapLazy(<CustomSection key={section.id} section={section} onOpenQuoteModal={onOpenQuoteModal} />);
           default:
             return null;
         }

@@ -89,10 +89,14 @@ export const RunningSpecialOffers: React.FC<RunningSpecialOffersProps> = ({ onNa
                 const title = lang === 'bn' ? item.titleBn : item.titleEn;
                 const badge = lang === 'bn' ? item.badgeBn : item.badgeEn;
                 return (
-                  <button
+                  <a
                     key={`${item.id}-${idx}`}
-                    type="button"
-                    onClick={() => handleOfferClick(item.linkUrl)}
+                    href={item.linkUrl || '/get-quote'}
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleOfferClick(item.linkUrl);
+                    }}
                     className="inline-flex items-center gap-2 text-xs sm:text-sm text-[#172B3A] hover:text-[#0D9488] transition-colors cursor-pointer shrink-0 font-medium"
                   >
                     {badge && (
@@ -102,7 +106,7 @@ export const RunningSpecialOffers: React.FC<RunningSpecialOffersProps> = ({ onNa
                     )}
                     <span>{title}</span>
                     <ArrowRight className="w-3 h-3 text-[#0D9488]" aria-hidden="true" />
-                  </button>
+                  </a>
                 );
               })}
             </div>
@@ -119,9 +123,13 @@ export const RunningSpecialOffers: React.FC<RunningSpecialOffersProps> = ({ onNa
                 const badge = lang === 'bn' ? item.badgeBn : item.badgeEn;
                 return (
                   <div key={`${item.id}-${idx}`} className="inline-flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => handleOfferClick(item.linkUrl)}
+                    <a
+                      href={item.linkUrl || '/get-quote'}
+                      onClick={(e) => {
+                        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                        e.preventDefault();
+                        handleOfferClick(item.linkUrl);
+                      }}
                       className="inline-flex items-center gap-2.5 mx-5 sm:mx-8 text-xs sm:text-sm font-semibold text-[#172B3A] hover:text-[#0D9488] transition-colors cursor-pointer group"
                     >
                       {badge && (
@@ -135,7 +143,7 @@ export const RunningSpecialOffers: React.FC<RunningSpecialOffersProps> = ({ onNa
                       <span className="text-[#0D9488] group-hover:translate-x-0.5 transition-transform inline-flex items-center">
                         <ArrowRight className="w-3 h-3" aria-hidden="true" />
                       </span>
-                    </button>
+                    </a>
 
                     <span className="text-[#0D9488]/40 select-none text-xs" aria-hidden="true">
                       ◆

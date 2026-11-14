@@ -15,6 +15,12 @@ import {
   CENTRAL_IMAGES_EVENT,
   isDemoOrStockUrl 
 } from '../services/imageSyncService';
+import {
+  DEFAULT_HOME_SEO_DESCRIPTION,
+  DEFAULT_HOME_SEO_TITLE,
+  resolveAuthoritativeHotline,
+  resolveAuthoritativeHotlineDisplay
+} from '../seo/seoResolver';
 
 const SITE_CONFIG_STORAGE_KEY = 'sunviloz_site_master_config_v5';
 export const SITE_CONFIG_EVENT = 'sunviloz_site_config_changed';
@@ -47,8 +53,8 @@ export const DEFAULT_HERO_CONFIG: HeroConfig = {
   servingAreaBadgeBn: 'ঢাকা শহরের সকল এলাকায় সার্ভিস প্রদান',
   ctaQuoteTextEn: 'Request a Quote',
   ctaQuoteTextBn: 'কোটেশন রিকোয়েস্ট করুন',
-  ctaCallTextEn: 'Call 01609-999612',
-  ctaCallTextBn: 'কল করুন 01609-999612',
+  ctaCallTextEn: 'Call 09649-112288',
+  ctaCallTextBn: 'কল করুন 09649-112288',
   bgImageUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
   // Hero Tri-Video Settings (Responsive Side-by-Side on Desktop, Stacked on Mobile)
   videoEnabled: true,
@@ -104,8 +110,8 @@ export const INITIAL_FULL_SITE_CONFIG: FullSiteConfig = {
   reviews: [...REVIEWS_DATA],
   areas: [...DHAKA_AREAS],
   seo: {
-    defaultMetaTitle: 'Water Tank Cleaning Service in Dhaka | Sunviloz Clean Care',
-    defaultMetaDescription: 'Professional overhead & underground water tank cleaning and pipeline flushing service in Dhaka, Narayanganj, Gazipur & Savar. Transparent WhatsApp quotation.',
+    defaultMetaTitle: DEFAULT_HOME_SEO_TITLE,
+    defaultMetaDescription: DEFAULT_HOME_SEO_DESCRIPTION,
     canonicalBaseUrl: 'https://sunvilozcleancare.com',
     indexingAllowed: true,
     socialOgImage: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png',
@@ -142,9 +148,18 @@ export const sanitizeAndMergeConfig = (parsed: Partial<FullSiteConfig>): FullSit
 
   mergedSections.sort((a, b) => a.order - b.order);
 
-  const sanitizedBusiness = {
+  const mergedBusinessInput = {
     ...INITIAL_FULL_SITE_CONFIG.business,
-    ...(parsed.business || {}),
+    ...(parsed.business || {})
+  };
+
+  const sanitizedBusiness = {
+    ...mergedBusinessInput,
+    phone: resolveAuthoritativeHotline(mergedBusinessInput.phone),
+    displayPhone: resolveAuthoritativeHotlineDisplay(
+      mergedBusinessInput.displayPhone,
+      mergedBusinessInput.phone
+    ),
     canonicalBaseUrl: (!parsed.business?.canonicalBaseUrl || parsed.business.canonicalBaseUrl.includes('water-tank-cleaning-service.vercel.app'))
       ? 'https://sunvilozcleancare.com'
       : parsed.business.canonicalBaseUrl,
@@ -222,6 +237,13 @@ export const sanitizeAndMergeConfig = (parsed: Partial<FullSiteConfig>): FullSit
 };
 
 export const getStoredSiteConfig = (): FullSiteConfig => {
+  const globalSnap = (globalThis as any).__INITIAL_SITE_CONFIG__;
+  if (globalSnap && typeof globalSnap === 'object') {
+    return sanitizeAndMergeConfig(globalSnap as Partial<FullSiteConfig>);
+  }
+  if (typeof window !== 'undefined' && (window as any).__INITIAL_SITE_CONFIG__) {
+    return sanitizeAndMergeConfig((window as any).__INITIAL_SITE_CONFIG__ as Partial<FullSiteConfig>);
+  }
   if (typeof window === 'undefined') return INITIAL_FULL_SITE_CONFIG;
   try {
     const raw = safeGetItem(SITE_CONFIG_STORAGE_KEY);
@@ -285,6 +307,7 @@ export const fetchSiteConfigFromSupabase = async (): Promise<FullSiteConfig> => 
       const merged = sanitizeAndMergeConfig(data.config);
       safeSetItem(SITE_CONFIG_STORAGE_KEY, JSON.stringify(merged));
       if (typeof window !== 'undefined') {
+        (window as any).__INITIAL_SITE_CONFIG__ = merged;
         window.dispatchEvent(new CustomEvent(SITE_CONFIG_EVENT, { detail: merged }));
       }
       return merged;
@@ -302,6 +325,7 @@ export const fetchSiteConfigFromSupabase = async (): Promise<FullSiteConfig> => 
  */
 export const saveSiteConfig = async (config: FullSiteConfig): Promise<{ success: boolean; error?: string }> => {
   if (typeof window !== 'undefined') {
+    (window as any).__INITIAL_SITE_CONFIG__ = config;
     safeSetItem(SITE_CONFIG_STORAGE_KEY, JSON.stringify(config));
     window.dispatchEvent(new CustomEvent(SITE_CONFIG_EVENT, { detail: config }));
   }

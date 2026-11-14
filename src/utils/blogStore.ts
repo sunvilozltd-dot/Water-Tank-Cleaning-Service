@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { BlogPost } from '../types/blog';
 import { safeGetItem, safeSetItem } from './safeLocalStorage';
 import { WATER_TANK_ARTICLES } from '../data/waterTankArticles';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-import { enqueueIndexNowUrls } from '../services/indexnowService';
 
 const BLOG_STORAGE_KEY = 'sunviloz_water_tank_articles_v2';
 const BLOG_CHANGED_EVENT = 'sunviloz_blog_changed';
@@ -29,6 +28,7 @@ function mapRowToBlogPost(d: any): BlogPost {
     images: Array.isArray(d.images) ? d.images : Array.isArray(seo.images) ? seo.images : [],
     author: d.author || 'সানভিলোজ হাইজিন টিম',
     publishedAt: d.published_at || new Date().toISOString().slice(0, 10),
+    updatedAt: d.updated_at || undefined,
     readTime: d.read_time || '5 min read',
     readTimeBn: d.read_time_bn || '৫ মিনিট পাঠ',
     featured: Boolean(d.featured),
@@ -226,12 +226,16 @@ export const addBlogPost = async (postData: Omit<BlogPost, 'id' | 'publishedAt'>
   }
 
   if (newPost.published && newPost.slug) {
-    enqueueIndexNowUrls([`/blog/${newPost.slug}`, '/blog'], {
-      action: 'publish_blog_post',
-      entityType: 'blog_post',
-      entitySlug: newPost.slug,
-      verifyPublic: true
-    }).catch(() => {});
+    import('../services/indexnowService')
+      .then(({ enqueueIndexNowUrls }) =>
+        enqueueIndexNowUrls([`/blog/${newPost.slug}`, '/blog'], {
+          action: 'publish_blog_post',
+          entityType: 'blog_post',
+          entitySlug: newPost.slug,
+          verifyPublic: true
+        })
+      )
+      .catch(() => {});
   }
 
   return newPost;
@@ -265,12 +269,16 @@ export const updateBlogPost = async (id: string, updates: Partial<BlogPost>): Pr
   }
 
   if (updatedPost.slug) {
-    enqueueIndexNowUrls([`/blog/${updatedPost.slug}`, '/blog'], {
-      action: updatedPost.published ? 'publish_blog_post' : 'unpublish_blog_post',
-      entityType: 'blog_post',
-      entitySlug: updatedPost.slug,
-      verifyPublic: Boolean(updatedPost.published)
-    }).catch(() => {});
+    import('../services/indexnowService')
+      .then(({ enqueueIndexNowUrls }) =>
+        enqueueIndexNowUrls([`/blog/${updatedPost.slug}`, '/blog'], {
+          action: updatedPost.published ? 'publish_blog_post' : 'unpublish_blog_post',
+          entityType: 'blog_post',
+          entitySlug: updatedPost.slug,
+          verifyPublic: Boolean(updatedPost.published)
+        })
+      )
+      .catch(() => {});
   }
 
   return updatedPost;
@@ -300,12 +308,16 @@ export const deleteBlogPost = async (id: string, slugHint?: string): Promise<boo
     }
   }
 
-  enqueueIndexNowUrls(['/blog', ...(targetSlug ? [`/blog/${targetSlug}`] : [])], {
-    action: 'delete_blog_post',
-    entityType: 'blog_post',
-    entitySlug: targetSlug || id,
-    verifyPublic: false
-  }).catch(() => {});
+  import('../services/indexnowService')
+    .then(({ enqueueIndexNowUrls }) =>
+      enqueueIndexNowUrls(['/blog', ...(targetSlug ? [`/blog/${targetSlug}`] : [])], {
+        action: 'delete_blog_post',
+        entityType: 'blog_post',
+        entitySlug: targetSlug || id,
+        verifyPublic: false
+      })
+    )
+    .catch(() => {});
 
   return true;
 };
@@ -377,9 +389,11 @@ export const useBlogPosts = () => {
     };
   }, []);
 
+  const publishedPosts = useMemo(() => posts.filter(p => p.published), [posts]);
+
   return {
     posts,
-    publishedPosts: posts.filter(p => p.published),
+    publishedPosts,
     loading,
     fromDatabase,
     error,
@@ -407,12 +421,16 @@ export const saveBlogPost = async (post: BlogPost): Promise<boolean> => {
     }
     await fetchBlogPostsWithStatus({ includeUnpublished: false });
     if (post.published && post.slug) {
-      enqueueIndexNowUrls([`/blog/${post.slug}`, '/blog'], {
-        action: 'publish_blog_post',
-        entityType: 'blog_post',
-        entitySlug: post.slug,
-        verifyPublic: true
-      }).catch(() => {});
+      import('../services/indexnowService')
+        .then(({ enqueueIndexNowUrls }) =>
+          enqueueIndexNowUrls([`/blog/${post.slug}`, '/blog'], {
+            action: 'publish_blog_post',
+            entityType: 'blog_post',
+            entitySlug: post.slug,
+            verifyPublic: true
+          })
+        )
+        .catch(() => {});
     }
     return true;
   }

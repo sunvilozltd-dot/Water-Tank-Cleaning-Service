@@ -90,14 +90,6 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
     }
   };
 
-  const shareOnWhatsApp = () => {
-    if (!post) return;
-    const titleText = lang === 'bn' && post.titleBn ? post.titleBn : post.title;
-    const url = window.location.href;
-    const text = `${titleText}\n${url}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-  };
-
   if (loading && !post) {
     return (
       <main className="min-h-[60vh] flex items-center justify-center px-4">
@@ -312,15 +304,28 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
       </div>
 
       <SeoHead
-        title={`${title} | SUNVILOZ CLEAN CARE`}
+        title={post.seo?.metaTitle || `${title} | SUNVILOZ CLEAN CARE`}
         description={post.seo?.metaDescription || excerpt}
+        canonicalPath={`/blog/${post.slug}`}
         canonicalUrl={`https://sunvilozcleancare.com/blog/${post.slug}`}
         ogType="article"
+        ogTitle={post.seo?.metaTitle || title}
+        ogDescription={post.seo?.metaDescription || excerpt}
+        ogImage={post.imageUrl}
+        ogImageAlt={post.imageAlt || post.seo?.imageAlt || title}
         breadcrumbs={[
           { name: 'Home', path: '/' },
           { name: 'Tips & Guides', path: '/blog' },
           { name: title, path: `/blog/${post.slug}` }
         ]}
+        articleSchema={{
+          headline: title,
+          description: post.seo?.metaDescription || excerpt,
+          datePublished: post.publishedAt,
+          dateModified: post.updatedAt || post.publishedAt,
+          image: post.imageUrl,
+          url: `https://sunvilozcleancare.com/blog/${post.slug}`
+        }}
       />
 
       <div className="max-w-4xl mx-auto space-y-8">
@@ -334,14 +339,18 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
             ]}
           />
 
-          <button
-            type="button"
-            onClick={() => handleNavigate('/blog')}
+          <a
+            href="/blog"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/blog');
+            }}
             className="inline-flex items-center gap-1.5 text-xs font-bold text-[#64748B] hover:text-[#123047] transition-colors cursor-pointer w-fit"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>{lang === 'bn' ? 'সকল Tips & Guides' : 'All Tips & Guides'}</span>
-          </button>
+          </a>
         </div>
 
         {/* Article Header */}
@@ -379,14 +388,15 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={shareOnWhatsApp}
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`${title}\nhttps://sunvilozcleancare.com/blog/${post.slug}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold flex items-center gap-1.5 shadow transition-colors cursor-pointer"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
                 <span>WhatsApp</span>
-              </button>
+              </a>
 
               <button
                 type="button"
@@ -504,14 +514,18 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
                 <BookOpen className="w-5 h-5 text-[#0D9488]" />
                 <span>{lang === 'bn' ? 'আরও অন্যান্য Tips & Guides' : 'More Tips & Guides'}</span>
               </h3>
-              <button
-                type="button"
-                onClick={() => handleNavigate('/blog')}
+              <a
+                href="/blog"
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  handleNavigate('/blog');
+                }}
                 className="text-xs font-bold text-[#0D9488] hover:text-[#0F766E] transition-colors flex items-center gap-1 cursor-pointer"
               >
                 <span>{lang === 'bn' ? 'সবগুলো দেখুন' : 'View All'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              </a>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -519,9 +533,14 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
                 const otherTitle = lang === 'bn' && other.titleBn ? other.titleBn : other.title;
                 const otherCategory = lang === 'bn' && other.categoryBn ? other.categoryBn : other.category;
                 return (
-                  <div
+                  <a
                     key={other.id}
-                    onClick={() => handleNavigate(`/blog/${other.slug}`)}
+                    href={`/blog/${other.slug}`}
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleNavigate(`/blog/${other.slug}`);
+                    }}
                     className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden hover:border-[#0D9488]/50 transition-all flex flex-col justify-between p-4 cursor-pointer group shadow-sm hover:shadow-md"
                   >
                     <div>
@@ -539,7 +558,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
                         <ArrowRight className="w-3 h-3" />
                       </span>
                     </div>
-                  </div>
+                  </a>
                 );
               })}
             </div>

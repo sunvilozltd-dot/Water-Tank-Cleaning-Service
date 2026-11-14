@@ -14,8 +14,7 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onNavigate
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-10 px-4 sm:px-6 max-w-4xl mx-auto space-y-8">
       <SeoHead
-        title={lang === 'bn' ? 'গোপনীয়তা নীতি | সানভিলোজ ক্লিন কেয়ার' : 'Privacy Policy - Sunviloz Clean Care Dhaka'}
-        description="Privacy policy and data handling information for Sunviloz Clean Care in Dhaka."
+        canonicalPath="/privacy-policy"
         canonicalUrl="https://sunvilozcleancare.com/privacy-policy"
       />
       <Breadcrumbs items={[{ label: lang === 'bn' ? 'গোপনীয়তা নীতি' : 'Privacy Policy', href: '/privacy-policy' }]} />
@@ -48,8 +47,8 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onNavigate
           </p>
           <p>
             {lang === 'bn'
-              ? 'যেকোনো জিজ্ঞাসায় আমাদের সাথে সরাসরি 01609-999612 নম্বরে অথবা sunvilozltd@gmail.com ঠিকানায় যোগাযোগ করতে পারেন।'
-              : 'If you have questions regarding data privacy, reach out to sunvilozltd@gmail.com or call 01609-999612.'}
+              ? 'যেকোনো জিজ্ঞাসায় আমাদের সাথে সরাসরি 09649-112288 হটলাইন নম্বরে অথবা sunvilozltd@gmail.com ঠিকানায় যোগাযোগ করতে পারেন।'
+              : 'If you have questions regarding data privacy, reach out to sunvilozltd@gmail.com or call hotline 09649-112288.'}
           </p>
         </div>
       </div>

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useServices } from '../utils/servicesStore';
 import { trackWhatsAppClick, trackEvent } from '../utils/tracking';
 
 interface PipelineCleaningPageProps {
@@ -33,6 +34,8 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
 }) => {
   const { lang } = useLanguage();
   const { business } = useSiteConfig();
+  const { getServiceBySlug } = useServices();
+  const dbService = getServiceBySlug('pipeline-cleaning') || getServiceBySlug('water-pipeline-cleaning');
 
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -53,6 +56,9 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
   };
 
   const rawNumber = (business.whatsappNumber || '8801609999612').replace(/[^0-9]/g, '');
+  const whatsappDisplay = rawNumber.startsWith('880')
+    ? rawNumber.slice(2).replace(/^(\d{5})(\d+)$/, '$1-$2')
+    : (rawNumber || '01609-999612');
   const whatsappUrl = `https://wa.me/${rawNumber}?text=${encodeURIComponent('আসসালামু আলাইকুম। আমি ওয়াটার পাইপলাইন ক্লিনিং সার্ভিস (Water Pipeline Cleaning Service) সম্পর্কে জানতে ও বুকিং করতে চাই।')}`;
 
   const pipelineFaqs = [
@@ -84,24 +90,45 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
     { name: lang === 'bn' ? 'পাইপলাইন পরিষ্কার সার্ভিস' : 'Water Pipeline Cleaning Service', path: '/services/pipeline-cleaning' }
   ];
 
-  const structuredFaqs = pipelineFaqs.map(f => ({
+  const defaultFaqItems = pipelineFaqs.map(f => ({
     question: f.qBn,
     answer: f.aBn
   }));
 
+  const activeFaqItems =
+    dbService?.faqs && dbService.faqs.length > 0
+      ? dbService.faqs.map(f => ({
+          question: lang === 'bn' ? (f.questionBn || f.question) : (f.question || f.questionBn || ''),
+          answer: lang === 'bn' ? (f.answerBn || f.answer) : (f.answer || f.answerBn || '')
+        })).filter(item => Boolean(item.question && item.answer))
+      : defaultFaqItems;
+
+  const autoFallbackMetaTitle = dbService ? `${dbService.title} in Dhaka | Sunviloz Clean Care` : '';
+  const explicitServiceMetaTitle =
+    dbService?.metaTitle && dbService.metaTitle !== autoFallbackMetaTitle
+      ? dbService.metaTitle
+      : undefined;
+  const explicitServiceMetaDesc =
+    dbService?.metaDesc && dbService.metaDesc !== dbService.shortDesc
+      ? dbService.metaDesc
+      : undefined;
+
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-16">
       <SeoHead
-        title="Water Pipeline Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE"
-        description="Professional water pipeline cleaning service in Dhaka. Non-invasive hydro-pulse flushing to clear rust, iron, and foul tap odor without wall damage. 01609999612."
+        title={explicitServiceMetaTitle}
+        description={explicitServiceMetaDesc}
+        canonicalPath="/services/pipeline-cleaning"
         canonicalUrl="https://sunvilozcleancare.com/services/pipeline-cleaning"
+        ogType="service"
+        ogImage={dbService?.image || undefined}
         serviceSchema={{
           name: 'Water Pipeline Cleaning Service in Dhaka',
           serviceType: 'Water Pipeline Cleaning',
-          description: 'Non-destructive hydro-pulse pressurized pipeline descaling and flushing to clear iron sediments, rust scaling, and bio-slime from internal plumbing across Dhaka.'
+          description: explicitServiceMetaDesc || 'Non-destructive hydro-pulse pressurized pipeline descaling and flushing to clear iron sediments, rust scaling, and bio-slime from internal plumbing across Dhaka.'
         }}
         breadcrumbs={breadcrumbsList}
-        faqSchema={structuredFaqs}
+        faqSchema={activeFaqItems}
       />
 
       <Breadcrumbs
@@ -157,7 +184,7 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
                 className="px-6 py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center gap-2"
               >
                 <MessageCircle className="w-4 h-4 text-white" />
-                <span>WhatsApp: {business.whatsappNumber || '01609999612'}</span>
+                <span>WhatsApp: {whatsappDisplay}</span>
               </a>
 
               <a
@@ -278,7 +305,7 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
         </div>
 
         <div className="max-w-4xl mx-auto space-y-3">
-          {pipelineFaqs.map((faq, index) => {
+          {activeFaqItems.map((faq, index) => {
             const isOpen = openFaq === index;
             return (
               <div 
@@ -293,7 +320,7 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
                 >
                   <span className="flex items-center gap-3">
                     <span className="text-[#0D9488] text-xs font-mono font-bold">Q{index + 1}.</span>
-                    <span>{faq.qBn}</span>
+                    <span>{faq.question}</span>
                   </span>
                   <ChevronDown 
                     className={`w-4 h-4 text-[#64748B] transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-[#0D9488]' : ''}`} 
@@ -302,7 +329,7 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
 
                 {isOpen && (
                   <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#64748B] leading-relaxed border-t border-[#E2E8F0]">
-                    <p>{faq.aBn}</p>
+                    <p>{faq.answer}</p>
                   </div>
                 )}
               </div>
@@ -357,9 +384,13 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          <button
-            type="button"
-            onClick={() => handleNavigate('/services/water-tank-cleaning')}
+          <a
+            href="/services/water-tank-cleaning"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/services/water-tank-cleaning');
+            }}
             className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
             <Droplets className="w-8 h-8 text-[#0D9488] shrink-0" />
@@ -371,11 +402,15 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
                 ছাদ ও ভূগর্ভস্থ পানির ট্যাংকের গভীর মেকানাইজড পরিষ্কার ও খাদ্য-বান্ধব স্যানিটাইজেশন।
               </p>
             </div>
-          </button>
+          </a>
 
-          <button
-            type="button"
-            onClick={() => handleNavigate('/services/overhead-tank-cleaning')}
+          <a
+            href="/services/overhead-tank-cleaning"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/services/overhead-tank-cleaning');
+            }}
             className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
             <Building2 className="w-8 h-8 text-[#0D9488] shrink-0" />
@@ -387,11 +422,15 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
                 ছাদের পিভিসি ও আরসিসি ট্যাংকের রোটারি প্রেশার ওয়াশ ও শ্যাওলা পরিষ্কার।
               </p>
             </div>
-          </button>
+          </a>
 
-          <button
-            type="button"
-            onClick={() => handleNavigate('/services/underground-water-tank-cleaning')}
+          <a
+            href="/services/underground-water-tank-cleaning"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/services/underground-water-tank-cleaning');
+            }}
             className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
             <ShieldCheck className="w-8 h-8 text-[#0D9488] shrink-0" />
@@ -403,7 +442,7 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
                 মাটির নিচের আরসিসি রিজার্ভার ও রিজার্ভ ট্যাংকের ভারী কাদা ভ্যাকুয়াম ও স্লাজ উত্তোলন।
               </p>
             </div>
-          </button>
+          </a>
         </div>
       </section>
 
@@ -440,15 +479,19 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
             { name: 'নারায়ণগঞ্জ (Narayanganj)', slug: 'narayanganj' },
             { name: 'ঢাকা মেট্রো (Dhaka All)', slug: 'dhaka' }
           ].map((area, idx) => (
-            <button
+            <a
               key={idx}
-              type="button"
-              onClick={() => handleNavigate(`/service-areas/${area.slug}`)}
+              href={`/service-areas/${area.slug}`}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                handleNavigate(`/service-areas/${area.slug}`);
+              }}
               className="px-3.5 py-2 rounded-xl bg-[#F5FAFC] hover:bg-[#E8F5F3] border border-[#E2E8F0] hover:border-[#0D9488]/40 text-xs font-semibold text-[#123047] hover:text-[#0D9488] transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <MapPin className="w-3.5 h-3.5 text-[#0D9488] shrink-0" />
               <span>{area.name}</span>
-            </button>
+            </a>
           ))}
         </div>
       </section>

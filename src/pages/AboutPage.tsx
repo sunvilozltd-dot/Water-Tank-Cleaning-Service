@@ -32,8 +32,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onOpenQuoteModal }) => {
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-10 px-4 sm:px-6 max-w-7xl mx-auto space-y-16">
       <SeoHead
-        title="About Us | SUNVILOZ CLEAN CARE — Professional Cleaning Service Dhaka"
-        description="Learn about SUNVILOZ CLEAN CARE, established in 2020 in Dhaka. Specializing in mechanized water tank and pipeline cleaning with transparent quotations. 01609999612."
+        canonicalPath="/about"
         canonicalUrl="https://sunvilozcleancare.com/about"
         breadcrumbs={[
           { name: lang === 'bn' ? 'হোম' : 'Home', path: '/' },
@@ -198,7 +197,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onOpenQuoteModal }) => {
             className="px-6 py-3 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs sm:text-sm rounded-xl inline-flex items-center gap-2 shadow-md transition-all"
           >
             <MessageCircle className="w-4 h-4 text-white" />
-            <span>WhatsApp: 01609999612</span>
+            <span>WhatsApp: 01609-999612</span>
           </a>
         </div>
       </section>

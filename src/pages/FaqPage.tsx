@@ -24,8 +24,7 @@ export const FaqPage: React.FC = () => {
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
       <SeoHead
-        title="Frequently Asked Questions & Water Tank Problem Solutions | SUNVILOZ CLEAN CARE"
-        description="Direct answers to 10 common water tank & pipeline problems in Dhaka, Narayanganj, Gazipur & Savar: dirty water, algae, odor, rust, low pressure, pricing and booking. 01609999612."
+        canonicalPath="/faq"
         canonicalUrl="https://sunvilozcleancare.com/faq"
         breadcrumbs={[
           { name: lang === 'bn' ? 'হোম' : 'Home', path: '/' },

@@ -1,6 +1,10 @@
 import { HeaderConfig, NavItem } from '../types/header';
 import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
 import { safeGetItem, safeSetItem } from '../utils/safeLocalStorage';
+import {
+  resolveAuthoritativeHotline,
+  resolveAuthoritativeHotlineDisplay
+} from '../seo/seoResolver';
 
 export const HEADER_CHANGE_EVENT = 'sunviloz_header_nav_updated';
 
@@ -23,8 +27,8 @@ export const DEFAULT_HEADER_CONFIG: HeaderConfig = {
   brandTaglineEn: 'Professional Water Tank & Pipeline Cleaning Service',
   brandVisible: true,
   brandFontSize: 'base',
-  phone: '+8801609999612',
-  phoneDisplay: '01609-999612',
+  phone: '+8809649112288',
+  phoneDisplay: '09649-112288',
   phoneLabelBn: 'কল করুন',
   phoneLabelEn: 'Call Us',
   phoneVisible: true,
@@ -166,7 +170,13 @@ export async function getHeaderConfig(): Promise<HeaderConfig> {
   try {
     const raw = safeGetItem(HEADER_CACHE_KEY);
     if (raw) {
-      cached = { ...DEFAULT_HEADER_CONFIG, ...JSON.parse(raw) };
+      const parsed = JSON.parse(raw);
+      cached = {
+        ...DEFAULT_HEADER_CONFIG,
+        ...parsed,
+        phone: resolveAuthoritativeHotline(parsed.phone),
+        phoneDisplay: resolveAuthoritativeHotlineDisplay(parsed.phoneDisplay, parsed.phone)
+      };
     }
   } catch {
     // Ignore cache parse error
@@ -197,8 +207,11 @@ export async function getHeaderConfig(): Promise<HeaderConfig> {
           brandTaglineEn: data.brand_tagline_en ?? cached.brandTaglineEn,
           brandVisible: data.brand_visible ?? cached.brandVisible,
           brandFontSize: data.brand_font_size ?? cached.brandFontSize,
-          phone: data.phone_number ?? cached.phone,
-          phoneDisplay: data.phone_label ?? cached.phoneDisplay,
+          phone: resolveAuthoritativeHotline(data.phone_number ?? cached.phone),
+          phoneDisplay: resolveAuthoritativeHotlineDisplay(
+            data.phone_label ?? cached.phoneDisplay,
+            data.phone_number ?? cached.phone
+          ),
           phoneLabelBn: cached.phoneLabelBn,
           phoneLabelEn: cached.phoneLabelEn,
           phoneVisible: data.phone_enabled ?? cached.phoneVisible,

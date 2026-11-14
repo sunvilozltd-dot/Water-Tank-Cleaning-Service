@@ -188,15 +188,19 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
           {/* 4 Core Cities Quick Navigation Strip */}
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
             {coreCityLinks.map((city) => (
-              <button
+              <a
                 key={city.slug}
-                type="button"
-                onClick={() => handleNavigate(`/service-areas/${city.slug}`)}
+                href={`/service-areas/${city.slug}`}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  handleNavigate(`/service-areas/${city.slug}`);
+                }}
                 className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#E8F5F3] border border-[#0D9488]/30 text-xs font-bold text-[#123047] hover:text-[#0D9488] transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
               >
                 <MapPin className="w-3.5 h-3.5 text-[#0D9488]" aria-hidden="true" />
                 <span>{lang === 'bn' ? city.bn : city.en}</span>
-              </button>
+              </a>
             ))}
           </div>
         </div>
@@ -239,14 +243,18 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
                   </button>
 
                   {featuredSlug && hasFeaturedArea && (
-                    <button
-                      type="button"
-                      onClick={() => handleNavigate(`/service-areas/${featuredSlug}`)}
+                    <a
+                      href={`/service-areas/${featuredSlug}`}
+                      onClick={(e) => {
+                        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                        e.preventDefault();
+                        handleNavigate(`/service-areas/${featuredSlug}`);
+                      }}
                       className="w-full text-center text-[11px] text-[#0D9488] hover:underline flex items-center justify-center gap-1 py-1 font-semibold"
                     >
                       <span>{lang === 'bn' ? 'এরিয়া বিস্তারিত দেখুন' : 'View Area Details'}</span>
                       <ExternalLink className="w-3 h-3" />
-                    </button>
+                    </a>
                   )}
                 </div>
               </div>
@@ -326,14 +334,18 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
                         </button>
 
                         {checkResult.slug && (
-                          <button
-                            type="button"
-                            onClick={() => handleNavigate(`/service-areas/${checkResult.slug}`)}
+                          <a
+                            href={`/service-areas/${checkResult.slug}`}
+                            onClick={(e) => {
+                              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                              e.preventDefault();
+                              handleNavigate(`/service-areas/${checkResult.slug}`);
+                            }}
                             className="min-h-[36px] py-1.5 px-3.5 rounded-lg bg-white border border-[#E2E8F0] hover:border-[#0D9488] text-[#123047] font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                           >
                             <span>{lang === 'bn' ? 'এরিয়া পেজ দেখুন' : 'View Dedicated Page'}</span>
                             <ExternalLink className="w-3.5 h-3.5 text-[#0D9488]" />
-                          </button>
+                          </a>
                         )}
                       </>
                     ) : (
@@ -378,16 +390,20 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
 
           <div className="flex flex-wrap gap-2.5">
             {visibleZoneAreas.map((loc) => (
-              <button
+              <a
                 key={loc.slug}
-                type="button"
-                onClick={() => handleNavigate(`/service-areas/${loc.slug}`)}
+                href={`/service-areas/${loc.slug}`}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  handleNavigate(`/service-areas/${loc.slug}`);
+                }}
                 className="group inline-flex items-center gap-2 px-3.5 py-2 min-h-[40px] rounded-xl bg-white hover:bg-[#E8F5F3] border border-[#E2E8F0] hover:border-[#0D9488] text-xs font-semibold text-[#172B3A] shadow-2xs transition-all cursor-pointer"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-[#0D9488] group-hover:scale-125 transition-transform" aria-hidden="true" />
                 <span>{lang === 'bn' ? loc.areaNameBn : loc.areaName}</span>
                 <ArrowRight className="w-3 h-3 text-[#94A3B8] group-hover:text-[#0D9488] group-hover:translate-x-0.5 transition-all" />
-              </button>
+              </a>
             ))}
           </div>
         </div>

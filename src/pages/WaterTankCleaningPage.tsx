@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useServices } from '../utils/servicesStore';
 import { trackWhatsAppClick, trackEvent } from '../utils/tracking';
 
 interface WaterTankCleaningPageProps {
@@ -39,6 +40,8 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
 }) => {
   const { lang } = useLanguage();
   const { business } = useSiteConfig();
+  const { getServiceBySlug } = useServices();
+  const dbService = getServiceBySlug('water-tank-cleaning');
   
   // Accordion state for FAQs
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -60,6 +63,9 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
   };
 
   const rawNumber = (business.whatsappNumber || '8801609999612').replace(/[^0-9]/g, '');
+  const whatsappDisplay = rawNumber.startsWith('880')
+    ? rawNumber.slice(2).replace(/^(\d{5})(\d+)$/, '$1-$2')
+    : (rawNumber || '01609-999612');
   const whatsappUrl = `https://wa.me/${rawNumber}?text=${encodeURIComponent('আসসালামু আলাইকুম। আমি ওয়াটার ট্যাংক ক্লিনিং সার্ভিস (Water Tank Cleaning Service) সম্পর্কে জানতে ও বুকিং করতে চাই।')}`;
 
   // 9-Step Scientific Process
@@ -166,24 +172,45 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
     { name: lang === 'bn' ? 'পানির ট্যাংক পরিষ্কার সার্ভিস' : 'Water Tank Cleaning Service', path: '/services/water-tank-cleaning' }
   ];
 
-  const structuredFaqs = waterTankFaqs.map(f => ({
+  const defaultFaqItems = waterTankFaqs.map(f => ({
     question: f.qBn,
     answer: f.aBn
   }));
 
+  const activeFaqItems =
+    dbService?.faqs && dbService.faqs.length > 0
+      ? dbService.faqs.map(f => ({
+          question: lang === 'bn' ? (f.questionBn || f.question) : (f.question || f.questionBn || ''),
+          answer: lang === 'bn' ? (f.answerBn || f.answer) : (f.answer || f.answerBn || '')
+        })).filter(item => Boolean(item.question && item.answer))
+      : defaultFaqItems;
+
+  const autoFallbackMetaTitle = dbService ? `${dbService.title} in Dhaka | Sunviloz Clean Care` : '';
+  const explicitServiceMetaTitle =
+    dbService?.metaTitle && dbService.metaTitle !== autoFallbackMetaTitle
+      ? dbService.metaTitle
+      : undefined;
+  const explicitServiceMetaDesc =
+    dbService?.metaDesc && dbService.metaDesc !== dbService.shortDesc
+      ? dbService.metaDesc
+      : undefined;
+
   return (
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-16">
       <SeoHead
-        title="Water Tank Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE"
-        description="Mechanized water tank cleaning service in Dhaka, Narayanganj, Gazipur & Savar for rooftop overhead and underground reserve tanks. Sludge extraction & food-grade sanitization. Call 01609999612."
+        title={explicitServiceMetaTitle}
+        description={explicitServiceMetaDesc}
+        canonicalPath="/services/water-tank-cleaning"
         canonicalUrl="https://sunvilozcleancare.com/services/water-tank-cleaning"
+        ogType="service"
+        ogImage={dbService?.image || undefined}
         serviceSchema={{
           name: 'Water Tank Cleaning Service in Dhaka',
           serviceType: 'Water Tank Cleaning Service',
-          description: 'Mechanized deep cleaning and food-grade sanitization for rooftop overhead tanks (PVC and concrete RCC) and underground reserve tanks across Dhaka, Narayanganj, Gazipur and Savar.'
+          description: explicitServiceMetaDesc || 'Mechanized deep cleaning and food-grade sanitization for rooftop overhead tanks (PVC and concrete RCC) and underground reserve tanks across Dhaka, Narayanganj, Gazipur and Savar.'
         }}
         breadcrumbs={breadcrumbsList}
-        faqSchema={structuredFaqs}
+        faqSchema={activeFaqItems}
       />
 
       <Breadcrumbs 
@@ -215,7 +242,7 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
             <p className="text-sm sm:text-base text-[#64748B] leading-relaxed max-w-2xl">
               {lang === 'bn'
                 ? 'বাসাবাড়ি, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের ছাদের ওভারহেড এবং ভূগর্ভস্থ আন্ডারগ্রাউন্ড পানির ট্যাংক পরিষ্কারে সানভিলোজ ক্লিন কেয়ারের আধুনিক মেকানাইজড ও স্যানিটাইজিং সল্যুশন।'
-                : 'Mechanized water tank cleaning service providing deep cleaning, heavy sludge extraction, high-pressure jet washing, and food-safe sanitization for underground reservoirs and rooftop tanks.'}
+                : 'Reliable water tank cleaning services in Dhaka providing deep cleaning, scheduled tank care, heavy sludge extraction, high-pressure jet washing, and food-safe sanitization for underground reservoirs and rooftop tanks.'}
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -239,7 +266,7 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
                 className="px-6 py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center gap-2"
               >
                 <MessageCircle className="w-4 h-4 text-white" />
-                <span>WhatsApp: {business.whatsappNumber || '01609999612'}</span>
+                <span>WhatsApp: {whatsappDisplay}</span>
               </a>
 
               <a
@@ -447,7 +474,7 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
         </div>
 
         <div className="max-w-4xl mx-auto space-y-3">
-          {waterTankFaqs.map((faq, index) => {
+          {activeFaqItems.map((faq, index) => {
             const isOpen = openFaq === index;
             return (
               <div 
@@ -462,7 +489,7 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
                 >
                   <span className="flex items-center gap-3">
                     <span className="text-[#0D9488] text-xs font-mono font-bold">Q{index + 1}.</span>
-                    <span>{faq.qBn}</span>
+                    <span>{faq.question}</span>
                   </span>
                   <ChevronDown 
                     className={`w-4 h-4 text-[#64748B] transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-[#0D9488]' : ''}`} 
@@ -471,7 +498,7 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
 
                 {isOpen && (
                   <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#64748B] leading-relaxed border-t border-[#E2E8F0]">
-                    <p>{faq.aBn}</p>
+                    <p>{faq.answer}</p>
                   </div>
                 )}
               </div>
@@ -523,9 +550,13 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          <button
-            type="button"
-            onClick={() => handleNavigate('/services/overhead-tank-cleaning')}
+          <a
+            href="/services/overhead-tank-cleaning"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/services/overhead-tank-cleaning');
+            }}
             className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
             <Building2 className="w-8 h-8 text-[#0D9488] shrink-0" />
@@ -537,11 +568,15 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
                 ছাদের পিভিসি ও আরসিসি কংক্রিট ট্যাংকের রোটারি প্রেশার ওয়াশ ও শ্যাওলা পরিষ্কার।
               </p>
             </div>
-          </button>
+          </a>
 
-          <button
-            type="button"
-            onClick={() => handleNavigate('/services/underground-water-tank-cleaning')}
+          <a
+            href="/services/underground-water-tank-cleaning"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/services/underground-water-tank-cleaning');
+            }}
             className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
             <Droplets className="w-8 h-8 text-[#0D9488] shrink-0" />
@@ -553,11 +588,15 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
                 আন্ডারগ্রাউন্ড রিজার্ভার ও রিজার্ভ ট্যাংকের ভারী কাদা স্লাজ পাম্পে উত্তোলন ও জীবাণুমুক্তকরণ।
               </p>
             </div>
-          </button>
+          </a>
 
-          <button
-            type="button"
-            onClick={() => handleNavigate('/services/pipeline-cleaning')}
+          <a
+            href="/services/pipeline-cleaning"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/services/pipeline-cleaning');
+            }}
             className="p-5 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#0D9488]/50 text-left transition-all group flex items-start gap-4 cursor-pointer shadow-sm"
           >
             <Wrench className="w-8 h-8 text-[#0D9488] shrink-0" />
@@ -569,7 +608,7 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
                 অভ্যন্তরীণ পানির পাইপলাইনের আয়রন ও মরিচা দেয়াল অক্ষত রেখে হাইড্রো-পালস ফ্লাশিং।
               </p>
             </div>
-          </button>
+          </a>
         </div>
       </section>
 
@@ -606,15 +645,19 @@ export const WaterTankCleaningPage: React.FC<WaterTankCleaningPageProps> = ({
             { name: 'নারায়ণগঞ্জ (Narayanganj)', slug: 'narayanganj' },
             { name: 'ঢাকা মেট্রো (Dhaka All)', slug: 'dhaka' }
           ].map((area, idx) => (
-            <button
+            <a
               key={idx}
-              type="button"
-              onClick={() => handleNavigate(`/service-areas/${area.slug}`)}
+              href={`/service-areas/${area.slug}`}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                handleNavigate(`/service-areas/${area.slug}`);
+              }}
               className="px-3.5 py-2 rounded-xl bg-[#F5FAFC] hover:bg-[#E8F5F3] border border-[#E2E8F0] hover:border-[#0D9488]/40 text-xs font-semibold text-[#123047] hover:text-[#0D9488] transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <MapPin className="w-3.5 h-3.5 text-[#0D9488] shrink-0" />
               <span>{area.name}</span>
-            </button>
+            </a>
           ))}
         </div>
       </section>

@@ -2,6 +2,11 @@ import { FullSiteConfig } from '../types/siteConfig';
 import { ZoneAreaRecord } from '../services/zoneContentService';
 import { ProblemQaItem } from '../data/problemQaData';
 import { escapeXml, toValidIsoDate } from './safeSerialize';
+import {
+  resolveAuthoritativeHotline,
+  resolveAuthoritativeHotlineDisplay,
+  WHATSAPP_E164
+} from './seoResolver';
 
 export interface SitemapRouteInput {
   path: string;
@@ -109,9 +114,11 @@ export function buildLlmsTxt(input: LlmsGeneratorInput): string {
     `Website: ${cleanBase}`
   ];
 
-  if (biz?.phone?.trim()) {
-    lines.push(`Phone / WhatsApp: ${biz.phone.trim()}`);
-  }
+  const hotlineE164 = resolveAuthoritativeHotline(biz?.phone);
+  const hotlineDisplay = resolveAuthoritativeHotlineDisplay(biz?.displayPhone, biz?.phone);
+  const waDigits = (biz?.whatsappNumber || WHATSAPP_E164).replace(/[^0-9]/g, '').replace(/^880/, '');
+  lines.push(`Hotline: ${hotlineDisplay} (${hotlineE164})`);
+  lines.push(`WhatsApp: +880${waDigits}`);
   if (biz?.email?.trim()) {
     lines.push(`Email: ${biz.email.trim()}`);
   }

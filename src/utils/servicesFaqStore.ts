@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { safeGetItem, safeSetItem } from './safeLocalStorage';
 
 export interface ServiceFaqItem {
@@ -176,44 +176,87 @@ function mapFaqToRow(f: ServiceFaqItem): any {
   };
 }
 
+function readSnapshotServicesFaqs(): ServiceFaqItem[] | null {
+  const globalSnap = (globalThis as any).__INITIAL_SERVICES_FAQS__;
+  if (Array.isArray(globalSnap)) {
+    return globalSnap.map(item => ({ ...item, order: Number(item.order ?? 1), isActive: item.isActive !== false }));
+  }
+  if (typeof window !== 'undefined') {
+    const winSnap = (window as any).__INITIAL_SERVICES_FAQS__;
+    if (Array.isArray(winSnap)) {
+      return winSnap.map(item => ({ ...item, order: Number(item.order ?? 1), isActive: item.isActive !== false }));
+    }
+  }
+  return null;
+}
+
+function sortByOrder(items: ServiceFaqItem[]): ServiceFaqItem[] {
+  return [...items].sort((a, b) => Number(a.order ?? 0) - Number(b.order ?? 0));
+}
+
 export const getStoredServicesFaqs = (): ServiceFaqItem[] => {
-  if (typeof window === 'undefined') return INITIAL_SERVICES_FAQS;
+  const ssrSnapshot = readSnapshotServicesFaqs();
+  if (ssrSnapshot !== null) {
+    return sortByOrder(ssrSnapshot);
+  }
+
+  if (typeof window === 'undefined') {
+    return isSupabaseConfigured() ? [] : sortByOrder(INITIAL_SERVICES_FAQS);
+  }
+
   try {
     const raw = safeGetItem(STORAGE_KEY);
-    if (!raw) {
-      safeSetItem(STORAGE_KEY, JSON.stringify(INITIAL_SERVICES_FAQS));
-      return INITIAL_SERVICES_FAQS;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return sortByOrder(parsed);
+      }
     }
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
-    }
-    return INITIAL_SERVICES_FAQS;
   } catch (err) {
     console.error('Failed to parse services FAQs:', err);
-    return INITIAL_SERVICES_FAQS;
   }
+
+  if (!isSupabaseConfigured()) {
+    return sortByOrder(INITIAL_SERVICES_FAQS);
+  }
+
+  return sortByOrder(INITIAL_SERVICES_FAQS);
 };
 
-export const fetchServicesFaqsFromSupabase = async (): Promise<ServiceFaqItem[]> => {
+export interface ServicesFaqFetchOptions {
+  includeInactive?: boolean;
+}
+
+export const fetchServicesFaqsFromSupabase = async (
+  options: ServicesFaqFetchOptions = {}
+): Promise<ServiceFaqItem[]> => {
+  const { includeInactive = false } = options;
   let list = getStoredServicesFaqs();
 
   if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('services_faqs')
         .select('*')
         .order('sort_order', { ascending: true });
 
-      if (!error && Array.isArray(data) && data.length > 0) {
-        list = data.map(mapRowToFaq);
-        if (typeof window !== 'undefined') {
-          safeSetItem(STORAGE_KEY, JSON.stringify(list));
-          window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: list }));
+      if (!includeInactive) {
+        query = query.eq('is_active', true);
+      }
+
+      const { data, error } = await query;
+
+      if (!error && Array.isArray(data)) {
+        list = sortByOrder(data.map(mapRowToFaq));
+        if (typeof window !== 'undefined' && !includeInactive) {
+          const prevRaw = safeGetItem(STORAGE_KEY);
+          const nextRaw = JSON.stringify(list);
+          (window as any).__INITIAL_SERVICES_FAQS__ = list;
+          if (prevRaw !== nextRaw) {
+            safeSetItem(STORAGE_KEY, nextRaw);
+            window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: list }));
+          }
         }
-      } else if (!error && Array.isArray(data) && data.length === 0) {
-        const rows = INITIAL_SERVICES_FAQS.map(mapFaqToRow);
-        await supabase.from('services_faqs').upsert(rows, { onConflict: 'id' });
       }
     } catch (err) {
       console.warn('Could not query services_faqs from Supabase:', err);
@@ -224,14 +267,11 @@ export const fetchServicesFaqsFromSupabase = async (): Promise<ServiceFaqItem[]>
 };
 
 export const saveAllServicesFaqs = async (faqs: ServiceFaqItem[]): Promise<boolean> => {
-  if (typeof window !== 'undefined') {
-    safeSetItem(STORAGE_KEY, JSON.stringify(faqs));
-    window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: faqs }));
-  }
+  const sorted = sortByOrder(faqs);
 
   if (isSupabaseConfigured()) {
     try {
-      const rows = faqs.map(mapFaqToRow);
+      const rows = sorted.map(mapFaqToRow);
       const { error } = await supabase.from('services_faqs').upsert(rows, { onConflict: 'id' });
       if (error) {
         console.error('Supabase services_faqs save error:', error.message);
@@ -243,11 +283,18 @@ export const saveAllServicesFaqs = async (faqs: ServiceFaqItem[]): Promise<boole
     }
   }
 
+  if (typeof window !== 'undefined') {
+    const activeOnly = sorted.filter(f => f.isActive !== false);
+    (window as any).__INITIAL_SERVICES_FAQS__ = activeOnly;
+    safeSetItem(STORAGE_KEY, JSON.stringify(sorted));
+    window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: sorted }));
+  }
+
   return true;
 };
 
 export const addServiceFaq = async (faqData: Omit<ServiceFaqItem, 'id'>): Promise<ServiceFaqItem> => {
-  const current = getStoredServicesFaqs();
+  const current = await fetchServicesFaqsFromSupabase({ includeInactive: true });
   const id = `faq-${faqData.category === 'pipeline-cleaning' ? 'pipe' : 'tank'}-${Date.now()}`;
   const newItem: ServiceFaqItem = {
     ...faqData,
@@ -261,7 +308,7 @@ export const addServiceFaq = async (faqData: Omit<ServiceFaqItem, 'id'>): Promis
 };
 
 export const updateServiceFaq = async (id: string, updates: Partial<ServiceFaqItem>): Promise<boolean> => {
-  const current = getStoredServicesFaqs();
+  const current = await fetchServicesFaqsFromSupabase({ includeInactive: true });
   const idx = current.findIndex(f => f.id === id);
   if (idx === -1) return false;
   current[idx] = {
@@ -272,38 +319,56 @@ export const updateServiceFaq = async (id: string, updates: Partial<ServiceFaqIt
 };
 
 export const deleteServiceFaq = async (id: string): Promise<boolean> => {
-  const current = getStoredServicesFaqs();
+  const current = await fetchServicesFaqsFromSupabase({ includeInactive: true });
   const filtered = current.filter(f => f.id !== id);
   if (filtered.length === current.length) return false;
-  await saveAllServicesFaqs(filtered);
 
   if (isSupabaseConfigured()) {
     try {
-      await supabase.from('services_faqs').delete().eq('id', id);
+      const { error } = await supabase.from('services_faqs').delete().eq('id', id);
+      if (error) {
+        console.error('Failed to delete service FAQ from Supabase:', error.message);
+        return false;
+      }
     } catch (err) {
       console.warn('Failed to delete service FAQ from Supabase:', err);
+      return false;
     }
+  }
+
+  if (typeof window !== 'undefined') {
+    const activeOnly = filtered.filter(f => f.isActive !== false);
+    (window as any).__INITIAL_SERVICES_FAQS__ = activeOnly;
+    safeSetItem(STORAGE_KEY, JSON.stringify(filtered));
+    window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: filtered }));
   }
   return true;
 };
 
 export const resetServicesFaqsToDefault = async (): Promise<ServiceFaqItem[]> => {
   await saveAllServicesFaqs(INITIAL_SERVICES_FAQS);
-  return INITIAL_SERVICES_FAQS;
+  return sortByOrder(INITIAL_SERVICES_FAQS);
 };
 
-export const useServicesFaqs = () => {
+export const useServicesFaqs = (options: ServicesFaqFetchOptions = {}) => {
+  const includeInactive = Boolean(options.includeInactive);
   const [faqs, setFaqs] = useState<ServiceFaqItem[]>(() => getStoredServicesFaqs());
 
   useEffect(() => {
-    fetchServicesFaqsFromSupabase().then(latest => {
-      if (latest && latest.length > 0) {
-        setFaqs(latest);
-      }
+    let active = true;
+    const applyNextFaqs = (nextList: ServiceFaqItem[]) => {
+      if (!active) return;
+      const sorted = sortByOrder(nextList);
+      setFaqs(prev => (JSON.stringify(prev) === JSON.stringify(sorted) ? prev : sorted));
+    };
+
+    fetchServicesFaqsFromSupabase({ includeInactive }).then(latest => {
+      applyNextFaqs(latest);
     });
 
     const handleUpdate = (e: any) => {
-      setFaqs(e.detail || getStoredServicesFaqs());
+      const next = Array.isArray(e?.detail) ? e.detail : getStoredServicesFaqs();
+      applyNextFaqs(includeInactive ? next : next.filter((f: ServiceFaqItem) => f.isActive !== false));
     };
     window.addEventListener(EVENT_NAME, handleUpdate);
 
@@ -317,7 +382,9 @@ export const useServicesFaqs = () => {
               'postgres_changes',
               { event: '*', schema: 'public', table: 'services_faqs' },
               () => {
-                fetchServicesFaqsFromSupabase();
+                fetchServicesFaqsFromSupabase({ includeInactive }).then(latest => {
+                  applyNextFaqs(latest);
+                });
               }
             )
             .subscribe();
@@ -328,18 +395,29 @@ export const useServicesFaqs = () => {
     }, 2500);
 
     return () => {
+      active = false;
       clearTimeout(realtimeTimer);
       window.removeEventListener(EVENT_NAME, handleUpdate);
       if (channel) {
         supabase.removeChannel(channel);
       }
     };
-  }, []);
+  }, [includeInactive]);
+
+  const sortedFaqs = useMemo(() => sortByOrder(faqs), [faqs]);
+  const tankFaqs = useMemo(
+    () => sortedFaqs.filter(f => f.category === 'water-tank-cleaning' && f.isActive !== false),
+    [sortedFaqs]
+  );
+  const pipelineFaqs = useMemo(
+    () => sortedFaqs.filter(f => f.category === 'pipeline-cleaning' && f.isActive !== false),
+    [sortedFaqs]
+  );
 
   return {
-    faqs,
-    tankFaqs: faqs.filter(f => f.category === 'water-tank-cleaning' && f.isActive !== false),
-    pipelineFaqs: faqs.filter(f => f.category === 'pipeline-cleaning' && f.isActive !== false),
+    faqs: sortedFaqs,
+    tankFaqs,
+    pipelineFaqs,
     addServiceFaq,
     updateServiceFaq,
     deleteServiceFaq,

@@ -16,7 +16,6 @@ import { AmbientWaterBackground } from './components/AmbientWaterBackground';
 import { initUtmTracking } from './utils/utmTracking';
 import { initAnalytics, trackPageView } from './utils/tracking';
 import { fetchCentralImageRegistry } from './services/imageSyncService';
-import { fetchUrlRedirects } from './services/zoneContentService';
 
 // Critical Homepage eagerly loaded for instant FCP / LCP
 import { HomePage } from './pages/HomePage';
@@ -137,7 +136,7 @@ function AppContent({ initialPath, ssrComponents }: AppProps) {
       } else if (currentPath === '/pipeline-cleaning-service') {
         window.history.replaceState(null, '', '/services/pipeline-cleaning');
         setCurrentPath('/services/pipeline-cleaning');
-      } else if (currentPath === '/services/pipe-line-cleaning') {
+      } else if (currentPath === '/services/pipe-line-cleaning' || currentPath === '/services/water-pipeline-cleaning') {
         window.history.replaceState(null, '', '/services/pipeline-cleaning');
         setCurrentPath('/services/pipeline-cleaning');
       } else if (currentPath === '/services/underground-tank-cleaning') {
@@ -164,20 +163,26 @@ function AppContent({ initialPath, ssrComponents }: AppProps) {
         window.history.replaceState(null, '', `/blog/${tipSlug}`);
         setCurrentPath(`/blog/${tipSlug}`);
       } else if (currentPath === '/services-faq' || currentPath === '/services-faq/') {
-        window.history.replaceState(null, '', '/#homepage-all-faq');
-        setCurrentPath('/');
+        window.history.replaceState(null, '', '/faq');
+        setCurrentPath('/faq');
       } else if (currentPath === '/pricing' || currentPath === '/pricing/') {
         window.history.replaceState(null, '', '/get-quote');
         setCurrentPath('/get-quote');
       } else if (!currentPath.startsWith('/admin')) {
         const cleanCurrent = currentPath === '/' ? '/' : currentPath.replace(/\/+$/, '');
-        fetchUrlRedirects().then(redirects => {
-          const match = redirects.find(r => r.isActive && r.fromPath === cleanCurrent);
-          if (match && match.toPath && match.toPath !== cleanCurrent) {
-            window.history.replaceState(null, '', match.toPath);
-            setCurrentPath(match.toPath);
-          }
-        }).catch(() => {});
+        import('./services/zoneContentService')
+          .then(({ fetchUrlRedirects }) => fetchUrlRedirects())
+          .then(redirects => {
+            const match = redirects.find(r => r.isActive && r.fromPath === cleanCurrent);
+            const targetPath = match?.toPath
+              ? (match.toPath === '/' ? '/' : match.toPath.replace(/\/+$/, ''))
+              : '';
+            if (targetPath && targetPath !== cleanCurrent) {
+              window.history.replaceState(null, '', targetPath);
+              setCurrentPath(targetPath);
+            }
+          })
+          .catch(() => {});
       }
     }
   }, [currentPath]);
@@ -195,8 +200,11 @@ function AppContent({ initialPath, ssrComponents }: AppProps) {
   // Intercept normal anchor clicks that point to internal paths
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+        return;
+      }
       const target = (e.target as HTMLElement).closest('a');
-      if (!target) return;
+      if (!target || target.target === '_blank') return;
 
       const href = target.getAttribute('href');
       if (href && href.startsWith('/') && !href.startsWith('//') && !target.hasAttribute('download')) {

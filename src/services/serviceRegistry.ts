@@ -42,7 +42,7 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
   // 1. Overhead Water Tank Cleaning Service
   {
     id: 'srv-overhead-water-tank',
-    slug: 'overhead-water-tank-cleaning',
+    slug: 'overhead-tank-cleaning',
     title: 'Overhead Water Tank Cleaning Service',
     titleBn: 'ওভারহেড ওয়াটার ট্যাংক ক্লিনিং সার্ভিস',
     name: 'Overhead Water Tank Cleaning Service',
@@ -65,8 +65,8 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
     popular: true,
     startingPrice: 1200,
     startingPriceBn: '৳ ১,২০০',
-    seo_title: 'Overhead Water Tank Cleaning Service in Dhaka | Sunviloz Clean Care',
-    metaTitle: 'Overhead Water Tank Cleaning Service in Dhaka | Sunviloz Clean Care',
+    seo_title: 'Overhead Water Tank Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE',
+    metaTitle: 'Overhead Water Tank Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE',
     meta_description: 'Professional overhead water tank cleaning service for plastic, steel, and concrete tanks in Dhaka. High pressure rotary jet wash and food-grade sanitization.',
     metaDesc: 'Professional overhead water tank cleaning service for plastic, steel, and concrete tanks in Dhaka. High pressure rotary jet wash and food-grade sanitization.',
     created_at: '2026-01-01T00:00:00.000Z',
@@ -254,7 +254,7 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
   // 3. Water Pipeline Cleaning Service
   {
     id: 'srv-water-pipeline',
-    slug: 'water-pipeline-cleaning',
+    slug: 'pipeline-cleaning',
     title: 'Water Pipeline Cleaning Service',
     titleBn: 'ওয়াটার পাইপলাইন ক্লিনিং সার্ভিস',
     name: 'Water Pipeline Cleaning Service',
@@ -277,8 +277,8 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
     popular: true,
     startingPrice: 1500,
     startingPriceBn: '৳ ১,৫০০',
-    seo_title: 'Water Pipeline Cleaning Service Dhaka | Sunviloz Clean Care',
-    metaTitle: 'Water Pipeline Cleaning Service Dhaka | Sunviloz Clean Care',
+    seo_title: 'Water Pipeline Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE',
+    metaTitle: 'Water Pipeline Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE',
     meta_description: 'Non-invasive water pipeline cleaning and descaling in Dhaka. Removes rust and iron deposits without breaking walls or damaging tiles.',
     metaDesc: 'Non-invasive water pipeline cleaning and descaling in Dhaka. Removes rust and iron deposits without breaking walls or damaging tiles.',
     created_at: '2026-01-01T00:00:00.000Z',
@@ -349,11 +349,11 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
 
 export const CANONICAL_SERVICE_ALIASES: Record<string, string> = {
   // Overhead Tank
-  'overhead-tank-cleaning': 'overhead-water-tank-cleaning',
-  'overhead-water-tank-cleaning': 'overhead-water-tank-cleaning',
-  'overhead-water-tank': 'overhead-water-tank-cleaning',
-  'rooftop-tank-cleaning': 'overhead-water-tank-cleaning',
-  'overhead-tank': 'overhead-water-tank-cleaning',
+  'overhead-tank-cleaning': 'overhead-tank-cleaning',
+  'overhead-water-tank-cleaning': 'overhead-tank-cleaning',
+  'overhead-water-tank': 'overhead-tank-cleaning',
+  'rooftop-tank-cleaning': 'overhead-tank-cleaning',
+  'overhead-tank': 'overhead-tank-cleaning',
 
   // Underground Tank
   'underground-tank-cleaning': 'underground-water-tank-cleaning',
@@ -363,16 +363,16 @@ export const CANONICAL_SERVICE_ALIASES: Record<string, string> = {
   'reserve-tank-cleaning': 'underground-water-tank-cleaning',
 
   // Water Pipeline
-  'water-pipeline-cleaning': 'water-pipeline-cleaning',
-  'pipeline-cleaning': 'water-pipeline-cleaning',
-  'pipeline-cleaning-service': 'water-pipeline-cleaning',
-  'pipe-line-cleaning': 'water-pipeline-cleaning',
-  'water-pipeline': 'water-pipeline-cleaning',
+  'water-pipeline-cleaning': 'pipeline-cleaning',
+  'pipeline-cleaning': 'pipeline-cleaning',
+  'pipeline-cleaning-service': 'pipeline-cleaning',
+  'pipe-line-cleaning': 'pipeline-cleaning',
+  'water-pipeline': 'pipeline-cleaning',
 
   // Legacy / Combo aliases mapped to best matching active service
-  'water-tank-cleaning': 'overhead-water-tank-cleaning',
-  'water-tank-cleaning-service': 'overhead-water-tank-cleaning',
-  'both-water-tank-cleaning': 'overhead-water-tank-cleaning',
-  'both-water-tank-cleaning-with-pipeline': 'overhead-water-tank-cleaning',
-  'water-pipeline-cleaning-both-water-tank': 'water-pipeline-cleaning'
+  'water-tank-cleaning': 'overhead-tank-cleaning',
+  'water-tank-cleaning-service': 'overhead-tank-cleaning',
+  'both-water-tank-cleaning': 'overhead-tank-cleaning',
+  'both-water-tank-cleaning-with-pipeline': 'overhead-tank-cleaning',
+  'water-pipeline-cleaning-both-water-tank': 'pipeline-cleaning'
 };

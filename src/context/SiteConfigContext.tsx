@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { 
   FullSiteConfig, 
   SectionConfig, 
@@ -272,7 +272,10 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setConfig(updated);
   };
 
-  const sortedSections = [...config.sections].sort((a, b) => a.order - b.order);
+  const sortedSections = useMemo(
+    () => [...config.sections].sort((a, b) => a.order - b.order),
+    [config.sections]
+  );
 
   const imagesValue = config.images || {
     heroPoster: 'https://img.youtube.com/vi/vaVkY5afSSE/hqdefault.jpg',

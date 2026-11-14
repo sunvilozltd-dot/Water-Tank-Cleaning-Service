@@ -161,14 +161,19 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ onNavigate }) => {
                         )}
 
                         <div className="pt-1">
-                          <button
-                            type="button"
-                            onClick={() => handleGo(item.relatedServicePath)}
-                            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D9488] hover:underline cursor-pointer"
+                          <a
+                            href={item.relatedServicePath}
+                            onClick={(e) => {
+                              if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+                                e.preventDefault();
+                                handleGo(item.relatedServicePath);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D9488] hover:underline"
                           >
                             <span>{lang === 'bn' ? item.relatedServiceLabelBn : item.relatedServiceLabelEn}</span>
                             <ArrowRight className="w-3.5 h-3.5" />
-                          </button>
+                          </a>
                         </div>
                       </div>
                     )}

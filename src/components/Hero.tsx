@@ -36,6 +36,7 @@ export const Hero: React.FC<HeroProps> = () => {
 
   // Video 1 Refs & State
   const video1Ref = useRef<HTMLVideoElement>(null);
+  const [activatedYt1, setActivatedYt1] = useState(false);
   const [isPlaying1, setIsPlaying1] = useState(true);
   const [isMuted1, setIsMuted1] = useState(true);
   const [hasError1, setHasError1] = useState(false);
@@ -44,6 +45,7 @@ export const Hero: React.FC<HeroProps> = () => {
   // Video 2 Refs & State
   const video2Ref = useRef<HTMLVideoElement>(null);
   const video2ContainerRef = useRef<HTMLDivElement>(null);
+  const [activatedYt2, setActivatedYt2] = useState(false);
   const [video2InView, setVideo2InView] = useState(false);
   const [isPlaying2, setIsPlaying2] = useState(true);
   const [isMuted2, setIsMuted2] = useState(true);
@@ -53,6 +55,7 @@ export const Hero: React.FC<HeroProps> = () => {
   // Video 3 Refs & State
   const video3Ref = useRef<HTMLVideoElement>(null);
   const video3ContainerRef = useRef<HTMLDivElement>(null);
+  const [activatedYt3, setActivatedYt3] = useState(false);
   const [video3InView, setVideo3InView] = useState(false);
   const [isPlaying3, setIsPlaying3] = useState(true);
   const [isMuted3, setIsMuted3] = useState(true);
@@ -192,19 +195,47 @@ export const Hero: React.FC<HeroProps> = () => {
           {/* ================= VIDEO 1 ================= */}
           <div 
             className="w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-[#0F2333] border border-slate-800/80 relative shadow-lg group cursor-pointer"
-            onClick={hasVideo1 ? togglePlay1 : undefined}
+            onClick={hasVideo1 ? (ytId1 ? () => setActivatedYt1(true) : togglePlay1) : undefined}
           >
             {hasVideo1 ? (
               ytId1 ? (
-                <iframe
-                  src={`https://www.youtube-nocookie.com/embed/${ytId1}?autoplay=1&mute=1&controls=1&loop=1&playlist=${ytId1}&playsinline=1&rel=0`}
-                  title="SUNVILOZ mechanized water tank cleaning service demonstration in Dhaka"
-                  loading="eager"
-                  width="560"
-                  height="315"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  className="w-full h-full border-0 object-contain bg-black"
-                />
+                activatedYt1 ? (
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${ytId1}?autoplay=1&mute=1&controls=1&loop=1&playlist=${ytId1}&playsinline=1&rel=0`}
+                    title="SUNVILOZ mechanized water tank cleaning service demonstration in Dhaka"
+                    width="560"
+                    height="315"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full border-0 object-contain bg-black"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActivatedYt1(true);
+                    }}
+                    aria-label="Play SUNVILOZ mechanized water tank cleaning demonstration video"
+                    className="relative w-full h-full bg-[#0F2333] flex items-center justify-center cursor-pointer"
+                  >
+                    <img
+                      src={(!posterError1 && video1Poster) ? video1Poster : `https://img.youtube.com/vi/${ytId1}/hqdefault.jpg`}
+                      alt="SUNVILOZ mechanized water tank cleaning service demonstration in Dhaka"
+                      loading="eager"
+                      fetchPriority="high"
+                      width={560}
+                      height={315}
+                      onError={() => setPosterError1(true)}
+                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                    />
+                    <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <Play className="w-6 h-6 fill-white ml-0.5" aria-hidden="true" />
+                      </span>
+                    </span>
+                  </button>
+                )
               ) : (
                 <>
                   <video
@@ -283,45 +314,53 @@ export const Hero: React.FC<HeroProps> = () => {
             className="w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-[#0F2333] border border-slate-800/80 relative shadow-lg group cursor-pointer"
             onClick={(e) => {
               if (!video2InView) setVideo2InView(true);
-              if (hasVideo2) togglePlay2(e);
+              if (hasVideo2) {
+                if (ytId2) {
+                  setActivatedYt2(true);
+                } else {
+                  togglePlay2(e);
+                }
+              }
             }}
           >
             {hasVideo2 ? (
               ytId2 ? (
-                video2InView ? (
+                activatedYt2 ? (
                   <iframe
                     src={`https://www.youtube-nocookie.com/embed/${ytId2}?autoplay=1&mute=1&controls=1&loop=1&playlist=${ytId2}&playsinline=1&rel=0`}
                     title="Overhead water tank rotary jet scrubbing and sludge extraction demonstration"
-                    loading="lazy"
                     width="560"
                     height="315"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
                     className="w-full h-full border-0 object-contain bg-black"
                   />
                 ) : (
-                  <div className="relative w-full h-full bg-[#0F2333] flex items-center justify-center">
-                    {!posterError2 && video2Poster ? (
-                      <img
-                        src={video2Poster}
-                        alt="Overhead water tank rotary jet scrubbing and sludge extraction demonstration"
-                        loading="lazy"
-                        decoding="async"
-                        width="560"
-                        height="315"
-                        onError={() => setPosterError2(true)}
-                        className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-opacity"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-[#0F2333] flex items-center justify-center">
-                        <Video className="w-8 h-8 text-slate-500 opacity-60" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <Play className="w-6 h-6 fill-white ml-0.5" />
-                      </div>
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActivatedYt2(true);
+                    }}
+                    aria-label="Play overhead water tank cleaning demonstration video"
+                    className="relative w-full h-full bg-[#0F2333] flex items-center justify-center cursor-pointer"
+                  >
+                    <img
+                      src={(!posterError2 && video2Poster) ? video2Poster : `https://img.youtube.com/vi/${ytId2}/hqdefault.jpg`}
+                      alt="Overhead water tank rotary jet scrubbing and sludge extraction demonstration"
+                      loading="lazy"
+                      decoding="async"
+                      width={560}
+                      height={315}
+                      onError={() => setPosterError2(true)}
+                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                    />
+                    <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <Play className="w-6 h-6 fill-white ml-0.5" aria-hidden="true" />
+                      </span>
+                    </span>
+                  </button>
                 )
               ) : (
                 <>
@@ -401,45 +440,53 @@ export const Hero: React.FC<HeroProps> = () => {
             className="w-full md:col-span-2 lg:col-span-1 md:w-1/2 md:mx-auto lg:w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-[#0F2333] border border-slate-800/80 relative shadow-lg group cursor-pointer"
             onClick={(e) => {
               if (!video3InView) setVideo3InView(true);
-              if (hasVideo3) togglePlay3(e);
+              if (hasVideo3) {
+                if (ytId3) {
+                  setActivatedYt3(true);
+                } else {
+                  togglePlay3(e);
+                }
+              }
             }}
           >
             {hasVideo3 ? (
               ytId3 ? (
-                video3InView ? (
+                activatedYt3 ? (
                   <iframe
                     src={`https://www.youtube-nocookie.com/embed/${ytId3}?autoplay=1&mute=1&controls=1&loop=1&playlist=${ytId3}&playsinline=1&rel=0`}
                     title="Underground reserve tank deep cleaning and pipeline flushing demonstration"
-                    loading="lazy"
                     width="560"
                     height="315"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
                     className="w-full h-full border-0 object-contain bg-black"
                   />
                 ) : (
-                  <div className="relative w-full h-full bg-[#0F2333] flex items-center justify-center">
-                    {!posterError3 && video3Poster ? (
-                      <img
-                        src={video3Poster}
-                        alt="Underground reserve tank deep cleaning and pipeline flushing demonstration"
-                        loading="lazy"
-                        decoding="async"
-                        width="560"
-                        height="315"
-                        onError={() => setPosterError3(true)}
-                        className="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition-opacity"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-[#0F2333] flex items-center justify-center">
-                        <Video className="w-8 h-8 text-slate-500 opacity-60" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <Play className="w-6 h-6 fill-white ml-0.5" />
-                      </div>
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActivatedYt3(true);
+                    }}
+                    aria-label="Play underground reserve tank and pipeline cleaning demonstration video"
+                    className="relative w-full h-full bg-[#0F2333] flex items-center justify-center cursor-pointer"
+                  >
+                    <img
+                      src={(!posterError3 && video3Poster) ? video3Poster : `https://img.youtube.com/vi/${ytId3}/hqdefault.jpg`}
+                      alt="Underground reserve tank deep cleaning and pipeline flushing demonstration"
+                      loading="lazy"
+                      decoding="async"
+                      width={560}
+                      height={315}
+                      onError={() => setPosterError3(true)}
+                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                    />
+                    <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <Play className="w-6 h-6 fill-white ml-0.5" aria-hidden="true" />
+                      </span>
+                    </span>
+                  </button>
                 )
               ) : (
                 <>

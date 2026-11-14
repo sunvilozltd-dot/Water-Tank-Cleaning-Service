@@ -3,6 +3,12 @@ import { BUSINESS_CONFIG } from '../data/config';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { extractVerificationToken, sanitizeHttpsUrl } from '../utils/htmlSanitizer';
 import { SITE_DOMAIN } from '../config/siteDomain';
+import {
+  extractRouteKey,
+  formatSeoTitle as formatCanonicalSeoTitle,
+  resolveAuthoritativeHotline
+} from '../seo/seoResolver';
+import { resolveRouteMetadata } from '../seo/sharedRouteMetadata';
 
 export interface SeoProps {
   title?: string;
@@ -20,28 +26,26 @@ export interface SeoProps {
     description: string;
     serviceType: string;
   };
+  articleSchema?: {
+    headline: string;
+    description: string;
+    datePublished?: string;
+    dateModified?: string;
+    image?: string;
+    url?: string;
+  };
   faqSchema?: { question: string; answer: string }[];
   breadcrumbs?: { name: string; path: string }[];
 }
 
-export const formatSeoTitle = (rawTitle?: string): string => {
-  const brand = 'SUNVILOZ CLEAN CARE';
-  if (!rawTitle) return `Water Tank Cleaning Service in Dhaka | ${brand}`;
-  const trimmed = rawTitle.trim();
-  if (trimmed.toLowerCase().includes(brand.toLowerCase()) || trimmed.toLowerCase().includes('sunviloz clean care')) {
-    return trimmed;
-  }
-  const regex = new RegExp(`\\s*(\\||-)\\s*(${brand}|Sunviloz Clean Care.*|Sunviloz.*)$`, 'i');
-  const cleaned = trimmed.replace(regex, '').trim();
-  return `${cleaned} | ${brand}`;
-};
+export const formatSeoTitle = formatCanonicalSeoTitle;
 
 const OFFICIAL_LOGO_URL = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/branding/sunviloz-logo-official.png';
 
 export const SeoHead: React.FC<SeoProps> = ({
   title,
   description,
-  canonicalPath = '/',
+  canonicalPath,
   canonicalUrl: customCanonicalUrl,
   ogType = 'website',
   ogTitle: customOgTitle,
@@ -50,6 +54,7 @@ export const SeoHead: React.FC<SeoProps> = ({
   ogImageAlt,
   noIndex = false,
   serviceSchema,
+  articleSchema,
   faqSchema,
   breadcrumbs,
 }) => {
@@ -58,46 +63,45 @@ export const SeoHead: React.FC<SeoProps> = ({
   const seo = siteConfig?.seo;
 
   const baseOrigin = (seo?.canonicalBaseUrl || business.canonicalBaseUrl || SITE_DOMAIN).replace(/\/+$/, '');
-  const normalizedPath = canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`;
-  const routeKey = normalizedPath === '/' ? '/' : normalizedPath.replace(/\/+$/, '');
-  const override = seo?.pageSeoOverrides?.[routeKey];
+  const routeKey = extractRouteKey(canonicalPath, customCanonicalUrl);
+  const resolvedMeta = resolveRouteMetadata({
+    routeKey,
+    seoConfig: seo,
+    entitySeo: {
+      title,
+      description,
+      ogTitle: customOgTitle,
+      ogDescription: customOgDescription,
+      ogImage,
+      ogImageAlt,
+      noIndex
+    }
+  });
 
-  const resolvedRawTitle = override?.title || title || seo?.defaultMetaTitle;
-  const fullTitle = formatSeoTitle(resolvedRawTitle);
-  const metaDesc =
-    override?.description ||
-    description ||
-    seo?.defaultMetaDescription ||
-    'Professional water tank cleaning service in Dhaka, Narayanganj, Gazipur & Savar. Overhead, underground reserve tank and water pipeline flushing. Contact SUNVILOZ CLEAN CARE: 01609999612.';
+  const fullTitle = resolvedMeta.title;
+  const metaDesc = resolvedMeta.description;
 
   const canonicalUrl =
     customCanonicalUrl ||
     `${baseOrigin}${routeKey === '/' ? '/' : routeKey}`;
 
   const socialImage =
-    sanitizeHttpsUrl(override?.ogImage) ||
-    sanitizeHttpsUrl(ogImage) ||
-    sanitizeHttpsUrl(seo?.socialOgImage) ||
+    sanitizeHttpsUrl(resolvedMeta.ogImage) ||
     OFFICIAL_LOGO_URL;
 
   const socialImageAlt =
-    override?.ogImageAlt ||
-    ogImageAlt ||
-    seo?.ogImageAlt ||
+    resolvedMeta.ogImageAlt ||
     'SUNVILOZ CLEAN CARE — Water Tank & Pipeline Cleaning Service in Dhaka';
 
-  const ogTitle = override?.ogTitle
-    ? formatSeoTitle(override.ogTitle)
-    : customOgTitle
-    ? formatSeoTitle(customOgTitle)
-    : fullTitle;
-  const ogDescription = override?.ogDescription || customOgDescription || metaDesc;
-  const effectiveNoIndex = Boolean(noIndex || override?.noIndex || seo?.indexingAllowed === false);
+  const ogTitle = resolvedMeta.ogTitle;
+  const ogDescription = resolvedMeta.ogDescription;
+  const effectiveNoIndex = resolvedMeta.noIndex;
 
   const gscToken = extractVerificationToken(business.googleSiteVerification);
   const bingToken = extractVerificationToken(business.bingSiteVerification);
   const gbpVerified = Boolean(business.gbpVerified);
   const gbpUrl = gbpVerified ? sanitizeHttpsUrl(business.googleBusinessProfileUrl) : '';
+  const authoritativePhoneE164 = resolveAuthoritativeHotline(business.phone);
 
   useEffect(() => {
     document.title = fullTitle;
@@ -134,34 +138,26 @@ export const SeoHead: React.FC<SeoProps> = ({
     upsertMetaByName('description', metaDesc);
     upsertMetaByName('robots', effectiveNoIndex ? 'noindex, nofollow' : 'index, follow');
 
-    // 2. Canonical & Hreflang
-    let canonicalTag = document.querySelector('link[rel="canonical"]');
-    if (!canonicalTag) {
-      canonicalTag = document.createElement('link');
-      canonicalTag.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonicalTag);
-    }
-    canonicalTag.setAttribute('href', canonicalUrl);
-
-    const setHreflang = (lang: string, href: string) => {
-      let tag = document.querySelector(`link[rel="alternate"][hreflang="${lang}"]`);
-      if (!tag) {
-        tag = document.createElement('link');
-        tag.setAttribute('rel', 'alternate');
-        tag.setAttribute('hreflang', lang);
-        document.head.appendChild(tag);
+    // 2. Canonical (omit on noindex routes such as 404/draft preview) & strip invalid single-URL hreflang
+    const existingCanonical = document.querySelector('link[rel="canonical"]');
+    if (effectiveNoIndex) {
+      if (existingCanonical) existingCanonical.remove();
+    } else {
+      let canonicalTag = existingCanonical;
+      if (!canonicalTag) {
+        canonicalTag = document.createElement('link');
+        canonicalTag.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonicalTag);
       }
-      tag.setAttribute('href', href);
-    };
-    const legacyEnTag = document.querySelector('link[rel="alternate"][hreflang="en"]');
-    if (legacyEnTag) legacyEnTag.remove();
-    setHreflang('bn', canonicalUrl);
-    setHreflang('x-default', canonicalUrl);
+      canonicalTag.setAttribute('href', canonicalUrl);
+    }
+
+    document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());
 
     // 3. OpenGraph Tags
     upsertMetaByProperty('og:title', ogTitle);
     upsertMetaByProperty('og:description', ogDescription);
-    upsertMetaByProperty('og:url', canonicalUrl);
+    upsertMetaByProperty('og:url', effectiveNoIndex ? null : canonicalUrl);
     upsertMetaByProperty('og:type', ogType);
     upsertMetaByProperty('og:image', socialImage);
     upsertMetaByProperty('og:image:alt', socialImageAlt);
@@ -182,18 +178,18 @@ export const SeoHead: React.FC<SeoProps> = ({
     const localBusinessSchema: Record<string, any> = {
       '@context': 'https://schema.org',
       '@type': ['LocalBusiness', 'HomeAndConstructionBusiness'],
-      '@id': `${SITE_DOMAIN}/#localbusiness`,
+      '@id': `${baseOrigin}/#localbusiness`,
       name: 'SUNVILOZ CLEAN CARE',
       description:
         'Professional water tank cleaning and pipeline flushing service in Dhaka, Narayanganj, Gazipur and Savar for overhead and underground water storage tanks.',
       url: baseOrigin,
-      telephone: `+88${(business.phone || '01609999612').replace(/^\+?88/, '')}`,
+      telephone: authoritativePhoneE164,
       email: business.email || 'sunvilozltd@gmail.com',
       image: OFFICIAL_LOGO_URL,
       logo: OFFICIAL_LOGO_URL,
       contactPoint: {
         '@type': 'ContactPoint',
-        telephone: `+88${(business.phone || '01609999612').replace(/^\+?88/, '')}`,
+        telephone: authoritativePhoneE164,
         contactType: 'customer service',
         areaServed: ['Dhaka', 'Narayanganj', 'Gazipur', 'Savar'],
         availableLanguage: ['Bengali', 'English']
@@ -212,7 +208,7 @@ export const SeoHead: React.FC<SeoProps> = ({
     }
 
     let breadcrumbSchema = null;
-    if (breadcrumbs && breadcrumbs.length > 0) {
+    if (!effectiveNoIndex && breadcrumbs && breadcrumbs.length > 0) {
       breadcrumbSchema = {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
@@ -226,7 +222,7 @@ export const SeoHead: React.FC<SeoProps> = ({
     }
 
     let structuredServiceSchema = null;
-    if (serviceSchema) {
+    if (!effectiveNoIndex && serviceSchema) {
       structuredServiceSchema = {
         '@context': 'https://schema.org',
         '@type': 'Service',
@@ -235,9 +231,9 @@ export const SeoHead: React.FC<SeoProps> = ({
         description: serviceSchema.description,
         provider: {
           '@type': 'HomeAndConstructionBusiness',
-          '@id': `${SITE_DOMAIN}/#localbusiness`,
+          '@id': `${baseOrigin}/#localbusiness`,
           name: 'SUNVILOZ CLEAN CARE',
-          telephone: `+88${(business.phone || '01609999612').replace(/^\+?88/, '')}`,
+          telephone: authoritativePhoneE164,
           url: baseOrigin
         },
         areaServed: [
@@ -250,7 +246,7 @@ export const SeoHead: React.FC<SeoProps> = ({
     }
 
     let structuredFaqSchema = null;
-    if (faqSchema && faqSchema.length > 0) {
+    if (!effectiveNoIndex && faqSchema && faqSchema.length > 0) {
       structuredFaqSchema = {
         '@context': 'https://schema.org',
         '@type': 'FAQPage',
@@ -265,8 +261,49 @@ export const SeoHead: React.FC<SeoProps> = ({
       };
     }
 
-    const injectJsonLd = (id: string, data: object) => {
-      let script = document.getElementById(id) as HTMLScriptElement | null;
+    let structuredArticleSchema: Record<string, any> | null = null;
+    if (!effectiveNoIndex && articleSchema) {
+      const articleImage = sanitizeHttpsUrl(articleSchema.image) || socialImage;
+      const articleUrl = articleSchema.url || canonicalUrl;
+      structuredArticleSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: articleSchema.headline,
+        description: articleSchema.description,
+        image: [articleImage],
+        author: {
+          '@type': 'Organization',
+          name: 'SUNVILOZ CLEAN CARE',
+          url: baseOrigin
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'SUNVILOZ CLEAN CARE',
+          logo: {
+            '@type': 'ImageObject',
+            url: OFFICIAL_LOGO_URL
+          }
+        },
+        mainEntityOfPage: {
+          '@type': 'WebPage',
+          '@id': articleUrl
+        }
+      };
+      if (articleSchema.datePublished) {
+        structuredArticleSchema.datePublished = articleSchema.datePublished;
+      }
+      if (articleSchema.dateModified || articleSchema.datePublished) {
+        structuredArticleSchema.dateModified = articleSchema.dateModified || articleSchema.datePublished;
+      }
+    }
+
+    const syncJsonLd = (id: string, data: object | null) => {
+      const existing = document.getElementById(id) as HTMLScriptElement | null;
+      if (!data) {
+        if (existing) existing.remove();
+        return;
+      }
+      let script = existing;
       if (!script) {
         script = document.createElement('script');
         script.id = id;
@@ -276,19 +313,11 @@ export const SeoHead: React.FC<SeoProps> = ({
       script.text = JSON.stringify(data);
     };
 
-    injectJsonLd('jsonld-local-business', localBusinessSchema);
-    if (breadcrumbSchema) injectJsonLd('jsonld-breadcrumbs', breadcrumbSchema);
-    if (structuredServiceSchema) injectJsonLd('jsonld-service', structuredServiceSchema);
-    if (structuredFaqSchema) injectJsonLd('jsonld-faq', structuredFaqSchema);
-
-    return () => {
-      const breadcrumbEl = document.getElementById('jsonld-breadcrumbs');
-      if (breadcrumbEl && !breadcrumbs) breadcrumbEl.remove();
-      const serviceEl = document.getElementById('jsonld-service');
-      if (serviceEl && !serviceSchema) serviceEl.remove();
-      const faqEl = document.getElementById('jsonld-faq');
-      if (faqEl && !faqSchema) faqEl.remove();
-    };
+    syncJsonLd('jsonld-local-business', effectiveNoIndex ? null : localBusinessSchema);
+    syncJsonLd('jsonld-breadcrumbs', breadcrumbSchema);
+    syncJsonLd('jsonld-service', structuredServiceSchema);
+    syncJsonLd('jsonld-faq', structuredFaqSchema);
+    syncJsonLd('jsonld-blog-posting', structuredArticleSchema);
   }, [
     fullTitle,
     metaDesc,
@@ -304,9 +333,10 @@ export const SeoHead: React.FC<SeoProps> = ({
     gbpVerified,
     gbpUrl,
     baseOrigin,
-    business.phone,
+    authoritativePhoneE164,
     business.email,
     serviceSchema,
+    articleSchema,
     faqSchema,
     breadcrumbs
   ]);

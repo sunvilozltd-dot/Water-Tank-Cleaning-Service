@@ -54,23 +54,31 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({ onNavigate }) => {
 
         {/* Navigation Actions */}
         <div className="pt-2 space-y-3">
-          <button
-            type="button"
-            onClick={() => handleGo('/')}
+          <a
+            href="/"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleGo('/');
+            }}
             className="w-full min-h-[46px] px-6 py-2.5 rounded-xl bg-[#123047] hover:bg-[#1b4363] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
           >
             <Home className="w-4 h-4 text-[#38BDF8]" />
             <span>{lang === 'bn' ? 'হোমপেজে ফিরে যান' : 'Back to Home'}</span>
-          </button>
+          </a>
 
-          <button
-            type="button"
-            onClick={() => handleGo('/services')}
+          <a
+            href="/services"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleGo('/services');
+            }}
             className="w-full min-h-[46px] px-6 py-2.5 rounded-xl bg-white hover:bg-[#F5FAFC] border border-[#E2E8F0] hover:border-[#0D9488] text-[#123047] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             <Wrench className="w-4 h-4 text-[#0D9488]" />
             <span>{lang === 'bn' ? 'আমাদের সকল সার্ভিস দেখুন' : 'Explore All Services'}</span>
-          </button>
+          </a>
 
           <a
             href={`https://wa.me/${rawWhatsapp}?text=${encodeURIComponent('আসসালামু আলাইকুম। সানভিলোজ ক্লিন কেয়ার ওয়েবসাইটে একটি পেজ কাজ করছে না, কোটেশন প্রয়োজন।')}`}

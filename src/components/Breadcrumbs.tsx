@@ -29,14 +29,19 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     <nav aria-label="Breadcrumb" className="py-2.5 px-4 max-w-7xl mx-auto w-full text-xs text-[#64748B]">
       <ol className="flex items-center space-x-1.5 flex-wrap">
         <li>
-          <button
-            onClick={() => onNavigate('/')}
+          <a
+            href="/"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              onNavigate('/');
+            }}
             className="flex items-center hover:text-[#0D9488] transition font-medium focus-visible:outline-2 focus-visible:outline-[#0D9488] cursor-pointer"
             title="Home"
           >
             <Home className="w-3.5 h-3.5 mr-1 text-[#64748B]" />
             <span>{lang === 'bn' ? 'হোম' : 'Home'}</span>
-          </button>
+          </a>
         </li>
         {items.map((item, idx) => {
           const isLast = idx === items.length - 1;
@@ -51,12 +56,17 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
                   {label}
                 </span>
               ) : (
-                <button
-                  onClick={() => onNavigate(path)}
+                <a
+                  href={path}
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                    e.preventDefault();
+                    onNavigate(path);
+                  }}
                   className="hover:text-[#0D9488] transition font-medium focus-visible:outline-2 focus-visible:outline-[#0D9488] truncate max-w-[150px] sm:max-w-none cursor-pointer"
                 >
                   {label}
-                </button>
+                </a>
               )}
             </li>
           );

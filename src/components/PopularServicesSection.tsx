@@ -90,8 +90,8 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({
           
           <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">
             {lang === 'bn'
-              ? 'বাসা, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের নিরাপদ ও বিশুদ্ধ পানি নিশ্চিত করতে আমাদের ৩টি প্রধান সক্রিয় সেবা।'
-              : 'Our focused water hygiene services for residences, apartments, and commercial buildings across Dhaka.'}
+              ? 'ঢাকা ও আশপাশের বাসাবাড়ি, অ্যাপার্টমেন্ট ও বাণিজ্যিক ভবনের নিরাপদ পানির জন্য আমাদের বিশেষায়িত ওয়াটার ট্যাংক ক্লিনিং ও পাইপলাইন পরিষ্কার সার্ভিস।'
+              : 'Our focused water tank cleaning services and pipeline cleaning solutions for residences, apartments, and commercial buildings across Dhaka.'}
           </p>
         </div>
 
@@ -137,12 +137,17 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({
                 }}
                 className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col justify-between transition-all duration-300 shadow-sm hover:shadow-xl border border-[#E2E8F0] hover:border-[#0D9488]/40 cursor-pointer"
               >
-                <div>
+                <a
+                  href={`/services/${service.slug}`}
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                    e.preventDefault();
+                    handleNavigateDetail(service.slug);
+                  }}
+                  className="block"
+                >
                   {/* Service Image matching full width of card box */}
-                  <div 
-                    onClick={() => handleNavigateDetail(service.slug)}
-                    className="relative w-full aspect-[16/10] sm:aspect-video overflow-hidden bg-[#F5FAFC] cursor-pointer"
-                  >
+                  <div className="relative w-full aspect-[16/10] sm:aspect-video overflow-hidden bg-[#F5FAFC]">
                     <OptimizedImage
                       src={cardImage}
                       alt={title}
@@ -155,10 +160,7 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({
                   </div>
 
                   {/* Service Titles */}
-                  <div 
-                    onClick={() => handleNavigateDetail(service.slug)}
-                    className="p-5 sm:p-6 pb-2 space-y-1.5 cursor-pointer"
-                  >
+                  <div className="p-5 sm:p-6 pb-2 space-y-1.5">
                     <h3 className="text-lg sm:text-xl font-bold text-[#123047] group-hover:text-[#0D9488] transition-colors leading-snug">
                       {titleEn}
                     </h3>
@@ -168,7 +170,7 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({
                       </p>
                     )}
                   </div>
-                </div>
+                </a>
 
                 {/* CTAs */}
                 <div className="p-5 sm:p-6 pt-2 mt-auto">
@@ -183,15 +185,19 @@ export const PopularServicesSection: React.FC<PopularServicesSectionProps> = ({
                       <span>{lang === 'bn' ? 'কোটেশন নিন' : 'Get Quote'}</span>
                     </button>
 
-                    {/* Details Link button */}
-                    <button
-                      type="button"
-                      onClick={() => handleNavigateDetail(service.slug)}
+                    {/* Details Link */}
+                    <a
+                      href={`/services/${service.slug}`}
+                      onClick={(e) => {
+                        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                        e.preventDefault();
+                        handleNavigateDetail(service.slug);
+                      }}
                       className="min-h-[42px] px-3.5 py-2 rounded-xl bg-[#F5FAFC] hover:bg-[#E8F5F3] text-[#123047] border border-[#E2E8F0] font-semibold text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer"
                     >
                       <span>{lang === 'bn' ? 'বিস্তারিত' : 'Details'}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                    </a>
 
                     {/* WhatsApp button: #25D366 */}
                     <a

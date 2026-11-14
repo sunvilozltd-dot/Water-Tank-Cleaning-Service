@@ -40,6 +40,7 @@ import {
 } from '../../services/zoneContentService';
 import { PageSeoOverride } from '../../types/siteConfig';
 import { getProductionDomain } from '../../config/siteDomain';
+import { DEFAULT_HOME_SEO_TITLE, DEFAULT_HOME_SEO_DESCRIPTION } from '../../seo/seoResolver';
 
 interface SettingsTabProps {
   onGoToHeroVideo?: () => void;
@@ -83,8 +84,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ onGoToHeroVideo }) => 
   const [bingSiteVerification, setBingSiteVerification] = useState(business.bingSiteVerification || '');
 
   // Global SEO, Open Graph & llms.txt
-  const [defaultMetaTitle, setDefaultMetaTitle] = useState(config.seo?.defaultMetaTitle || 'Water Tank Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE');
-  const [defaultMetaDescription, setDefaultMetaDescription] = useState(config.seo?.defaultMetaDescription || '');
+  const [defaultMetaTitle, setDefaultMetaTitle] = useState(config.seo?.defaultMetaTitle || DEFAULT_HOME_SEO_TITLE);
+  const [defaultMetaDescription, setDefaultMetaDescription] = useState(config.seo?.defaultMetaDescription || DEFAULT_HOME_SEO_DESCRIPTION);
   const [socialOgImage, setSocialOgImage] = useState(config.seo?.socialOgImage || '');
   const [ogImageAlt, setOgImageAlt] = useState(config.seo?.ogImageAlt || 'SUNVILOZ CLEAN CARE — Water Tank & Pipeline Cleaning Service');
   const [llmsSummary, setLlmsSummary] = useState(config.seo?.llmsSummary || '');
@@ -710,7 +711,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ onGoToHeroVideo }) => 
               type="text"
               value={currentOverride.title || ''}
               onChange={(e) => updateRouteOverride('title', e.target.value)}
-              placeholder="খালি রাখলে ডিফল্ট পেজ টাইটেল থাকবে"
+              placeholder={selectedRoute === '/' ? `ডিফল্ট: ${DEFAULT_HOME_SEO_TITLE}` : 'খালি রাখলে ডিফল্ট পেজ টাইটেল থাকবে'}
               className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs"
             />
           </div>
@@ -720,6 +721,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ onGoToHeroVideo }) => 
               type="text"
               value={currentOverride.ogTitle || ''}
               onChange={(e) => updateRouteOverride('ogTitle', e.target.value)}
+              placeholder={selectedRoute === '/' ? `ডিফল্ট: ${DEFAULT_HOME_SEO_TITLE}` : ''}
               className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs"
             />
           </div>
@@ -729,6 +731,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ onGoToHeroVideo }) => 
               rows={2}
               value={currentOverride.description || ''}
               onChange={(e) => updateRouteOverride('description', e.target.value)}
+              placeholder={selectedRoute === '/' ? `ডিফল্ট: ${DEFAULT_HOME_SEO_DESCRIPTION}` : ''}
               className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs"
             />
           </div>

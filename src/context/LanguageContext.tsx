@@ -66,7 +66,7 @@ const DICTIONARY: Record<Language, Record<string, string>> = {
     // Services
     'services.tag': 'Our Solutions',
     'services.h2': 'Our Water Tank Cleaning Services',
-    'services.sub': 'Specialized water hygiene solutions tailored for Dhaka residential homes, apartment complexes, and commercial properties.',
+    'services.sub': 'Specialized water tank cleaning services and ongoing tank care tailored for Dhaka residential homes, apartment complexes, and commercial properties.',
     'services.learnMore': 'Learn More',
     'services.getQuote': 'Get Quote',
 

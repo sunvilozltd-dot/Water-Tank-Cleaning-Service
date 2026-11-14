@@ -2,7 +2,6 @@ import { LOCATIONS_DATA } from '../data/locationsData';
 import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
 import { safeGetItem, safeSetItem } from '../utils/safeLocalStorage';
 import { sanitizeRichHtml, stripHtmlToPlainText } from '../utils/htmlSanitizer';
-import { enqueueIndexNowUrls } from './indexnowService';
 import { SITE_DOMAIN } from '../config/siteDomain';
 
 export const ZONES_CHANGED_EVENT = 'sunviloz_zones_changed';
@@ -268,6 +267,10 @@ export const DEFAULT_SERVICE_ZONES: ServiceZoneRecord[] = [
 ];
 
 function buildDefaultAreaContent(loc: typeof LOCATIONS_DATA[number]): ZoneAreaContent {
+  const localNoteBn = loc.waterConditionNoteBn?.trim();
+  const localNoteEn = loc.waterConditionNote?.trim();
+  const isCorridorCity = ['gazipur', 'savar', 'narayanganj'].includes(loc.slug);
+
   return {
     title: loc.title || `Water Tank Cleaning Service in ${loc.areaName} | SUNVILOZ CLEAN CARE`,
     titleBn: loc.titleBn || `${loc.areaNameBn} এলাকায় পানির ট্যাংক পরিষ্কার সার্ভিস`,
@@ -277,20 +280,26 @@ function buildDefaultAreaContent(loc: typeof LOCATIONS_DATA[number]): ZoneAreaCo
     ogDescription: loc.metaDesc || `Water tank cleaning and pipeline cleaning service in ${loc.areaName}.`,
     intro: loc.intro || '',
     introBn: loc.introBn || '',
-    waterProblemsBn:
-      `${loc.areaNameBn} এলাকার আবাসিক ও বাণিজ্যিক ভবনের রিজার্ভার ও ওভারহেড ট্যাংকে তলদেশের কাদা-বালু, দেয়ালের শ্যাওলা এবং পাইপলাইনে আয়রন বা পলির আস্তরণ জমে পানি ঘোলা হওয়া, দুর্গন্ধ ও প্রেশার কমে যাওয়ার মতো সাধারণ সমস্যা দেখা দেয়।`,
-    waterProblemsEn:
-      `Buildings in ${loc.areaName} commonly experience bottom mud/sand buildup in underground reserves, algal biofilm on rooftop tanks, and iron or silt deposits inside supply pipes leading to cloudy water, stale odors, and low tap flow.`,
-    potentialCausesBn:
-      'ইনকামিং ওয়াসা বা ডিপ-টিউবওয়েল লাইনের পলি, ছাদের ট্যাংকে সরাসরি সূর্যের আলো প্রবেশ, দীর্ঘদিন ট্যাংক ও রিজার্ভার একসাথে পরিষ্কার না করা এবং অনেক ক্ষেত্রে ভাঙা ঢাকনা, পাম্পের ফুট-ভালভ বা অভ্যন্তরীণ প্লাম্বিং ত্রুটির কারণেও সমস্যা তৈরি হতে পারে।',
-    potentialCausesEn:
-      'Potential causes include sediment carried by municipal or borehole supply lines, direct sunlight entering rooftop tank lids, cleaning only one tank while leaving the reserve dirty, as well as non-cleaning causes like cracked covers, valve leaks, or plumbing faults.',
+    waterProblemsBn: localNoteBn
+      ? `${loc.areaNameBn} (${loc.zone}) এলাকার ভবনগুলোতে সাধারণত দেখা যায়: ${localNoteBn} এর ফলে রিজার্ভারের তলায় কাদা-বালু জমে পানি ঘোলা হওয়া, দুর্গন্ধ ও পাইপে প্রেশার কমে যাওয়ার সমস্যা তৈরি হয়।`
+      : `${loc.areaNameBn} এলাকার আবাসিক ও বাণিজ্যিক ভবনের রিজার্ভার ও ওভারহেড ট্যাংকে তলদেশের কাদা-বালু, দেয়ালের শ্যাওলা এবং পাইপলাইনে আয়রন বা পলির আস্তরণ জমে পানি ঘোলা হওয়া ও প্রেশার কমে যাওয়ার সমস্যা দেখা দেয়।`,
+    waterProblemsEn: localNoteEn
+      ? `Key local storage issues observed in ${loc.areaName} (${loc.zone}): ${localNoteEn} Over time this causes cloudy tap water, biofilm odor, and reduced pipe flow.`
+      : `Buildings in ${loc.areaName} commonly experience bottom mud/sand buildup in underground reserves, algal biofilm on rooftop tanks, and iron or silt deposits inside supply pipes.`,
+    potentialCausesBn: isCorridorCity
+      ? `${loc.areaNameBn} অঞ্চলে গভীর নলকূপ বা সরবরাহ লাইনের আয়রন-বালু, ছাদের ট্যাংকে সরাসরি সূর্যের আলো এবং শুধু ওভারহেড ট্যাংক পরিষ্কার করে নিচের রিজার্ভার বাদ রাখাই প্রধান কারণ। পাশাপাশি ফাটা ম্যানহোল কভার, ত্রুটিপূর্ণ ফুট-ভালভ বা অভ্যন্তরীণ প্লাম্বিং ত্রুটিও পানি দূষিত করতে পারে।`
+      : `${loc.areaNameBn} জোনে ওয়াসা বা ডিপ-টিউবওয়েল লাইনের পলি, ছাদের ট্যাংকে সরাসরি রোদ পড়া, রিজার্ভ ও ছাদের ট্যাংক আলাদা সময়ে পরিষ্কার করা এবং ভাঙা ঢাকনা বা প্লাম্বিং লিকেজের মতো পরিষ্কার-বহির্ভূত কারণেও সমস্যা ফিরে আসতে পারে।`,
+    potentialCausesEn: isCorridorCity
+      ? `In ${loc.areaName}, high groundwater iron/sand, sunlight penetrating rooftop tank covers, and cleaning only one tank while leaving the reserve untouched are common triggers—alongside cracked manhole lids or plumbing valve leaks.`
+      : `In ${loc.areaName}, sediment from WASA or borehole lines, direct rooftop sun exposure, uncoordinated cleaning of reserve vs. overhead tanks, and non-cleaning faults like broken covers or leaking valves can all degrade water quality.`,
     waterConditionNote: loc.waterConditionNote || '',
     waterConditionNoteBn: loc.waterConditionNoteBn || '',
-    practicalAdviceBn:
-      'প্রতি ৪–৬ মাস পরপর আন্ডারগ্রাউন্ড রিজার্ভ ও ছাদের ওভারহেড ট্যাংক একসাথে পরিষ্কার করুন, ঢাকনা শক্তভাবে বন্ধ রাখুন এবং প্লাম্বিং লিকেজ বা মেইন লাইনে ভারী পলি থাকলে আগে মেরামত বা সেডিমেন্ট ফিল্টারের ব্যবস্থা নিন। পানযোগ্যতা নিশ্চিত করতে চাইলে অনুমোদিত ল্যাবে পানির নমুনা পরীক্ষা করানো উচিত।',
-    practicalAdviceEn:
-      'Clean both underground and overhead tanks on a coordinated 4–6 month schedule, keep lids tightly sealed against sunlight and dust, and resolve incoming plumbing leaks or sediment filters if dirt returns quickly. Use certified lab testing before treating stored water as potable.',
+    practicalAdviceBn: isCorridorCity
+      ? `${loc.areaNameBn} এলাকায় ঢাকা থেকে আমাদের মোবাইল টিম নির্ধারিত শিডিউলে সার্ভিস প্রদান করে। প্রতি ৪–৬ মাস অন্তর রিজার্ভ ও ওভারহেড ট্যাংক একসাথে পরিষ্কার রাখুন, ছাদের ট্যাংকের ঢাকনা সিল রাখুন এবং ইনকামিং লাইনে বেশি পলি থাকলে সেডিমেন্ট ফিল্টার ব্যবহার করুন। পানযোগ্যতা যাচাইয়ে ল্যাব টেস্ট জরুরি।`
+      : `${loc.areaNameBn} এলাকায় আমাদের মোবাইল টিম নির্ধারিত শিডিউলে এসে রিজার্ভার ও ওভারহেড ট্যাংক পরিষ্কার করে। প্রতি ৪–৬ মাস পরপর উভয় ট্যাংক একসাথে পরিষ্কার করুন, প্লাম্বিং লিকেজ মেরামত রাখুন এবং পানযোগ্যতা নিশ্চিত করতে অনুমোদিত ল্যাবে পরীক্ষা করান।`,
+    practicalAdviceEn: isCorridorCity
+      ? `Our Dhaka-dispatched mobile crew serves ${loc.areaName} on scheduled bookings. Clean underground and rooftop tanks together every 4–6 months, keep covers UV-sealed, and verify drinking potability through certified lab testing.`
+      : `Our mobile team serves ${loc.areaName} on scheduled appointments. Coordinate underground and overhead cleaning every 4–6 months, fix leaking valves/covers promptly, and rely on certified lab testing for drinking potability.`,
     verifiedFindings: [],
     coverageDetails: loc.coverageDetails || [],
     pricingFactors: loc.pricingFactors || [],
@@ -687,6 +696,7 @@ export async function publishZone(zone: ServiceZoneRecord): Promise<{
 
     const publicVerified = await verifyZoneOrAreaPublicState('service_zones', zone.slug, '/service-areas');
 
+    const { enqueueIndexNowUrls } = await import('./indexnowService');
     const idxRes = await enqueueIndexNowUrls(
       [`${SITE_DOMAIN}/`, `${SITE_DOMAIN}/service-areas`, `${SITE_DOMAIN}/service-areas/${publishedData.featuredSlug}`],
       {
@@ -828,6 +838,7 @@ export async function publishArea(area: ZoneAreaRecord): Promise<{
       `/service-areas/${cleanSlug}`
     );
 
+    const { enqueueIndexNowUrls } = await import('./indexnowService');
     const idxRes = await enqueueIndexNowUrls(
       [`${SITE_DOMAIN}/service-areas/${cleanSlug}`, `${SITE_DOMAIN}/service-areas`],
       {
@@ -873,12 +884,16 @@ export async function toggleAreaVisibility(area: ZoneAreaRecord, isVisible: bool
     }
 
     if (area.status === 'published') {
-      enqueueIndexNowUrls([`${SITE_DOMAIN}/service-areas`, `${SITE_DOMAIN}/service-areas/${area.slug}`], {
-        action: isVisible ? 'show_zone_area' : 'hide_zone_area',
-        entityType: 'zone_area',
-        entitySlug: area.slug,
-        verifyPublic: isVisible
-      }).catch(() => {});
+      import('./indexnowService')
+        .then(({ enqueueIndexNowUrls }) =>
+          enqueueIndexNowUrls([`${SITE_DOMAIN}/service-areas`, `${SITE_DOMAIN}/service-areas/${area.slug}`], {
+            action: isVisible ? 'show_zone_area' : 'hide_zone_area',
+            entityType: 'zone_area',
+            entitySlug: area.slug,
+            verifyPublic: isVisible
+          })
+        )
+        .catch(() => {});
     }
 
     return true;
@@ -906,12 +921,16 @@ export async function deleteZoneArea(area: ZoneAreaRecord): Promise<boolean> {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(ZONES_CHANGED_EVENT));
     }
-    enqueueIndexNowUrls([`${SITE_DOMAIN}/service-areas`, `${SITE_DOMAIN}/service-areas/${area.slug}`], {
-      action: 'delete_zone_area',
-      entityType: 'zone_area',
-      entitySlug: area.slug,
-      verifyPublic: false
-    }).catch(() => {});
+    import('./indexnowService')
+      .then(({ enqueueIndexNowUrls }) =>
+        enqueueIndexNowUrls([`${SITE_DOMAIN}/service-areas`, `${SITE_DOMAIN}/service-areas/${area.slug}`], {
+          action: 'delete_zone_area',
+          entityType: 'zone_area',
+          entitySlug: area.slug,
+          verifyPublic: false
+        })
+      )
+      .catch(() => {});
     return true;
   } catch {
     return false;

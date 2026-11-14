@@ -14,7 +14,7 @@ async function main() {
   }
 
   const { client, configured } = createServerSupabaseClient();
-  if (!configured) {
+  if (!configured || !client) {
     console.error('Error: Supabase URL/Key is not configured.');
     process.exit(1);
   }

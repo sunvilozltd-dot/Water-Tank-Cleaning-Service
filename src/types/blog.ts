@@ -25,6 +25,7 @@ export interface BlogPost {
   images?: ArticleImage[];
   author: string;
   publishedAt: string;
+  updatedAt?: string;
   readTime: string;
   readTimeBn?: string;
   featured?: boolean;
