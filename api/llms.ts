@@ -19,7 +19,8 @@ export default async function handler(req: any, res: any) {
         'zones',
         'areas',
         'services',
-        'blogPosts'
+        'blogPosts',
+        'caseStudies'
       ])
     ) {
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -37,6 +38,7 @@ export default async function handler(req: any, res: any) {
       zones: dataset.zones,
       areas: dataset.areas,
       articles: dataset.blogPosts,
+      caseStudies: dataset.caseStudies,
       qaItems: PROBLEM_QA_ITEMS
     });
 

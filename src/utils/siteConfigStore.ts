@@ -392,6 +392,10 @@ export const saveSiteConfig = async (config: FullSiteConfig): Promise<{ success:
       console.warn('Supabase site config save notice:', err);
       return { success: false, error: err?.message || 'Supabase সংযোগে সমস্যা হয়েছে।' };
     }
+
+    import('../services/indexnowService')
+      .then(({ invalidateServerSeoCache }) => invalidateServerSeoCache())
+      .catch(() => {});
   }
 
   return { success: true };

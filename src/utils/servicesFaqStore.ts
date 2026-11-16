@@ -281,6 +281,9 @@ export const saveAllServicesFaqs = async (faqs: ServiceFaqItem[]): Promise<boole
       console.error('Failed to save services FAQs to Supabase:', err);
       return false;
     }
+    import('../services/indexnowService')
+      .then(({ invalidateServerSeoCache }) => invalidateServerSeoCache())
+      .catch(() => {});
   }
 
   if (typeof window !== 'undefined') {
@@ -334,6 +337,9 @@ export const deleteServiceFaq = async (id: string): Promise<boolean> => {
       console.warn('Failed to delete service FAQ from Supabase:', err);
       return false;
     }
+    import('../services/indexnowService')
+      .then(({ invalidateServerSeoCache }) => invalidateServerSeoCache())
+      .catch(() => {});
   }
 
   if (typeof window !== 'undefined') {

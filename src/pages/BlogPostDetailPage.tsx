@@ -21,6 +21,7 @@ import { useBlogPosts } from '../utils/blogStore';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { NotFoundPage } from './NotFoundPage';
+import { sanitizeRichHtml } from '../utils/htmlSanitizer';
 
 interface BlogPostDetailPageProps {
   slug: string;
@@ -147,9 +148,23 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
     });
   };
 
-  // Render paragraphs with markdown-like highlights, headings, lists, tables, and images
+  // Render paragraphs with HTML (sanitized) or markdown highlights, headings, lists, tables, and images
   const renderFormattedContent = (rawText: string) => {
-    const blocks = rawText.split('\n\n');
+    const normalized = (rawText || '').replace(/\r\n/g, '\n').trim();
+    if (!normalized) return null;
+
+    const looksLikeHtml = /<(?:p|h[1-6]|ul|ol|li|div|blockquote|table|figure|br|strong|em|a)\b[^>]*>/i.test(normalized);
+    if (looksLikeHtml) {
+      const safeHtml = sanitizeRichHtml(normalized);
+      return (
+        <div
+          className="space-y-4 text-sm sm:text-base text-[#172B3A] leading-relaxed [&_h2]:text-xl [&_h2]:sm:text-2xl [&_h2]:font-extrabold [&_h2]:text-[#123047] [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-[#123047] [&_h3]:mt-5 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-1.5 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:space-y-1.5 [&_blockquote]:border-l-4 [&_blockquote]:border-[#0D9488] [&_blockquote]:pl-4 [&_blockquote]:italic [&_a]:text-[#0D9488] [&_a]:underline [&_a]:font-semibold [&_strong]:text-[#123047]"
+          dangerouslySetInnerHTML={{ __html: safeHtml }}
+        />
+      );
+    }
+
+    const blocks = normalized.split('\n\n');
     return blocks.map((block, idx) => {
       const trimmed = block.trim();
 
@@ -552,7 +567,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({
                       </h4>
                     </div>
                     <div className="pt-3 mt-3 border-t border-[#E2E8F0] flex items-center justify-between text-[11px] text-[#64748B]">
-                      <span>{other.readTime}</span>
+                      <span>{lang === 'bn' && other.readTimeBn ? other.readTimeBn : other.readTime}</span>
                       <span className="text-[#0D9488] font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                         <span>{lang === 'bn' ? 'পড়ুন' : 'Read'}</span>
                         <ArrowRight className="w-3 h-3" />

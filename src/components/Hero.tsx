@@ -34,9 +34,13 @@ export const Hero: React.FC<HeroProps> = () => {
   const rawPoster3 = cmsHeroSection?.posterImage3Url || hero.posterImage3Url;
   const video3Poster = (!rawPoster3 || isDemoMedia(rawPoster3)) ? undefined : rawPoster3.trim();
 
+  // Desktop viewport detection (initialized false for SSR/hydration safety, updated on mount)
+  const [isDesktop, setIsDesktop] = useState(false);
+
   // Video 1 Refs & State
   const video1Ref = useRef<HTMLVideoElement>(null);
   const [activatedYt1, setActivatedYt1] = useState(false);
+  const [activatedMp41, setActivatedMp41] = useState(false);
   const [isPlaying1, setIsPlaying1] = useState(true);
   const [isMuted1, setIsMuted1] = useState(true);
   const [hasError1, setHasError1] = useState(false);
@@ -46,6 +50,7 @@ export const Hero: React.FC<HeroProps> = () => {
   const video2Ref = useRef<HTMLVideoElement>(null);
   const video2ContainerRef = useRef<HTMLDivElement>(null);
   const [activatedYt2, setActivatedYt2] = useState(false);
+  const [activatedMp42, setActivatedMp42] = useState(false);
   const [video2InView, setVideo2InView] = useState(false);
   const [isPlaying2, setIsPlaying2] = useState(true);
   const [isMuted2, setIsMuted2] = useState(true);
@@ -56,18 +61,22 @@ export const Hero: React.FC<HeroProps> = () => {
   const video3Ref = useRef<HTMLVideoElement>(null);
   const video3ContainerRef = useRef<HTMLDivElement>(null);
   const [activatedYt3, setActivatedYt3] = useState(false);
+  const [activatedMp43, setActivatedMp43] = useState(false);
   const [video3InView, setVideo3InView] = useState(false);
   const [isPlaying3, setIsPlaying3] = useState(true);
   const [isMuted3, setIsMuted3] = useState(true);
   const [hasError3, setHasError3] = useState(false);
   const [posterError3, setPosterError3] = useState(false);
 
-  // IntersectionObserver to load below-the-fold or secondary hero players politely
+  // Viewport & IntersectionObserver to load secondary hero players politely
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    const desktopNow = window.innerWidth >= 1024;
+    setIsDesktop(desktopNow);
+
     // On larger desktop screens (>=1024px), videos are side-by-side, activate promptly
-    if (window.innerWidth >= 1024) {
+    if (desktopNow) {
       setVideo2InView(true);
       setVideo3InView(true);
       return;
@@ -94,18 +103,18 @@ export const Hero: React.FC<HeroProps> = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Auto-play videos when refs become available
+  // Auto-play videos on desktop or when user taps MP4 facade on mobile
   useEffect(() => {
-    if (video1Ref.current && video1Url) {
+    if (video1Ref.current && video1Url && (isDesktop || activatedMp41)) {
       video1Ref.current.play().then(() => setIsPlaying1(true)).catch(() => setIsPlaying1(false));
     }
-    if (video2Ref.current && video2InView && video2Url) {
+    if (video2Ref.current && video2InView && video2Url && (isDesktop || activatedMp42)) {
       video2Ref.current.play().then(() => setIsPlaying2(true)).catch(() => setIsPlaying2(false));
     }
-    if (video3Ref.current && video3InView && video3Url) {
+    if (video3Ref.current && video3InView && video3Url && (isDesktop || activatedMp43)) {
       video3Ref.current.play().then(() => setIsPlaying3(true)).catch(() => setIsPlaying3(false));
     }
-  }, [video1Url, video2Url, video3Url, video2InView, video3InView]);
+  }, [video1Url, video2Url, video3Url, video2InView, video3InView, isDesktop, activatedMp41, activatedMp42, activatedMp43]);
 
   // Video 1 Controls
   const togglePlay1 = (e: React.MouseEvent) => {
@@ -236,15 +245,41 @@ export const Hero: React.FC<HeroProps> = () => {
                     </span>
                   </button>
                 )
+              ) : (!isDesktop && !activatedMp41 && !posterError1 && video1Poster) ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActivatedMp41(true);
+                  }}
+                  aria-label="Play SUNVILOZ mechanized water tank cleaning demonstration video"
+                  className="relative w-full h-full bg-[#0F2333] flex items-center justify-center cursor-pointer"
+                >
+                  <img
+                    src={video1Poster}
+                    alt="SUNVILOZ mechanized water tank cleaning service demonstration in Dhaka"
+                    loading="eager"
+                    fetchPriority="high"
+                    width={560}
+                    height={315}
+                    onError={() => setPosterError1(true)}
+                    className="w-full h-full object-contain bg-black"
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/70 border border-white/30 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <Play className="w-6 h-6 fill-white ml-0.5" aria-hidden="true" />
+                    </span>
+                  </span>
+                </button>
               ) : (
                 <>
                   <video
                     ref={video1Ref}
-                    autoPlay
+                    autoPlay={isDesktop || activatedMp41}
                     muted
                     loop
                     playsInline
-                    preload="metadata"
+                    preload={isDesktop || activatedMp41 ? 'metadata' : 'none'}
                     poster={!posterError1 ? video1Poster : undefined}
                     onError={() => setHasError1(true)}
                     className="w-full h-full object-contain bg-black"
@@ -362,15 +397,41 @@ export const Hero: React.FC<HeroProps> = () => {
                     </span>
                   </button>
                 )
+              ) : (!isDesktop && !activatedMp42 && !posterError2 && video2Poster) ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActivatedMp42(true);
+                  }}
+                  aria-label="Play overhead water tank cleaning demonstration video"
+                  className="relative w-full h-full bg-[#0F2333] flex items-center justify-center cursor-pointer"
+                >
+                  <img
+                    src={video2Poster}
+                    alt="Overhead water tank rotary jet scrubbing and sludge extraction demonstration"
+                    loading="lazy"
+                    decoding="async"
+                    width={560}
+                    height={315}
+                    onError={() => setPosterError2(true)}
+                    className="w-full h-full object-contain bg-black"
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/70 border border-white/30 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <Play className="w-6 h-6 fill-white ml-0.5" aria-hidden="true" />
+                    </span>
+                  </span>
+                </button>
               ) : (
                 <>
                   <video
                     ref={video2Ref}
-                    autoPlay
+                    autoPlay={isDesktop || activatedMp42}
                     muted
                     loop
                     playsInline
-                    preload="metadata"
+                    preload={isDesktop || activatedMp42 ? 'metadata' : 'none'}
                     poster={!posterError2 ? video2Poster : undefined}
                     onError={() => setHasError2(true)}
                     className="w-full h-full object-contain bg-black"
@@ -488,15 +549,41 @@ export const Hero: React.FC<HeroProps> = () => {
                     </span>
                   </button>
                 )
+              ) : (!isDesktop && !activatedMp43 && !posterError3 && video3Poster) ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActivatedMp43(true);
+                  }}
+                  aria-label="Play underground reserve tank and pipeline cleaning demonstration video"
+                  className="relative w-full h-full bg-[#0F2333] flex items-center justify-center cursor-pointer"
+                >
+                  <img
+                    src={video3Poster}
+                    alt="Underground reserve tank deep cleaning and pipeline flushing demonstration"
+                    loading="lazy"
+                    decoding="async"
+                    width={560}
+                    height={315}
+                    onError={() => setPosterError3(true)}
+                    className="w-full h-full object-contain bg-black"
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/70 border border-white/30 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <Play className="w-6 h-6 fill-white ml-0.5" aria-hidden="true" />
+                    </span>
+                  </span>
+                </button>
               ) : (
                 <>
                   <video
                     ref={video3Ref}
-                    autoPlay
+                    autoPlay={isDesktop || activatedMp43}
                     muted
                     loop
                     playsInline
-                    preload="metadata"
+                    preload={isDesktop || activatedMp43 ? 'metadata' : 'none'}
                     poster={!posterError3 ? video3Poster : undefined}
                     onError={() => setHasError3(true)}
                     className="w-full h-full object-contain bg-black"

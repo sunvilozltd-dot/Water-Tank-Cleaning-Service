@@ -34,12 +34,20 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({ service, onClose, on
       icon: 'Droplets',
       features: ['High-Pressure Jet Wash', 'Sludge & Mud Removal', 'Disinfection'],
       featuresBn: ['হাই-প্রেসার ওয়াশ', 'কাদা ও শেওলা পরিষ্কার', 'জীবাণুমুক্তকরণ'],
-      startingPrice: 2000,
+      startingPrice: undefined,
+      verifiedPriceNoteBn: '',
       popular: false,
       idealFor: 'Residential Buildings',
       idealForBn: ['আবাসিক ভবন']
     }
   );
+
+  const linesToText = (arr?: string[]) => (Array.isArray(arr) ? arr.join('\n') : '');
+  const textToLines = (val: string) =>
+    val
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean);
 
   const [featureInput, setFeatureInput] = useState('');
   const [urlInput, setUrlInput] = useState(formData.image || '');
@@ -243,12 +251,20 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({ service, onClose, on
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-300 font-medium mb-1">Starting Price (৳)</label>
+              <label className="block text-slate-300 font-medium mb-1">
+                Verified Starting Price (৳) <span className="text-slate-500">(Optional)</span>
+              </label>
               <input
                 type="number"
-                value={formData.startingPrice}
-                onChange={(e) => setFormData({ ...formData, startingPrice: Number(e.target.value) })}
+                value={formData.startingPrice && Number(formData.startingPrice) > 0 ? formData.startingPrice : ''}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    startingPrice: e.target.value ? Number(e.target.value) : undefined
+                  })
+                }
                 className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white"
+                placeholder="Blank = Quote upon review"
               />
             </div>
             <div>
@@ -261,6 +277,19 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({ service, onClose, on
                 placeholder="rooftop-tank-cleaning"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-slate-300 font-medium mb-1">
+              Verified Price Note (BN — ঐচ্ছিক, শুধুমাত্র নিশ্চিত রেট থাকলে)
+            </label>
+            <input
+              type="text"
+              value={formData.verifiedPriceNoteBn || ''}
+              onChange={(e) => setFormData({ ...formData, verifiedPriceNoteBn: e.target.value })}
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white"
+              placeholder="যেমন: ১,০০০ লিটার পর্যন্ত যাচাইকৃত নির্ধারিত চার্জ (খালি রাখলে দেখাবে না)"
+            />
           </div>
 
           <div>
@@ -311,6 +340,63 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({ service, onClose, on
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Structured Scope & Operations (BN, 1 per line) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Included Scope (BN — প্রতি লাইনে ১টি)</label>
+              <textarea
+                rows={3}
+                value={linesToText(formData.includedItemsBn)}
+                onChange={(e) => setFormData({ ...formData, includedItemsBn: textToLines(e.target.value) })}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white"
+                placeholder="সার্ভিসে যা যা অন্তর্ভুক্ত..."
+              />
+            </div>
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Not Included / Excluded (BN — প্রতি লাইনে ১টি)</label>
+              <textarea
+                rows={3}
+                value={linesToText(formData.excludedItemsBn)}
+                onChange={(e) => setFormData({ ...formData, excludedItemsBn: textToLines(e.target.value) })}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white"
+                placeholder="যা আলাদা প্লাম্বিং/ল্যাব কাজ..."
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Homeowner Prep (BN)</label>
+              <textarea
+                rows={3}
+                value={linesToText(formData.customerPrepBn)}
+                onChange={(e) => setFormData({ ...formData, customerPrepBn: textToLines(e.target.value) })}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white"
+                placeholder="কাজের আগে গ্রাহকের করণীয়..."
+              />
+            </div>
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Duration Factors (BN)</label>
+              <textarea
+                rows={3}
+                value={linesToText(formData.durationFactorsBn)}
+                onChange={(e) => setFormData({ ...formData, durationFactorsBn: textToLines(e.target.value) })}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white"
+                placeholder="সময় কিসের ওপর নির্ভর করে..."
+              />
+            </div>
+            <div>
+              <label className="block text-slate-300 font-medium mb-1">Pricing Factors (BN)</label>
+              <textarea
+                rows={3}
+                value={linesToText(formData.pricingFactorsBn)}
+                onChange={(e) => setFormData({ ...formData, pricingFactorsBn: textToLines(e.target.value) })}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white"
+                placeholder="খরচ কিসের ওপর নির্ধারিত..."
+              />
             </div>
           </div>
 

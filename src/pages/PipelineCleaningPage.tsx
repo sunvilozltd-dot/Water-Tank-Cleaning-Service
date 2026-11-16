@@ -4,6 +4,7 @@ import { Breadcrumbs } from '../components/Breadcrumbs';
 import { SmartQuoteWizard } from '../components/SmartQuoteWizard';
 import { SendTankPhotoCta } from '../components/SendTankPhotoCta';
 import { OptimizedImage } from '../components/OptimizedImage';
+import { ServiceDetailsMatrix } from '../components/ServiceDetailsMatrix';
 import { 
   Wrench, 
   CheckCircle2, 
@@ -148,9 +149,13 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
                 <Wrench className="w-3.5 h-3.5" />
                 <span>{lang === 'bn' ? 'বিশেষায়িত পাইপলাইন ফ্লাশিং' : 'Non-Invasive Pipe Descaling'}</span>
               </div>
-              <span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-extrabold text-[#16A34A] font-mono">
-                {lang === 'bn' ? 'শুরু মাত্র ৳ ১,৫০০' : 'Starting from BDT 1,500'}
-              </span>
+              {(dbService?.verifiedPriceNoteBn || (Number(dbService?.startingPrice) > 0)) && (
+                <span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-extrabold text-[#16A34A] font-mono">
+                  {lang === 'bn'
+                    ? (dbService?.verifiedPriceNoteBn || `শুরু ৳ ${Number(dbService?.startingPrice).toLocaleString('bn-BD')}`)
+                    : (dbService?.verifiedPriceNoteEn || `Starting from BDT ${Number(dbService?.startingPrice).toLocaleString()}`)}
+                </span>
+              )}
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#123047] tracking-tight leading-tight">
@@ -200,7 +205,7 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
           <div className="lg:col-span-5">
             <div className="relative aspect-video lg:aspect-4/3 rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-md bg-[#F5FAFC] group">
               <OptimizedImage
-                src="https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg"
+                src={dbService?.image || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg'}
                 alt="Water Pipeline Cleaning Service in Dhaka"
                 width={800}
                 height={600}
@@ -279,6 +284,14 @@ export const PipelineCleaningPage: React.FC<PipelineCleaningPageProps> = ({
           </div>
         </div>
       </section>
+
+      {/* Scope, Homeowner Preparation, Duration/Pricing Factors & Linked Case Studies */}
+      <ServiceDetailsMatrix
+        serviceSlug="pipeline-cleaning"
+        dbService={dbService}
+        onNavigate={handleNavigate}
+        onOpenQuoteModal={onOpenQuoteModal}
+      />
 
       {/* Quote / Calculator */}
       <div id="quote" className="space-y-4">

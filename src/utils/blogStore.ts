@@ -78,7 +78,42 @@ function mapBlogPostToRow(p: BlogPost): any {
   };
 }
 
+function readSnapshotBlogPosts(): BlogPost[] | null {
+  const globalSnap = (globalThis as any).__INITIAL_BLOG_POSTS__;
+  if (Array.isArray(globalSnap)) {
+    return globalSnap.map((item: any) => ({
+      ...item,
+      titleBn: item.titleBn || item.title_bn || item.title,
+      excerptBn: item.excerptBn || item.excerpt_bn || item.excerpt || '',
+      contentBn: item.contentBn || item.content_bn || item.content || '',
+      categoryBn: item.categoryBn || item.category_bn || item.category || 'পানির ট্যাংক পরিষ্কার',
+      readTimeBn: item.readTimeBn || item.read_time_bn || item.readTime || '৫ মিনিট পাঠ',
+      author: item.author || 'সানভিলোজ হাইজিন টিম',
+      published: item.published !== false,
+      seo: item.seo || {}
+    }));
+  }
+  if (typeof window !== 'undefined' && Array.isArray((window as any).__INITIAL_BLOG_POSTS__)) {
+    return ((window as any).__INITIAL_BLOG_POSTS__ as any[]).map((item: any) => ({
+      ...item,
+      titleBn: item.titleBn || item.title_bn || item.title,
+      excerptBn: item.excerptBn || item.excerpt_bn || item.excerpt || '',
+      contentBn: item.contentBn || item.content_bn || item.content || '',
+      categoryBn: item.categoryBn || item.category_bn || item.category || 'পানির ট্যাংক পরিষ্কার',
+      readTimeBn: item.readTimeBn || item.read_time_bn || item.readTime || '৫ মিনিট পাঠ',
+      author: item.author || 'সানভিলোজ হাইজিন টিম',
+      published: item.published !== false,
+      seo: item.seo || {}
+    }));
+  }
+  return null;
+}
+
 export const getStoredBlogPosts = (): BlogPost[] => {
+  const ssrSnapshot = readSnapshotBlogPosts();
+  if (ssrSnapshot !== null) {
+    return ssrSnapshot;
+  }
   if (typeof window === 'undefined') {
     return isSupabaseConfigured() ? [] : INITIAL_BLOG_POSTS;
   }
@@ -142,6 +177,7 @@ export const fetchBlogPostsWithStatus = async (
     const list = Array.isArray(data) ? data.map(mapRowToBlogPost) : [];
 
     if (typeof window !== 'undefined' && !includeUnpublished) {
+      (window as any).__INITIAL_BLOG_POSTS__ = list;
       safeSetItem(BLOG_STORAGE_KEY, JSON.stringify(list));
       window.dispatchEvent(new CustomEvent(BLOG_CHANGED_EVENT, { detail: list }));
     }
@@ -190,9 +226,13 @@ export const saveAllBlogPosts = async (posts: BlogPost[]): Promise<boolean> => {
 
     const publicPosts = posts.filter(p => p.published);
     if (typeof window !== 'undefined') {
+      (window as any).__INITIAL_BLOG_POSTS__ = publicPosts;
       safeSetItem(BLOG_STORAGE_KEY, JSON.stringify(publicPosts));
       window.dispatchEvent(new CustomEvent(BLOG_CHANGED_EVENT, { detail: publicPosts }));
     }
+    import('../services/indexnowService')
+      .then(({ invalidateServerSeoCache }) => invalidateServerSeoCache())
+      .catch(() => {});
     return true;
   } catch (err) {
     console.error('Failed to save blog posts:', err);
@@ -225,18 +265,19 @@ export const addBlogPost = async (postData: Omit<BlogPost, 'id' | 'publishedAt'>
     }
   }
 
-  if (newPost.published && newPost.slug) {
-    import('../services/indexnowService')
-      .then(({ enqueueIndexNowUrls }) =>
-        enqueueIndexNowUrls([`/blog/${newPost.slug}`, '/blog'], {
+  import('../services/indexnowService')
+    .then(async ({ invalidateServerSeoCache, enqueueIndexNowUrls }) => {
+      await invalidateServerSeoCache();
+      if (newPost.published && newPost.slug) {
+        await enqueueIndexNowUrls([`/blog/${newPost.slug}`, '/blog'], {
           action: 'publish_blog_post',
           entityType: 'blog_post',
           entitySlug: newPost.slug,
           verifyPublic: true
-        })
-      )
-      .catch(() => {});
-  }
+        });
+      }
+    })
+    .catch(() => {});
 
   return newPost;
 };
@@ -268,18 +309,19 @@ export const updateBlogPost = async (id: string, updates: Partial<BlogPost>): Pr
     }
   }
 
-  if (updatedPost.slug) {
-    import('../services/indexnowService')
-      .then(({ enqueueIndexNowUrls }) =>
-        enqueueIndexNowUrls([`/blog/${updatedPost.slug}`, '/blog'], {
+  import('../services/indexnowService')
+    .then(async ({ invalidateServerSeoCache, enqueueIndexNowUrls }) => {
+      await invalidateServerSeoCache();
+      if (updatedPost.slug) {
+        await enqueueIndexNowUrls([`/blog/${updatedPost.slug}`, '/blog'], {
           action: updatedPost.published ? 'publish_blog_post' : 'unpublish_blog_post',
           entityType: 'blog_post',
           entitySlug: updatedPost.slug,
           verifyPublic: Boolean(updatedPost.published)
-        })
-      )
-      .catch(() => {});
-  }
+        });
+      }
+    })
+    .catch(() => {});
 
   return updatedPost;
 };
@@ -309,14 +351,15 @@ export const deleteBlogPost = async (id: string, slugHint?: string): Promise<boo
   }
 
   import('../services/indexnowService')
-    .then(({ enqueueIndexNowUrls }) =>
-      enqueueIndexNowUrls(['/blog', ...(targetSlug ? [`/blog/${targetSlug}`] : [])], {
+    .then(async ({ invalidateServerSeoCache, enqueueIndexNowUrls }) => {
+      await invalidateServerSeoCache();
+      await enqueueIndexNowUrls(['/blog', ...(targetSlug ? [`/blog/${targetSlug}`] : [])], {
         action: 'delete_blog_post',
         entityType: 'blog_post',
         entitySlug: targetSlug || id,
         verifyPublic: false
-      })
-    )
+      });
+    })
     .catch(() => {});
 
   return true;
@@ -338,7 +381,9 @@ export const seedDefaultBlogPosts = async (): Promise<{ success: boolean; count:
 
 export const useBlogPosts = () => {
   const [posts, setPosts] = useState<BlogPost[]>(() => getStoredBlogPosts());
-  const [loading, setLoading] = useState<boolean>(() => isSupabaseConfigured());
+  const [loading, setLoading] = useState<boolean>(
+    () => isSupabaseConfigured() && readSnapshotBlogPosts() === null
+  );
   const [fromDatabase, setFromDatabase] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -420,18 +465,19 @@ export const saveBlogPost = async (post: BlogPost): Promise<boolean> => {
       return false;
     }
     await fetchBlogPostsWithStatus({ includeUnpublished: false });
-    if (post.published && post.slug) {
-      import('../services/indexnowService')
-        .then(({ enqueueIndexNowUrls }) =>
-          enqueueIndexNowUrls([`/blog/${post.slug}`, '/blog'], {
+    import('../services/indexnowService')
+      .then(async ({ invalidateServerSeoCache, enqueueIndexNowUrls }) => {
+        await invalidateServerSeoCache();
+        if (post.published && post.slug) {
+          await enqueueIndexNowUrls([`/blog/${post.slug}`, '/blog'], {
             action: 'publish_blog_post',
             entityType: 'blog_post',
             entitySlug: post.slug,
             verifyPublic: true
-          })
-        )
-        .catch(() => {});
-    }
+          });
+        }
+      })
+      .catch(() => {});
     return true;
   }
 

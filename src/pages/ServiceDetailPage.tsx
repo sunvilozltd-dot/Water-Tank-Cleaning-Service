@@ -3,11 +3,13 @@ import { SeoHead } from '../components/SeoHead';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { SmartQuoteWizard } from '../components/SmartQuoteWizard';
 import { DynamicServiceBookingModal } from '../components/DynamicServiceBookingModal';
+import { ServiceDetailsMatrix } from '../components/ServiceDetailsMatrix';
 import { useServices } from '../utils/servicesStore';
 import { AUTHORITATIVE_SERVICES } from '../services/serviceRegistry';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { NotFoundPage } from './NotFoundPage';
+import { sanitizeRichHtml, stripHtmlToPlainText } from '../utils/htmlSanitizer';
 import { 
   ShieldCheck, 
   CheckCircle2, 
@@ -153,9 +155,9 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
     }
   ];
 
-  // Related other services (excluding current)
+  // Related other services (excluding current and inactive)
   const relatedServices = services
-    .filter(s => s.id !== service.id)
+    .filter(s => s.id !== service.id && s.is_active !== false)
     .slice(0, 3);
 
   const breadcrumbsList = [
@@ -173,7 +175,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
     <main className="min-h-screen bg-transparent text-[#172B3A] py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-14">
       <SeoHead
         title={service.metaTitle || `${title} | SUNVILOZ CLEAN CARE`}
-        description={service.metaDesc || service.shortDesc || description || ''}
+        description={stripHtmlToPlainText(service.metaDesc || service.shortDesc || description || '')}
         canonicalPath={`/services/${service.slug}`}
         canonicalUrl={`https://sunvilozcleancare.com/services/${service.slug}`}
         ogType="service"
@@ -182,7 +184,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
         serviceSchema={{
           name: service.title,
           serviceType: service.title,
-          description: service.shortDesc || description || ''
+          description: stripHtmlToPlainText(service.shortDesc || description || '')
         }}
         breadcrumbs={breadcrumbsList}
         faqSchema={structuredFaqs}
@@ -215,14 +217,29 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
               </p>
             )}
 
-            <p className="text-sm sm:text-base text-[#64748B] leading-relaxed max-w-2xl">
-              {description}
-            </p>
+            {/<[a-z][\s\S]*>/i.test(description || '') ? (
+              <div
+                className="text-sm sm:text-base text-[#64748B] leading-relaxed max-w-2xl space-y-2 [&_ul]:list-disc [&_ul]:pl-5"
+                dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(description || '') }}
+              />
+            ) : (
+              <p className="text-sm sm:text-base text-[#64748B] leading-relaxed max-w-2xl">
+                {description}
+              </p>
+            )}
 
-            {service.startingPrice && typeof service.startingPrice === 'number' && (
+            {(service.verifiedPriceNoteBn || (typeof service.startingPrice === 'number' && service.startingPrice > 0)) && (
               <div className="inline-block px-4 py-2 bg-[#F5FAFC] border border-[#E2E8F0] rounded-xl">
-                <span className="text-xs text-[#64748B] mr-2">{lang === 'bn' ? 'শুরু মাত্র:' : 'Starting from:'}</span>
-                <span className="text-lg font-bold font-mono text-[#16A34A]">৳{service.startingPrice.toLocaleString()}</span>
+                {service.verifiedPriceNoteBn ? (
+                  <span className="text-sm font-bold text-[#16A34A]">
+                    {lang === 'bn' ? service.verifiedPriceNoteBn : (service.verifiedPriceNoteEn || service.verifiedPriceNoteBn)}
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-xs text-[#64748B] mr-2">{lang === 'bn' ? 'যাচাইকৃত শুরু:' : 'Verified starting:'}</span>
+                    <span className="text-lg font-bold font-mono text-[#16A34A]">৳{Number(service.startingPrice).toLocaleString()}</span>
+                  </>
+                )}
               </div>
             )}
 
@@ -285,9 +302,16 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
             <ShieldCheck className="w-5 h-5 text-[#0D9488]" />
             <span>{lang === 'bn' ? 'সার্ভিসের গুরুত্ব ও প্রয়োজনীয়তা' : 'Why This Service Is Essential'}</span>
           </h2>
-          <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">
-            {whyNeeded || description}
-          </p>
+          {/<[a-z][\s\S]*>/i.test((whyNeeded || description) || '') ? (
+            <div
+              className="text-sm sm:text-base text-[#64748B] leading-relaxed space-y-2 [&_ul]:list-disc [&_ul]:pl-5"
+              dangerouslySetInnerHTML={{ __html: sanitizeRichHtml((whyNeeded || description) || '') }}
+            />
+          ) : (
+            <p className="text-sm sm:text-base text-[#64748B] leading-relaxed">
+              {whyNeeded || description}
+            </p>
+          )}
         </div>
 
         <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 sm:p-8 space-y-4 shadow-sm">
@@ -326,6 +350,14 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
           ))}
         </div>
       </section>
+
+      {/* Scope, Homeowner Preparation, Duration/Pricing Factors & Linked Case Studies */}
+      <ServiceDetailsMatrix
+        serviceSlug={service.slug}
+        dbService={service}
+        onNavigate={handleNavigate}
+        onOpenQuoteModal={onOpenQuoteModal}
+      />
 
       {/* 6. Pricing / Quote Calculator */}
       <div id="quote" className="space-y-4">
@@ -465,12 +497,26 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
       </section>
 
       {/* 10. Related Services */}
-      {relatedServices.length > 0 && (
-        <section className="space-y-6">
+      <section className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xl sm:text-2xl font-bold text-[#123047]">
-            সম্পর্কিত অন্যান্য সেবা
+            {lang === 'bn' ? 'সম্পর্কিত অন্যান্য সেবা' : 'Related Services'}
           </h2>
+          <a
+            href="/services/water-tank-cleaning"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/services/water-tank-cleaning');
+            }}
+            className="text-xs sm:text-sm font-bold text-[#0D9488] hover:underline flex items-center gap-1"
+          >
+            <span>{lang === 'bn' ? 'মূল পানির ট্যাংক পরিষ্কার সার্ভিস পেজ' : 'Water Tank Cleaning Overview'}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+        </div>
 
+        {relatedServices.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {relatedServices.map((rel) => (
               <a
@@ -498,8 +544,8 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({
               </a>
             ))}
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       {/* Dynamic Service Custom Booking Modal */}
       <DynamicServiceBookingModal

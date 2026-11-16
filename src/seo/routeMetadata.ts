@@ -35,6 +35,7 @@ export interface ResolvedSeoRoute {
     imageUrl?: string;
     category?: string;
     readTime?: string;
+    author?: string;
     content?: string;
   };
   priority: number;
@@ -186,10 +187,13 @@ export function buildAllRoutes(dataset: LiveSeoDataset): ResolvedSeoRoute[] {
       lastmod: dataset.siteConfigUpdatedAt || null
     }),
     makeCoreRoute('/services', {
-      lastmod: dataset.services[0]?.updatedAt || dataset.siteConfigUpdatedAt || null
+      lastmod: dataset.services.find(s => s.is_active !== false)?.updatedAt || dataset.siteConfigUpdatedAt || null
     }),
     makeCoreRoute('/service-areas', {
-      lastmod: dataset.areas[0]?.updatedAt || dataset.zones[0]?.updatedAt || null
+      lastmod:
+        dataset.areas.find(a => a.isVisible !== false && a.status === 'published')?.updatedAt ||
+        dataset.zones.find(z => z.isVisible !== false && z.status === 'published')?.updatedAt ||
+        null
     }),
     makeCoreRoute('/get-quote', {
       lastmod: dataset.siteConfigUpdatedAt || null
@@ -198,20 +202,33 @@ export function buildAllRoutes(dataset: LiveSeoDataset): ResolvedSeoRoute[] {
       faqs: fullFaqHubItems,
       lastmod: dataset.siteConfigUpdatedAt || null
     }),
-    makeCoreRoute('/portfolio'),
+    makeCoreRoute('/portfolio', {
+      lastmod:
+        (dataset.caseStudies || []).find(
+          c => c.status === 'published' && c.customerConsentGranted === true
+        )?.updatedAt ||
+        (dataset.caseStudies || []).find(
+          c => c.status === 'published' && c.customerConsentGranted === true
+        )?.serviceDate ||
+        null
+    }),
     makeCoreRoute('/about'),
     makeCoreRoute('/contact', {
       lastmod: dataset.siteConfigUpdatedAt || null
     }),
     makeCoreRoute('/blog', {
-      lastmod: dataset.blogPosts[0]?.updatedAt || dataset.blogPosts[0]?.publishedAt || null
+      lastmod:
+        dataset.blogPosts.find(p => p.published !== false)?.updatedAt ||
+        dataset.blogPosts.find(p => p.published !== false)?.publishedAt ||
+        null
     }),
     makeCoreRoute('/privacy-policy'),
     makeCoreRoute('/terms')
   ];
 
-  // Dynamic Active Services added/edited in Admin (excluding slugs redirected statically)
+  // Dynamic Active Services added/edited in Admin (excluding inactive or slugs redirected statically)
   for (const srv of dataset.services) {
+    if (srv.is_active === false) continue;
     const normalizedSlug =
       srv.slug === 'overhead-water-tank-cleaning'
         ? 'overhead-tank-cleaning'
@@ -224,6 +241,10 @@ export function buildAllRoutes(dataset: LiveSeoDataset): ResolvedSeoRoute[] {
       if (existing) {
         if (srv.metaTitle?.trim()) existing.title = srv.metaTitle.trim();
         if (srv.metaDesc?.trim()) existing.description = srv.metaDesc.trim();
+        if (srv.titleBn?.trim()) existing.h1 = srv.titleBn.trim();
+        if ((srv.shortDescBn || srv.shortDesc)?.trim()) {
+          existing.summary = (srv.shortDescBn || srv.shortDesc).trim();
+        }
         if (srv.image?.trim()) existing.ogImage = srv.image.trim();
         if (Array.isArray(srv.faqs) && srv.faqs.length > 0) {
           existing.faqs = srv.faqs.map(f => ({
@@ -238,16 +259,22 @@ export function buildAllRoutes(dataset: LiveSeoDataset): ResolvedSeoRoute[] {
       continue;
     }
 
+    const displayTitle = srv.titleBn || srv.title;
+    const displaySummary = srv.shortDescBn || srv.shortDesc || '';
+    const displayBenefits =
+      Array.isArray(srv.benefitsBn) && srv.benefitsBn.length > 0 ? srv.benefitsBn : srv.benefits;
+
     routes.push({
       path: routePath,
       title: srv.metaTitle || `${srv.title} | SUNVILOZ CLEAN CARE`,
       description:
         srv.metaDesc ||
-        srv.shortDesc ||
         srv.shortDescBn ||
+        srv.shortDesc ||
         `${srv.title} — SUNVILOZ CLEAN CARE`,
-      h1: srv.titleBn || srv.title,
-      summary: srv.shortDescBn || srv.shortDesc || '',
+      h1: displayTitle,
+      summary: displaySummary,
+      features: Array.isArray(displayBenefits) && displayBenefits.length > 0 ? displayBenefits : undefined,
       faqs: Array.isArray(srv.faqs) && srv.faqs.length > 0
         ? srv.faqs.map(f => ({
             question: f.questionBn || f.question,
@@ -257,11 +284,11 @@ export function buildAllRoutes(dataset: LiveSeoDataset): ResolvedSeoRoute[] {
       breadcrumbs: [
         { name: 'Home', path: '/' },
         { name: 'Services', path: '/services' },
-        { name: srv.title, path: routePath }
+        { name: displayTitle, path: routePath }
       ],
       serviceType: srv.title,
       ogImage: srv.image,
-      ogImageAlt: srv.title,
+      ogImageAlt: displayTitle,
       lastmod: srv.updatedAt || srv.publishedAt || null,
       priority: 0.85,
       changefreq: 'weekly'
@@ -308,32 +335,77 @@ export function buildAllRoutes(dataset: LiveSeoDataset): ResolvedSeoRoute[] {
 
   // Published Blog Articles strictly from Supabase blog_posts (published = true)
   for (const article of dataset.blogPosts) {
+    if (article.published === false) continue;
+    const displayTitle = article.titleBn || article.title;
+    const displayExcerpt = article.excerptBn || article.excerpt || '';
+    const displayContent = article.contentBn || article.content || '';
     routes.push({
       path: `/blog/${article.slug}`,
-      title: article.metaTitle || `${article.title} | SUNVILOZ CLEAN CARE`,
+      title: article.metaTitle || article.seo?.metaTitle || `${displayTitle} | SUNVILOZ CLEAN CARE`,
       description:
         article.metaDescription ||
-        article.excerpt ||
-        article.excerptBn ||
-        `${article.title} — SUNVILOZ CLEAN CARE.`,
-      h1: article.titleBn || article.title,
-      summary: article.excerptBn || article.excerpt,
+        article.seo?.metaDescription ||
+        displayExcerpt ||
+        `${displayTitle} — SUNVILOZ CLEAN CARE.`,
+      h1: displayTitle,
+      summary: displayExcerpt,
       breadcrumbs: [
         { name: 'Home', path: '/' },
         { name: 'Blog', path: '/blog' },
-        { name: article.title, path: `/blog/${article.slug}` }
+        { name: displayTitle, path: `/blog/${article.slug}` }
       ],
       articleMeta: {
         publishedAt: article.publishedAt,
         updatedAt: article.updatedAt,
         imageUrl: article.imageUrl,
-        category: article.category,
-        readTime: article.readTime,
-        content: article.content
+        category: article.categoryBn || article.category,
+        readTime: article.readTimeBn || article.readTime,
+        author: article.author,
+        content: displayContent
       },
       ogImage: article.imageUrl,
-      ogImageAlt: article.title,
+      ogImageAlt: article.imageAlt || article.seo?.imageAlt || displayTitle,
       lastmod: article.updatedAt || article.publishedAt || null,
+      priority: 0.75,
+      changefreq: 'monthly'
+    });
+  }
+
+  // Published & Consented Case Studies strictly from Supabase portfolio_projects
+  for (const cs of dataset.caseStudies || []) {
+    if (cs.status !== 'published' || cs.customerConsentGranted !== true) continue;
+    const slug = (cs.slug || cs.id || '').trim();
+    if (!slug) continue;
+    const displayTitle = cs.titleBn || cs.title;
+    const summaryText =
+      cs.workDoneBn ||
+      cs.workDone ||
+      cs.customerProblemBn ||
+      cs.customerProblem ||
+      cs.summaryBn ||
+      cs.summary ||
+      `${cs.locationBn || cs.area} এলাকায় ${cs.category} পরিষ্কার কাজের কেস স্টাডি।`;
+    const features = [cs.customerProblemBn || cs.customerProblem, cs.workDoneBn || cs.workDone, cs.actualResultBn || cs.actualResult]
+      .filter((v): v is string => Boolean(v && v.trim()))
+      .slice(0, 3);
+
+    routes.push({
+      path: `/portfolio/${slug}`,
+      title: cs.metaTitle?.trim() || `${displayTitle} | Case Study | SUNVILOZ CLEAN CARE`,
+      description:
+        cs.metaDescription?.trim() ||
+        summaryText.slice(0, 155),
+      h1: displayTitle,
+      summary: summaryText,
+      features: features.length > 0 ? features : undefined,
+      breadcrumbs: [
+        { name: 'Home', path: '/' },
+        { name: 'Case Studies', path: '/portfolio' },
+        { name: displayTitle, path: `/portfolio/${slug}` }
+      ],
+      ogImage: cs.afterImage || cs.beforeImage,
+      ogImageAlt: cs.afterCaptionBn || cs.afterCaption || displayTitle,
+      lastmod: cs.updatedAt || cs.serviceDate || null,
       priority: 0.75,
       changefreq: 'monthly'
     });
@@ -435,6 +507,17 @@ export function resolveRoute(rawPath: string, dataset: LiveSeoDataset): RouteRes
       reason: 'Services database query failed without fallback snapshot.'
     };
   }
+  if (
+    (cleanPath === '/portfolio' || cleanPath.startsWith('/portfolio/')) &&
+    status &&
+    !isSliceAvailable(status, 'caseStudies')
+  ) {
+    return {
+      kind: 'unavailable',
+      statusCode: 503,
+      reason: 'Case studies database query failed without fallback snapshot.'
+    };
+  }
 
   // 4. Match published route
   const allRoutes = buildAllRoutes(dataset);
@@ -444,6 +527,12 @@ export function resolveRoute(rawPath: string, dataset: LiveSeoDataset): RouteRes
     if (cleanPath.startsWith('/blog/') && stale.has('blogPosts')) fromLkg = true;
     if (cleanPath.startsWith('/service-areas/') && stale.has('areas')) fromLkg = true;
     if (cleanPath.startsWith('/services/') && stale.has('services')) fromLkg = true;
+    if (
+      (cleanPath === '/portfolio' || cleanPath.startsWith('/portfolio/')) &&
+      stale.has('caseStudies')
+    ) {
+      fromLkg = true;
+    }
     return { kind: 'page', statusCode: 200, route: matched, fromLastKnownGood: fromLkg };
   }
 
@@ -478,6 +567,14 @@ export function resolveRoute(rawPath: string, dataset: LiveSeoDataset): RouteRes
         kind: 'unavailable',
         statusCode: 503,
         reason: 'Unable to verify service slug due to database query failure.'
+      };
+    }
+
+    if (cleanPath.startsWith('/portfolio/') && !status.caseStudiesOk) {
+      return {
+        kind: 'unavailable',
+        statusCode: 503,
+        reason: 'Unable to verify case study slug due to database query failure.'
       };
     }
 
@@ -797,7 +894,7 @@ export function renderRouteHtmlFromTemplate(
       image: [resolvedSocialImage],
       author: {
         '@type': 'Organization',
-        name: biz?.name || 'SUNVILOZ CLEAN CARE',
+        name: route.articleMeta.author || biz?.name || 'SUNVILOZ CLEAN CARE',
         url: baseUrl
       },
       publisher: {
@@ -860,8 +957,35 @@ export function renderRouteHtmlFromTemplate(
     );
   }
   if (dataset.status?.configured && isSliceAvailable(dataset.status, 'services')) {
+    const publicServices = dataset.services.filter(s => s.is_active !== false);
     snapshotScripts.push(
-      `window.__INITIAL_SERVICES__ = ${safeJsonForHtmlScript(dataset.services)};`
+      `window.__INITIAL_SERVICES__ = ${safeJsonForHtmlScript(publicServices)};`
+    );
+  }
+  if (dataset.status?.configured && isSliceAvailable(dataset.status, 'blogPosts')) {
+    const publicPosts = dataset.blogPosts.filter(p => p.published !== false);
+    snapshotScripts.push(
+      `window.__INITIAL_BLOG_POSTS__ = ${safeJsonForHtmlScript(publicPosts)};`
+    );
+  }
+  if (dataset.status?.configured && isSliceAvailable(dataset.status, 'zones')) {
+    const publicZones = dataset.zones.filter(z => z.isVisible !== false && z.status !== 'draft');
+    snapshotScripts.push(
+      `window.__INITIAL_ZONES__ = ${safeJsonForHtmlScript(publicZones)};`
+    );
+  }
+  if (dataset.status?.configured && isSliceAvailable(dataset.status, 'areas')) {
+    const publicAreas = dataset.areas.filter(a => a.isVisible !== false && a.status === 'published');
+    snapshotScripts.push(
+      `window.__INITIAL_AREAS__ = ${safeJsonForHtmlScript(publicAreas)};`
+    );
+  }
+  if (dataset.status?.configured && isSliceAvailable(dataset.status, 'caseStudies')) {
+    const publicCases = (dataset.caseStudies || []).filter(
+      c => c.status === 'published' && c.customerConsentGranted === true
+    );
+    snapshotScripts.push(
+      `window.__INITIAL_CASE_STUDIES__ = ${safeJsonForHtmlScript(publicCases)};`
     );
   }
   if (dataset.siteConfig) {
@@ -869,7 +993,12 @@ export function renderRouteHtmlFromTemplate(
       business: dataset.siteConfig.business || undefined,
       announcement: dataset.siteConfig.announcement || undefined,
       hero: dataset.siteConfig.hero || undefined,
+      sections: dataset.siteConfig.sections || undefined,
+      whyChooseUs: dataset.siteConfig.whyChooseUs || undefined,
+      cleaningSteps: dataset.siteConfig.cleaningSteps || undefined,
       faqs: dataset.siteConfig.faqs || undefined,
+      reviews: dataset.siteConfig.reviews || undefined,
+      areas: dataset.siteConfig.areas || undefined,
       images: dataset.siteConfig.images || undefined,
       seo: dataset.siteConfig.seo
         ? { ...dataset.siteConfig.seo, indexNowKey: '' }

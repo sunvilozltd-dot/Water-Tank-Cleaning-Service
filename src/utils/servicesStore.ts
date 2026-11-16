@@ -59,37 +59,53 @@ const sanitizeStoredService = (s: ExtensibleServiceItem): ExtensibleServiceItem 
 
   const cleanExistingImg = (s.image && !isDemoOrStockUrl(s.image)) ? s.image : undefined;
   const cleanExistingFeatured = (s.featured_image && !isDemoOrStockUrl(s.featured_image)) ? s.featured_image : undefined;
+  const authoritativeFallback = AUTHORITATIVE_SERVICES.find(a => a.slug === normalizedSlug || a.id === s.id);
+  const pickArray = (primary?: any, secondary?: any): string[] | undefined => {
+    if (Array.isArray(primary) && primary.length > 0) return primary;
+    if (Array.isArray(secondary) && secondary.length > 0) return secondary;
+    return undefined;
+  };
+  const enrichedBase: ExtensibleServiceItem = {
+    ...s,
+    slug: normalizedSlug,
+    includedItems: pickArray(s.includedItems, authoritativeFallback?.includedItems),
+    includedItemsBn: pickArray(s.includedItemsBn, authoritativeFallback?.includedItemsBn),
+    excludedItems: pickArray(s.excludedItems, authoritativeFallback?.excludedItems),
+    excludedItemsBn: pickArray(s.excludedItemsBn, authoritativeFallback?.excludedItemsBn),
+    customerPrep: pickArray(s.customerPrep, authoritativeFallback?.customerPrep),
+    customerPrepBn: pickArray(s.customerPrepBn, authoritativeFallback?.customerPrepBn),
+    durationFactors: pickArray(s.durationFactors, authoritativeFallback?.durationFactors),
+    durationFactorsBn: pickArray(s.durationFactorsBn, authoritativeFallback?.durationFactorsBn),
+    pricingFactors: pickArray(s.pricingFactors, authoritativeFallback?.pricingFactors),
+    pricingFactorsBn: pickArray(s.pricingFactorsBn, authoritativeFallback?.pricingFactorsBn)
+  };
 
-  if (s.id === 'srv-overhead-water-tank' || normalizedSlug === 'overhead-tank-cleaning') {
+  if (enrichedBase.id === 'srv-overhead-water-tank' || normalizedSlug === 'overhead-tank-cleaning') {
     const fallback = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg';
     return {
-      ...s,
-      slug: normalizedSlug,
+      ...enrichedBase,
       image: cleanExistingImg || fallback,
       featured_image: cleanExistingFeatured || cleanExistingImg || fallback
     };
   }
-  if (s.id === 'srv-underground-water-tank' || normalizedSlug === 'underground-water-tank-cleaning') {
+  if (enrichedBase.id === 'srv-underground-water-tank' || normalizedSlug === 'underground-water-tank-cleaning') {
     const fallback = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png';
     return {
-      ...s,
-      slug: normalizedSlug,
+      ...enrichedBase,
       image: cleanExistingImg || fallback,
       featured_image: cleanExistingFeatured || cleanExistingImg || fallback
     };
   }
-  if (s.id === 'srv-water-pipeline' || normalizedSlug === 'pipeline-cleaning') {
+  if (enrichedBase.id === 'srv-water-pipeline' || normalizedSlug === 'pipeline-cleaning') {
     const fallback = 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg';
     return {
-      ...s,
-      slug: normalizedSlug,
+      ...enrichedBase,
       image: cleanExistingImg || fallback,
       featured_image: cleanExistingFeatured || cleanExistingImg || fallback
     };
   }
   return {
-    ...s,
-    slug: normalizedSlug,
+    ...enrichedBase,
     image: cleanExistingImg || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg',
     featured_image: cleanExistingFeatured || cleanExistingImg || 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-water-tank-cleaning_1794133666768.jpg'
   };
@@ -99,6 +115,15 @@ const sanitizeStoredService = (s: ExtensibleServiceItem): ExtensibleServiceItem 
  * Maps a database row from public.services to an ExtensibleServiceItem.
  */
 function mapRowToService(d: any): ExtensibleServiceItem {
+  const formCfg = d.form_config && typeof d.form_config === 'object' ? d.form_config : {};
+  const ext =
+    d.extended_content && typeof d.extended_content === 'object'
+      ? d.extended_content
+      : formCfg._serviceDetails && typeof formCfg._serviceDetails === 'object'
+      ? formCfg._serviceDetails
+      : {};
+  const rawNumericPrice = Number(d.starting_price);
+  const validNumericPrice = Number.isFinite(rawNumericPrice) && rawNumericPrice > 0 ? rawNumericPrice : undefined;
   return sanitizeStoredService({
     id: d.id,
     slug: normalizeCoreServiceSlug(d.slug),
@@ -121,8 +146,12 @@ function mapRowToService(d: any): ExtensibleServiceItem {
     show_on_homepage: d.show_on_homepage !== false,
     show_in_navigation: d.show_in_navigation !== false,
     show_in_quote_form: d.show_in_quote_form !== false,
-    startingPrice: Number(d.starting_price ?? 1500),
-    startingPriceBn: d.starting_price_bn || `৳ ${Number(d.starting_price ?? 1500).toLocaleString('bn-BD')}`,
+    startingPrice: validNumericPrice,
+    startingPriceBn: validNumericPrice
+      ? (d.starting_price_bn || `৳ ${validNumericPrice.toLocaleString('bn-BD')}`)
+      : (d.starting_price_bn || undefined),
+    verifiedPriceNoteEn: ext.verifiedPriceNoteEn || undefined,
+    verifiedPriceNoteBn: ext.verifiedPriceNoteBn || undefined,
     popular: Boolean(d.popular),
     isCustomAdded: Boolean(d.is_custom_added),
     seo_title: d.seo_title || d.meta_title || `${d.title} in Dhaka | Sunviloz Clean Care`,
@@ -143,6 +172,17 @@ function mapRowToService(d: any): ExtensibleServiceItem {
     processBn: Array.isArray(d.process_bn) ? d.process_bn : (Array.isArray(d.process) ? d.process : []),
     idealFor: Array.isArray(d.ideal_for) ? d.ideal_for : ['আবাসিক বাড়ি', 'অ্যাপার্টমেন্ট ভবন'],
     idealForBn: Array.isArray(d.ideal_for_bn) ? d.ideal_for_bn : (Array.isArray(d.ideal_for) ? d.ideal_for : []),
+    includedItems: Array.isArray(ext.includedItems) ? ext.includedItems : undefined,
+    includedItemsBn: Array.isArray(ext.includedItemsBn) ? ext.includedItemsBn : undefined,
+    excludedItems: Array.isArray(ext.excludedItems) ? ext.excludedItems : undefined,
+    excludedItemsBn: Array.isArray(ext.excludedItemsBn) ? ext.excludedItemsBn : undefined,
+    customerPrep: Array.isArray(ext.customerPrep) ? ext.customerPrep : undefined,
+    customerPrepBn: Array.isArray(ext.customerPrepBn) ? ext.customerPrepBn : undefined,
+    durationFactors: Array.isArray(ext.durationFactors) ? ext.durationFactors : undefined,
+    durationFactorsBn: Array.isArray(ext.durationFactorsBn) ? ext.durationFactorsBn : undefined,
+    pricingFactors: Array.isArray(ext.pricingFactors) ? ext.pricingFactors : undefined,
+    pricingFactorsBn: Array.isArray(ext.pricingFactorsBn) ? ext.pricingFactorsBn : undefined,
+    extendedContent: ext,
     faqs: Array.isArray(d.faqs) ? d.faqs : []
   });
 }
@@ -150,8 +190,25 @@ function mapRowToService(d: any): ExtensibleServiceItem {
 /**
  * Maps an ExtensibleServiceItem to a database row for public.services.
  */
-function mapServiceToRow(s: ExtensibleServiceItem): any {
-  return {
+function mapServiceToRow(s: ExtensibleServiceItem, includeExtendedCol = true): any {
+  const detailsPayload = {
+    verifiedPriceNoteEn: s.verifiedPriceNoteEn || null,
+    verifiedPriceNoteBn: s.verifiedPriceNoteBn || null,
+    includedItems: s.includedItems || [],
+    includedItemsBn: s.includedItemsBn || [],
+    excludedItems: s.excludedItems || [],
+    excludedItemsBn: s.excludedItemsBn || [],
+    customerPrep: s.customerPrep || [],
+    customerPrepBn: s.customerPrepBn || [],
+    durationFactors: s.durationFactors || [],
+    durationFactorsBn: s.durationFactorsBn || [],
+    pricingFactors: s.pricingFactors || [],
+    pricingFactorsBn: s.pricingFactorsBn || []
+  };
+  const numericPrice = Number(s.startingPrice);
+  const validPrice = Number.isFinite(numericPrice) && numericPrice > 0 ? numericPrice : null;
+
+  const row: Record<string, any> = {
     id: s.id,
     slug: s.slug,
     title: s.title,
@@ -171,15 +228,15 @@ function mapServiceToRow(s: ExtensibleServiceItem): any {
     show_on_homepage: s.show_on_homepage !== false,
     show_in_navigation: s.show_in_navigation !== false,
     show_in_quote_form: s.show_in_quote_form !== false,
-    starting_price: s.startingPrice ?? 1500,
-    starting_price_bn: s.startingPriceBn || null,
+    starting_price: validPrice,
+    starting_price_bn: validPrice ? (s.startingPriceBn || `৳ ${validPrice.toLocaleString('bn-BD')}`) : (s.startingPriceBn || null),
     popular: Boolean(s.popular),
     is_custom_added: Boolean(s.isCustomAdded),
     seo_title: s.seo_title || s.metaTitle || null,
     meta_title: s.metaTitle || s.seo_title || null,
     meta_description: s.meta_description || s.metaDesc || null,
     meta_desc: s.metaDesc || s.meta_description || null,
-    form_config: s.formConfig || {},
+    form_config: { ...(s.formConfig || {}), _serviceDetails: detailsPayload },
     benefits: s.benefits || [],
     benefits_bn: s.benefitsBn || s.benefits || [],
     process: s.process || [],
@@ -189,21 +246,41 @@ function mapServiceToRow(s: ExtensibleServiceItem): any {
     faqs: s.faqs || [],
     updated_at: new Date().toISOString()
   };
+
+  if (includeExtendedCol) {
+    row.extended_content = detailsPayload;
+  }
+  return row;
+}
+
+async function upsertServicesWithFallback(items: ExtensibleServiceItem[]): Promise<{ error: any }> {
+  const fullRows = items.map(item => mapServiceToRow(item, true));
+  const res = await supabase.from('services').upsert(fullRows, { onConflict: 'id' });
+  if (res.error && /extended_content/i.test(res.error.message || '')) {
+    const legacyRows = items.map(item => mapServiceToRow(item, false));
+    return await supabase.from('services').upsert(legacyRows, { onConflict: 'id' });
+  }
+  return res;
+}
+
+function readSnapshotServices(): ExtensibleServiceItem[] | null {
+  const globalSnap = (globalThis as any).__INITIAL_SERVICES__;
+  if (Array.isArray(globalSnap)) {
+    return globalSnap.map((item: any) => sanitizeStoredService(item));
+  }
+  if (typeof window !== 'undefined' && Array.isArray((window as any).__INITIAL_SERVICES__)) {
+    return ((window as any).__INITIAL_SERVICES__ as any[]).map((item: any) => sanitizeStoredService(item));
+  }
+  return null;
 }
 
 /**
  * Retrieve cached services when Supabase is configured, or bundled defaults strictly in offline/unconfigured mode.
  */
 export const getStoredServices = (): ExtensibleServiceItem[] => {
-  const globalSnap = (globalThis as any).__INITIAL_SERVICES__;
-  if (Array.isArray(globalSnap)) {
-    return globalSnap.map((item: any) => sanitizeStoredService(item));
-  }
-  if (typeof window !== 'undefined') {
-    const winSnap = (window as any).__INITIAL_SERVICES__;
-    if (Array.isArray(winSnap)) {
-      return winSnap.map((item: any) => sanitizeStoredService(item));
-    }
+  const snapshot = readSnapshotServices();
+  if (snapshot !== null) {
+    return snapshot;
   }
   if (typeof window === 'undefined') {
     return isSupabaseConfigured() ? [] : INITIAL_SERVICES;
@@ -280,6 +357,7 @@ export const fetchServicesWithStatus = async (): Promise<ServiceFetchResult> => 
     }
 
     if (typeof window !== 'undefined') {
+      (window as any).__INITIAL_SERVICES__ = list;
       safeSetItem(STORAGE_KEY, JSON.stringify(list));
       window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: list }));
     }
@@ -328,8 +406,7 @@ export const saveAllServices = async (services: ExtensibleServiceItem[]): Promis
   if (isSupabaseConfigured()) {
     try {
       if (services.length > 0) {
-        const rows = services.map(mapServiceToRow);
-        const { error } = await supabase.from('services').upsert(rows, { onConflict: 'id' });
+        const { error } = await upsertServicesWithFallback(services);
         if (error) {
           console.error('Failed to sync services to Supabase:', error.message);
           return false;
@@ -342,9 +419,14 @@ export const saveAllServices = async (services: ExtensibleServiceItem[]): Promis
   }
 
   if (typeof window !== 'undefined') {
+    (window as any).__INITIAL_SERVICES__ = services;
     safeSetItem(STORAGE_KEY, JSON.stringify(services));
     window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: services }));
   }
+
+  import('../services/indexnowService')
+    .then(({ invalidateServerSeoCache }) => invalidateServerSeoCache())
+    .catch(() => {});
 
   return true;
 };
@@ -408,8 +490,10 @@ export const addNewService = async (serviceData: Partial<ExtensibleServiceItem>)
     show_on_homepage: serviceData.show_on_homepage !== undefined ? serviceData.show_on_homepage : true,
     show_in_navigation: serviceData.show_in_navigation !== undefined ? serviceData.show_in_navigation : true,
     show_in_quote_form: serviceData.show_in_quote_form !== undefined ? serviceData.show_in_quote_form : true,
-    startingPrice: serviceData.startingPrice || 1500,
-    startingPriceBn: serviceData.startingPriceBn || '৳ ১,৫০০',
+    startingPrice: Number(serviceData.startingPrice) > 0 ? Number(serviceData.startingPrice) : undefined,
+    startingPriceBn: serviceData.startingPriceBn || undefined,
+    verifiedPriceNoteEn: serviceData.verifiedPriceNoteEn || undefined,
+    verifiedPriceNoteBn: serviceData.verifiedPriceNoteBn || undefined,
     popular: !!serviceData.popular,
     isCustomAdded: true,
     seo_title: serviceData.seo_title || serviceData.metaTitle || `${serviceData.title || 'Service'} in Dhaka | Sunviloz Clean Care`,
@@ -434,11 +518,21 @@ export const addNewService = async (serviceData: Partial<ExtensibleServiceItem>)
     processBn: serviceData.processBn || serviceData.process || ['পরিদর্শন', 'মেকানাইজড পরিষ্কার'],
     idealFor: serviceData.idealFor || ['আবাসিক বাড়ি', 'অ্যাপার্টমেন্ট ভবন'],
     idealForBn: serviceData.idealForBn || ['আবাসিক বাড়ি', 'অ্যাপার্টমেন্ট ভবন'],
+    includedItems: serviceData.includedItems,
+    includedItemsBn: serviceData.includedItemsBn,
+    excludedItems: serviceData.excludedItems,
+    excludedItemsBn: serviceData.excludedItemsBn,
+    customerPrep: serviceData.customerPrep,
+    customerPrepBn: serviceData.customerPrepBn,
+    durationFactors: serviceData.durationFactors,
+    durationFactorsBn: serviceData.durationFactorsBn,
+    pricingFactors: serviceData.pricingFactors,
+    pricingFactorsBn: serviceData.pricingFactorsBn,
     faqs: serviceData.faqs || []
   };
 
   if (isSupabaseConfigured()) {
-    const { error } = await supabase.from('services').upsert(mapServiceToRow(newService), { onConflict: 'id' });
+    const { error } = await upsertServicesWithFallback([newService]);
     if (error) {
       throw new Error(error.message);
     }
@@ -448,18 +542,19 @@ export const addNewService = async (serviceData: Partial<ExtensibleServiceItem>)
     await saveAllServices(updated);
   }
 
-  if (newService.is_active !== false && newService.slug) {
-    import('../services/indexnowService')
-      .then(({ enqueueIndexNowUrls }) =>
-        enqueueIndexNowUrls(['/services', `/services/${newService.slug}`], {
+  import('../services/indexnowService')
+    .then(async ({ invalidateServerSeoCache, enqueueIndexNowUrls }) => {
+      await invalidateServerSeoCache();
+      if (newService.is_active !== false && newService.slug) {
+        await enqueueIndexNowUrls(['/services', `/services/${newService.slug}`], {
           action: 'publish_service',
           entityType: 'service',
           entitySlug: newService.slug,
           verifyPublic: true
-        })
-      )
-      .catch(() => {});
-  }
+        });
+      }
+    })
+    .catch(() => {});
 
   return newService;
 };
@@ -480,7 +575,7 @@ export const updateService = async (id: string, updates: Partial<ExtensibleServi
   };
 
   if (isSupabaseConfigured()) {
-    const { error } = await supabase.from('services').upsert(mapServiceToRow(updatedItem), { onConflict: 'id' });
+    const { error } = await upsertServicesWithFallback([updatedItem]);
     if (error) {
       console.error('Supabase update service error:', error.message);
       return false;
@@ -491,19 +586,20 @@ export const updateService = async (id: string, updates: Partial<ExtensibleServi
     await saveAllServices(current);
   }
 
-  if (updatedItem.slug) {
-    const isActive = updatedItem.is_active !== false;
-    import('../services/indexnowService')
-      .then(({ enqueueIndexNowUrls }) =>
-        enqueueIndexNowUrls(['/services', `/services/${updatedItem.slug}`], {
+  import('../services/indexnowService')
+    .then(async ({ invalidateServerSeoCache, enqueueIndexNowUrls }) => {
+      await invalidateServerSeoCache();
+      if (updatedItem.slug) {
+        const isActive = updatedItem.is_active !== false;
+        await enqueueIndexNowUrls(['/services', `/services/${updatedItem.slug}`], {
           action: isActive ? 'update_service' : 'hide_service',
           entityType: 'service',
           entitySlug: updatedItem.slug,
           verifyPublic: isActive
-        })
-      )
-      .catch(() => {});
-  }
+        });
+      }
+    })
+    .catch(() => {});
 
   return true;
 };
@@ -542,14 +638,15 @@ export const deleteService = async (id: string): Promise<boolean> => {
   }
 
   import('../services/indexnowService')
-    .then(({ enqueueIndexNowUrls }) =>
-      enqueueIndexNowUrls(['/services', ...(targetSlug ? [`/services/${targetSlug}`] : [])], {
+    .then(async ({ invalidateServerSeoCache, enqueueIndexNowUrls }) => {
+      await invalidateServerSeoCache();
+      await enqueueIndexNowUrls(['/services', ...(targetSlug ? [`/services/${targetSlug}`] : [])], {
         action: 'delete_service',
         entityType: 'service',
         entitySlug: targetSlug || id,
         verifyPublic: false
-      })
-    )
+      });
+    })
     .catch(() => {});
 
   return true;
@@ -573,7 +670,7 @@ export const seedDefaultServices = async (): Promise<{ success: boolean; count: 
   if (!isSupabaseConfigured()) {
     return { success: false, count: 0, error: 'Supabase সংযুক্ত নয়।' };
   }
-  const rows = INITIAL_SERVICES.map(mapServiceToRow);
+  const rows = INITIAL_SERVICES.map(s => mapServiceToRow(s));
   const { error } = await supabase.from('services').upsert(rows, { onConflict: 'id', ignoreDuplicates: true });
   if (error) return { success: false, count: 0, error: error.message };
   await fetchServicesWithStatus();
@@ -590,7 +687,9 @@ export const resetServicesToDefault = async (): Promise<ExtensibleServiceItem[]>
  */
 export const useServices = () => {
   const [allServices, setAllServices] = useState<ExtensibleServiceItem[]>(() => getStoredServices());
-  const [loading, setLoading] = useState<boolean>(() => isSupabaseConfigured());
+  const [loading, setLoading] = useState<boolean>(
+    () => isSupabaseConfigured() && readSnapshotServices() === null
+  );
   const [fromDatabase, setFromDatabase] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 

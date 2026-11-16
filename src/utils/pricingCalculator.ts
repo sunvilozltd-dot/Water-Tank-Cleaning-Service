@@ -77,35 +77,41 @@ export function calculateQuoteEstimate(
   const flats = flatsRange.avg;
   const floors = floorsRange.avg;
 
+  const basePvc = Number(pricing.rooftopPvcStartingPrice || pricing.rooftopStartingPrice || 0);
+  const baseRcc = Number(pricing.rooftopRccStartingPrice || pricing.rooftopStartingPrice || 0);
+  const baseUnderground = Number(pricing.undergroundStartingPrice || 0);
+
   let baseMin = 0;
   let baseMax = 0;
 
-  // 1. Determine base by tank type and material
+  // 1. Determine base strictly from Admin-verified positive pricing (never hardcode fallback estimates)
   if (tankType === 'Rooftop Tank') {
     if (isRcc) {
-      baseMin = pricing.rooftopRccStartingPrice || 1800;
-      baseMax = baseMin + 500;
+      baseMin = baseRcc;
+      baseMax = baseMin > 0 ? baseMin + 500 : 0;
     } else {
-      // PVC or default
-      baseMin = pricing.rooftopPvcStartingPrice || 1200;
-      baseMax = baseMin + 400;
+      baseMin = basePvc;
+      baseMax = baseMin > 0 ? baseMin + 400 : 0;
     }
   } else if (tankType === 'Underground Tank') {
-    baseMin = pricing.undergroundStartingPrice || 2500;
-    baseMax = baseMin + 800;
+    baseMin = baseUnderground;
+    baseMax = baseMin > 0 ? baseMin + 800 : 0;
   } else if (tankType === 'Both') {
-    const roofPart = isRcc ? (pricing.rooftopRccStartingPrice || 1800) : (pricing.rooftopPvcStartingPrice || 1200);
-    const underPart = pricing.undergroundStartingPrice || 2500;
-    baseMin = roofPart + underPart;
-    baseMax = baseMin + 1000;
-  } else {
-    // 'Not Sure'
+    const roofPart = isRcc ? baseRcc : basePvc;
+    const underPart = baseUnderground;
+    if (roofPart > 0 && underPart > 0) {
+      baseMin = roofPart + underPart;
+      baseMax = baseMin + 1000;
+    }
+  }
+
+  if (!(baseMin > 0)) {
     return {
       hasSufficientInfo: false,
       formattedEstimate: 'Quotation upon review',
       formattedEstimateBn: 'বিবরণ পর্যালোচনার পর কোটেশন প্রদান',
-      explanationEn: 'Final quotation will be confirmed after reviewing your tank details.',
-      explanationBn: 'আপনার ট্যাংকের বিবরণ পর্যালোচনার পর চূড়ান্ত কোটেশন প্রদান করা হবে।',
+      explanationEn: 'Final quotation will be confirmed after reviewing your tank size, count, and site details.',
+      explanationBn: 'আপনার ট্যাংকের ধরন, ধারণক্ষমতা ও অবস্থান পর্যালোচনার পর চূড়ান্ত কোটেশন প্রদান করা হবে।',
       isEstimated: true,
       disclaimerEn,
       disclaimerBn

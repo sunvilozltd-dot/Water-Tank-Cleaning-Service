@@ -180,15 +180,18 @@ export const SmartQuoteWizard: React.FC<SmartQuoteWizardProps> = ({
     return customFlats.trim() ? `${customFlats.trim()}টি ফ্ল্যাট` : (flatsChoice ? `${flatsChoice}টি ফ্ল্যাট` : '');
   };
 
-  // Estimate calculation for live preview
-  const estimateResult = calculateQuoteEstimate({
-    tankType: tankType === 'overhead' ? 'Rooftop Tank' : tankType === 'underground' ? 'Underground Tank' : tankType === 'both' ? 'Both' : '',
-    tankCapacity: tankType === 'overhead' ? (isOverheadUnknown ? "I Don't Know" : overheadCapacityChoice) : tankType === 'underground' ? (isUndergroundUnknown ? "I Don't Know" : undergroundCapacityChoice) : "I Don't Know",
-    floors: floorsChoice === 'custom' ? customFloors : floorsChoice,
-    flats: flatsChoice === 'custom' ? customFlats : flatsChoice,
-    additionalPipelineCleaning: pipelineCleaning,
-    additionalAmc: annualContract
-  });
+  // Estimate calculation for live preview (uses Admin-configured verified pricing when set)
+  const estimateResult = calculateQuoteEstimate(
+    {
+      tankType: tankType === 'overhead' ? 'Rooftop Tank' : tankType === 'underground' ? 'Underground Tank' : tankType === 'both' ? 'Both' : '',
+      tankCapacity: tankType === 'overhead' ? (isOverheadUnknown ? "I Don't Know" : overheadCapacityChoice) : tankType === 'underground' ? (isUndergroundUnknown ? "I Don't Know" : undergroundCapacityChoice) : "I Don't Know",
+      floors: floorsChoice === 'custom' ? customFloors : floorsChoice,
+      flats: flatsChoice === 'custom' ? customFlats : flatsChoice,
+      additionalPipelineCleaning: pipelineCleaning,
+      additionalAmc: annualContract
+    },
+    business?.pricing
+  );
 
   // STEP 1 HANDLER: Collect Customer Name & Mobile Number (First-Step Lead Capture)
   const handleStep1Submit = async () => {

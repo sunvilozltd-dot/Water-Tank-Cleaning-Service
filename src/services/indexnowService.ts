@@ -356,3 +356,98 @@ export async function triggerSiteRebuild(): Promise<{
     return { success: false, message: err?.message || 'রিবিল্ড অনুরোধ ব্যর্থ হয়েছে।' };
   }
 }
+
+export const CACHE_INVALIDATION_EVENT = 'sunviloz_cache_invalidation_status';
+
+export interface CacheInvalidationResult {
+  success: boolean;
+  attempts: number;
+  httpStatus?: number;
+  message: string;
+}
+
+function emitCacheInvalidationStatus(result: CacheInvalidationResult): void {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(CACHE_INVALIDATION_EVENT, { detail: result }));
+  }
+}
+
+export async function invalidateServerSeoCache(options?: {
+  fetchImpl?: typeof fetch;
+  getToken?: () => Promise<string | null>;
+  retryDelaysMs?: number[];
+}): Promise<CacheInvalidationResult> {
+  if (typeof window === 'undefined' && !options?.fetchImpl) {
+    return { success: true, attempts: 0, message: 'Server runtime skip.' };
+  }
+  if (!options?.getToken && !isSupabaseConfigured()) {
+    return { success: false, attempts: 0, message: 'Supabase কনফিগার করা নেই।' };
+  }
+
+  let accessToken: string | null = null;
+  if (options?.getToken) {
+    accessToken = await options.getToken();
+  } else {
+    const { data: sessionData } = await supabase.auth.getSession();
+    accessToken = sessionData?.session?.access_token || null;
+  }
+
+  if (!accessToken) {
+    const unauth: CacheInvalidationResult = {
+      success: false,
+      attempts: 0,
+      httpStatus: 401,
+      message: 'অ্যাডমিন সেশন টোকেন পাওয়া যায়নি; সার্ভার SEO ক্যাশ রিফ্রেশ করা যায়নি।'
+    };
+    emitCacheInvalidationStatus(unauth);
+    return unauth;
+  }
+
+  const fetchFn = options?.fetchImpl || fetch;
+  const delays = options?.retryDelaysMs ?? [500, 1500];
+  const maxAttempts = delays.length + 1;
+  let lastStatus: number | undefined;
+  let lastMessage = 'সার্ভার SEO ক্যাশ রিফ্রেশ ব্যর্থ হয়েছে।';
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const resp = await fetchFn('/api/rebuild', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      lastStatus = resp.status;
+      const payload = await resp.json().catch(() => ({}));
+      if (resp.ok && payload?.success) {
+        const okRes: CacheInvalidationResult = {
+          success: true,
+          attempts: attempt,
+          httpStatus: resp.status,
+          message: payload?.message || 'সার্ভার SEO ক্যাশ রিফ্রেশ সম্পন্ন হয়েছে।'
+        };
+        emitCacheInvalidationStatus(okRes);
+        return okRes;
+      }
+      lastMessage = payload?.message || `HTTP ${resp.status} — ক্যাশ রিফ্রেশ অসম্পূর্ণ।`;
+      // Don't retry permanent client auth errors (401/403/405)
+      if (resp.status === 401 || resp.status === 403 || resp.status === 405) {
+        break;
+      }
+    } catch (err: any) {
+      lastMessage = err?.message || 'নেটওয়ার্ক ত্রুটির কারণে ক্যাশ রিফ্রেশ করা যায়নি।';
+    }
+
+    if (attempt < maxAttempts) {
+      const waitMs = delays[attempt - 1] ?? 500;
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+    }
+  }
+
+  const failRes: CacheInvalidationResult = {
+    success: false,
+    attempts: maxAttempts,
+    httpStatus: lastStatus,
+    message: lastMessage
+  };
+  emitCacheInvalidationStatus(failRes);
+  return failRes;
+}

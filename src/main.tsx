@@ -1,4 +1,4 @@
-import { createRoot } from 'react-dom/client';
+import { createRoot, hydrateRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
@@ -20,4 +20,8 @@ if (typeof window !== 'undefined') {
 }
 
 const container = document.getElementById('root')!;
-createRoot(container).render(<App />);
+if (container.firstElementChild) {
+  hydrateRoot(container, <App />);
+} else {
+  createRoot(container).render(<App />);
+}

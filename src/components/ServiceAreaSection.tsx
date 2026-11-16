@@ -18,7 +18,8 @@ import {
   ServiceZoneRecord,
   ZoneAreaRecord,
   ZONES_CHANGED_EVENT,
-  fetchZonesAndAreas
+  fetchZonesAndAreas,
+  readSnapshotZonesAndAreas
 } from '../services/zoneContentService';
 import { isSupabaseConfigured } from '../utils/supabaseClient';
 import { trackEvent, trackPhoneClick, trackWhatsAppClick } from '../utils/tracking';
@@ -34,9 +35,22 @@ export const ServiceAreaSection: React.FC<ServiceAreaSectionProps> = ({
 }) => {
   const { lang, t } = useLanguage();
   const { areas, business } = useSiteConfig();
-  const [zones, setZones] = useState<ServiceZoneRecord[]>(() => (isSupabaseConfigured() ? [] : DEFAULT_SERVICE_ZONES));
-  const [zoneAreas, setZoneAreas] = useState<ZoneAreaRecord[]>(() => (isSupabaseConfigured() ? [] : DEFAULT_ZONE_AREAS));
-  const [loadedFromDb, setLoadedFromDb] = useState(() => !isSupabaseConfigured());
+  const initialSnapshot = readSnapshotZonesAndAreas();
+  const [zones, setZones] = useState<ServiceZoneRecord[]>(() =>
+    initialSnapshot
+      ? initialSnapshot.zones
+      : isSupabaseConfigured()
+      ? []
+      : DEFAULT_SERVICE_ZONES
+  );
+  const [zoneAreas, setZoneAreas] = useState<ZoneAreaRecord[]>(() =>
+    initialSnapshot
+      ? initialSnapshot.areas
+      : isSupabaseConfigured()
+      ? []
+      : DEFAULT_ZONE_AREAS
+  );
+  const [loadedFromDb, setLoadedFromDb] = useState(() => Boolean(initialSnapshot) || !isSupabaseConfigured());
   const [searchTerm, setSearchTerm] = useState('');
   const [checkResult, setCheckResult] = useState<{
     found: boolean;

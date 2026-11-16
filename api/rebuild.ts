@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { invalidateSeoCache } from '../src/seo/siteDataFetcher';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -51,14 +52,17 @@ export default async function handler(req: any, res: any) {
     return res.status(403).json({ success: false, message: 'Forbidden: Active admin role required.' });
   }
 
+  const cacheInvalidation = await invalidateSeoCache(adminDb);
+
   const deployHookUrl = (process.env.VERCEL_DEPLOY_HOOK_URL || '').trim();
   if (!deployHookUrl) {
     return res.status(200).json({
       success: true,
       configured: false,
       triggered: false,
+      cacheInvalidation,
       message:
-        'VERCEL_DEPLOY_HOOK_URL সেট করা নেই। তবে লাইভ SSR রুট (/api/render, /sitemap.xml, /llms.txt) সরাসরি Supabase থেকে তাৎক্ষণিক আপডেট পরিবেশন করছে।'
+        'সার্ভার SEO ও LKG ক্যাশ পরিষ্কার করা হয়েছে। লাইভ SSR রুট (/api/render, /sitemap.xml, /llms.txt) সরাসরি Supabase থেকে তাৎক্ষণিক আপডেট পরিবেশন করছে।'
     });
   }
 

@@ -38,6 +38,20 @@ export interface LlmsArticleEntry {
   updatedAt?: string;
 }
 
+export interface LlmsCaseStudyEntry {
+  id: string;
+  slug?: string;
+  title: string;
+  titleBn?: string;
+  area?: string;
+  location?: string;
+  locationBn?: string;
+  workDate?: string;
+  serviceDate?: string;
+  status?: 'draft' | 'published';
+  customerConsentGranted?: boolean;
+}
+
 export interface LlmsGeneratorInput {
   baseUrl: string;
   siteConfig?: Partial<FullSiteConfig> | null;
@@ -45,6 +59,7 @@ export interface LlmsGeneratorInput {
   zones: LlmsZoneEntry[];
   areas: ZoneAreaRecord[];
   articles: LlmsArticleEntry[];
+  caseStudies?: LlmsCaseStudyEntry[];
   qaItems: ProblemQaItem[];
 }
 
@@ -195,6 +210,21 @@ export function buildLlmsTxt(input: LlmsGeneratorInput): string {
     for (const post of input.articles) {
       const dateStr = toValidIsoDate(post.updatedAt || post.publishedAt);
       lines.push(`- ${post.title}: ${cleanBase}/blog/${post.slug}${dateStr ? ` (Date: ${dateStr})` : ''}`);
+    }
+    lines.push('');
+  }
+
+  const publicCases = (input.caseStudies || []).filter(
+    c => c.status === 'published' && c.customerConsentGranted === true
+  );
+  if (publicCases.length > 0) {
+    lines.push('## Published Case Studies');
+    for (const cs of publicCases) {
+      const label = cs.titleBn && cs.titleBn !== cs.title ? `${cs.title} (${cs.titleBn})` : cs.title;
+      const locLabel = cs.area || cs.locationBn || '';
+      lines.push(
+        `- ${label}${locLabel ? ` [${locLabel}]` : ''}: ${cleanBase}/portfolio/${cs.slug || cs.id}`
+      );
     }
     lines.push('');
   }

@@ -28,10 +28,15 @@ import { BlogPost } from '../types/blog';
 import { getAllReviewsForAdmin, REVIEWS_CHANGED_EVENT } from '../services/reviewService';
 import { getLeads, updateLeadStatus, updateLeadDetails, deleteLead } from '../services/leadService';
 import { getServices, saveService, deleteService, fetchServicesFromSupabase } from '../utils/servicesStore';
-import { getProjects, saveProject, deleteProject } from '../utils/portfolioStore';
+import { fetchProjectsFromSupabase, saveProject, deleteProject } from '../utils/portfolioStore';
 import { getVideos, saveVideo, deleteVideo, fetchVideosFromSupabase } from '../utils/videosStore';
 import { getBlogPosts, saveBlogPost, deleteBlogPost, fetchBlogPostsFromSupabase, seedDefaultBlogPosts } from '../utils/blogStore';
 import { SeoHead } from '../components/SeoHead';
+import {
+  CACHE_INVALIDATION_EVENT,
+  CacheInvalidationResult,
+  invalidateServerSeoCache
+} from '../services/indexnowService';
 
 interface AdminDashboardPageProps {
   onNavigateHome: () => void;
@@ -46,6 +51,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [pendingReviewsCount, setPendingReviewsCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [cacheAlert, setCacheAlert] = useState<CacheInvalidationResult | null>(null);
+  const [retryingCache, setRetryingCache] = useState(false);
 
   // Modals
   const [selectedLead, setSelectedLead] = useState<QuoteLead | null>(null);
@@ -57,7 +64,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
       const [leadsData, srvData, projData, vidData, postData, revData] = await Promise.all([
         getLeads(),
         fetchServicesFromSupabase(),
-        getProjects(),
+        fetchProjectsFromSupabase({ includeDrafts: true }),
         fetchVideosFromSupabase(),
         fetchBlogPostsFromSupabase({ includeUnpublished: true }),
         getAllReviewsForAdmin()
@@ -81,13 +88,38 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
     const handleDataChanged = () => {
       loadData();
     };
+    const handleCacheInvalidationStatus = (evt: Event) => {
+      const detail = (evt as CustomEvent<CacheInvalidationResult>).detail;
+      if (!detail) return;
+      if (detail.success) {
+        setCacheAlert(null);
+      } else {
+        setCacheAlert(detail);
+      }
+    };
     window.addEventListener('sunviloz_services_changed', handleDataChanged);
     window.addEventListener(REVIEWS_CHANGED_EVENT, handleDataChanged);
+    window.addEventListener(CACHE_INVALIDATION_EVENT, handleCacheInvalidationStatus);
     return () => {
       window.removeEventListener('sunviloz_services_changed', handleDataChanged);
       window.removeEventListener(REVIEWS_CHANGED_EVENT, handleDataChanged);
+      window.removeEventListener(CACHE_INVALIDATION_EVENT, handleCacheInvalidationStatus);
     };
   }, []);
+
+  const handleRetryCacheInvalidation = async () => {
+    setRetryingCache(true);
+    try {
+      const res = await invalidateServerSeoCache();
+      if (res.success) {
+        setCacheAlert(null);
+      } else {
+        setCacheAlert(res);
+      }
+    } finally {
+      setRetryingCache(false);
+    }
+  };
 
   const handleUpdateLeadStatus = async (id: string, status: LeadStatus) => {
     await updateLeadStatus(id, status);
@@ -164,6 +196,35 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
         onRefresh={loadData}
         isRefreshing={loading}
       />
+
+      {cacheAlert && !cacheAlert.success && (
+        <div
+          role="alert"
+          className="bg-amber-950/90 border-b border-amber-700/60 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 text-xs text-amber-100"
+        >
+          <div>
+            <strong className="font-bold text-amber-300">সতর্কতা: সার্ভার SEO ক্যাশ রিফ্রেশ সম্পূর্ণ হয়নি</strong>{' '}
+            <span>— {cacheAlert.message} ({cacheAlert.attempts} বার চেষ্টা করা হয়েছে)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={retryingCache}
+              onClick={handleRetryCacheInvalidation}
+              className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition-colors disabled:opacity-60 cursor-pointer"
+            >
+              {retryingCache ? 'চেষ্টা চলছে...' : 'পুনরায় ক্যাশ রিফ্রেশ করুন'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCacheAlert(null)}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
+            >
+              বন্ধ করুন
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 flex flex-col md:flex-row">
         <AdminSidebar

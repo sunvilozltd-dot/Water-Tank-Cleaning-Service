@@ -235,8 +235,8 @@ export const PUBLISHED_HOMEPAGE_SECTIONS: HomepageSection[] = [
     sectionType: 'reviews',
     title: 'Real Customer Reviews & Feedback',
     titleBn: 'গ্রাহকদের বাস্তব অভিজ্ঞতা ও মতামত',
-    subtitle: 'Trusted by over 1,500+ homes and institutions in Dhaka',
-    subtitleBn: 'ঢাকা শহরের বিভিন্ন বাড়ি ও ভবনের সন্তুষ্ট গ্রাহকদের রিভিউ',
+    subtitle: 'Feedback shared by homeowners and building managers across Dhaka',
+    subtitleBn: 'ঢাকা শহরের বিভিন্ন বাড়ি ও ভবনের গ্রাহকদের বাস্তব মতামত',
     mediaType: 'none',
     settings: {
       bgStyle: 'slate'

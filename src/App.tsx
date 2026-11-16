@@ -31,6 +31,7 @@ const LocationDetailPage = React.lazy(() => import('./pages/LocationDetailPage')
 const BlogPage = React.lazy(() => import('./pages/BlogPage').then(m => ({ default: m.BlogPage })));
 const BlogPostDetailPage = React.lazy(() => import('./pages/BlogPostDetailPage').then(m => ({ default: m.BlogPostDetailPage })));
 const PortfolioPage = React.lazy(() => import('./pages/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
+const CaseStudyDetailPage = React.lazy(() => import('./pages/CaseStudyDetailPage').then(m => ({ default: m.CaseStudyDetailPage })));
 const TermsPage = React.lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
 const PrivacyPolicyPage = React.lazy(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
 const FaqPage = React.lazy(() => import('./pages/FaqPage').then(m => ({ default: m.FaqPage })));
@@ -66,6 +67,7 @@ export interface SsrPageComponents {
   BlogPage?: React.ComponentType<any>;
   BlogPostDetailPage?: React.ComponentType<any>;
   PortfolioPage?: React.ComponentType<any>;
+  CaseStudyDetailPage?: React.ComponentType<any>;
   TermsPage?: React.ComponentType<any>;
   PrivacyPolicyPage?: React.ComponentType<any>;
   FaqPage?: React.ComponentType<any>;
@@ -79,12 +81,19 @@ export interface AppProps {
   ssrComponents?: SsrPageComponents;
 }
 
+function normalizeRoutePath(raw: string): string {
+  if (!raw || raw === '/') return '/';
+  if (raw.startsWith('/admin')) return raw;
+  const trimmed = raw.replace(/\/+$/, '');
+  return trimmed || '/';
+}
+
 function AppContent({ initialPath, ssrComponents }: AppProps) {
   const { isAuthenticated } = useAdminAuth();
   const [currentPath, setCurrentPath] = useState<string>(() => {
-    if (initialPath) return initialPath;
+    if (initialPath) return normalizeRoutePath(initialPath);
     if (typeof window !== 'undefined') {
-      return window.location.pathname || '/';
+      return normalizeRoutePath(window.location.pathname || '/');
     }
     return '/';
   });
@@ -110,7 +119,7 @@ function AppContent({ initialPath, ssrComponents }: AppProps) {
     initAnalytics();
     fetchCentralImageRegistry(); // Hydrate authoritative image assets from Supabase
     const handlePopState = () => {
-      setCurrentPath(window.location.pathname || '/');
+      setCurrentPath(normalizeRoutePath(window.location.pathname || '/'));
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -188,13 +197,14 @@ function AppContent({ initialPath, ssrComponents }: AppProps) {
   }, [currentPath]);
 
   const navigate = (path: string) => {
+    const normalizedTarget = path.includes('#') ? path : normalizeRoutePath(path);
     if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', path);
+      window.history.pushState({}, '', normalizedTarget);
       window.scrollTo(0, 0);
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
     }
-    setCurrentPath(path);
+    setCurrentPath(normalizeRoutePath(normalizedTarget.split('#')[0] || '/'));
   };
 
   // Intercept normal anchor clicks that point to internal paths
@@ -334,9 +344,22 @@ function AppContent({ initialPath, ssrComponents }: AppProps) {
         />
       );
     }
+    if (currentPath.startsWith('/portfolio/')) {
+      const slug = currentPath.replace('/portfolio/', '').split('?')[0].split('#')[0];
+      if (slug) {
+        const Page = ssrComponents?.CaseStudyDetailPage || CaseStudyDetailPage;
+        return (
+          <Page
+            slug={slug}
+            onNavigate={navigate}
+            onOpenQuoteModal={handleOpenQuoteModal}
+          />
+        );
+      }
+    }
     if (currentPath === '/portfolio') {
       const Page = ssrComponents?.PortfolioPage || PortfolioPage;
-      return <Page onNavigate={navigate} />;
+      return <Page onNavigate={navigate} onOpenQuoteModal={handleOpenQuoteModal} />;
     }
     if (currentPath === '/terms') {
       const Page = ssrComponents?.TermsPage || TermsPage;

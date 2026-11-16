@@ -181,6 +181,8 @@ export const ServiceZoneManagerTab: React.FC = () => {
       waterConditionNoteBn: '',
       practicalAdviceBn: '',
       practicalAdviceEn: '',
+      dispatchConditionsBn: '',
+      dispatchConditionsEn: '',
       verifiedFindings: [],
       coverageDetails: ['সকল আবাসিক বাসাবাড়ি, অ্যাপার্টমেন্ট ও কমার্শিয়াল ভবন'],
       pricingFactors: ['ট্যাংকের ধরন (ওভারহেড / আন্ডারগ্রাউন্ড)', 'ধারণক্ষমতা (লিটার)', 'পলি ও ময়লার মাত্রা'],
@@ -959,6 +961,27 @@ export const ServiceZoneManagerTab: React.FC = () => {
                         rows={3}
                         value={editingArea.draftData.practicalAdviceEn}
                         onChange={e => updateDraftField('practicalAdviceEn', e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Dispatch &amp; Scheduling Conditions (বাংলা)</label>
+                      <textarea
+                        rows={3}
+                        value={editingArea.draftData.dispatchConditionsBn || ''}
+                        onChange={e => updateDraftField('dispatchConditionsBn', e.target.value)}
+                        placeholder="টিম প্রেরণ, শিডিউল ও প্রবেশাধিকার সম্পর্কিত শর্ত লিখুন..."
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Dispatch &amp; Scheduling Conditions (English)</label>
+                      <textarea
+                        rows={3}
+                        value={editingArea.draftData.dispatchConditionsEn || ''}
+                        onChange={e => updateDraftField('dispatchConditionsEn', e.target.value)}
+                        placeholder="Scheduling and access conditions for this locality..."
                         className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs"
                       />
                     </div>

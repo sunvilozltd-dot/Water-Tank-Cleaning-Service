@@ -37,7 +37,7 @@ export const Footer: React.FC<FooterProps> = ({
       (business?.googleMapsDirectionsUrl || business?.googleReviewsUrl || business?.googleBusinessProfileUrl)
   );
   const [logoError, setLogoError] = useState(false);
-  const currentYear = new Date().getFullYear();
+  const currentYear = new Date().getUTCFullYear();
   const [modalPolicy, setModalPolicy] = useState<'privacy' | 'terms' | null>(null);
 
   const handleLink = (path: string) => {
@@ -223,6 +223,19 @@ export const Footer: React.FC<FooterProps> = ({
                       </a>
                     </li>
                   ))}
+                <li>
+                  <a
+                    href="/services"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleLink('/services');
+                    }}
+                    className="hover:text-[#38BDF8] transition-colors text-left cursor-pointer font-semibold text-white"
+                  >
+                    {lang === 'bn' ? 'সকল সার্ভিস দেখুন →' : 'All Services →'}
+                  </a>
+                </li>
               </ul>
             </div>
 
@@ -256,6 +269,19 @@ export const Footer: React.FC<FooterProps> = ({
                     className="hover:text-[#38BDF8] transition-colors cursor-pointer"
                   >
                     {lang === 'bn' ? 'আমাদের সম্পর্কে' : 'About Us'}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/portfolio"
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                      e.preventDefault();
+                      handleLink('/portfolio');
+                    }}
+                    className="hover:text-[#38BDF8] transition-colors cursor-pointer"
+                  >
+                    {lang === 'bn' ? 'কাজের কেস স্টাডি (Portfolio)' : 'Case Studies & Work'}
                   </a>
                 </li>
                 <li>

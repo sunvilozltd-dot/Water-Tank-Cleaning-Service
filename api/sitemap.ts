@@ -19,7 +19,8 @@ export default async function handler(req: any, res: any) {
         'zones',
         'areas',
         'services',
-        'blogPosts'
+        'blogPosts',
+        'caseStudies'
       ])
     ) {
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');

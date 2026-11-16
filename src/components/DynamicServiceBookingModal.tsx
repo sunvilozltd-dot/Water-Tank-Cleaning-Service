@@ -371,9 +371,11 @@ export const DynamicServiceBookingModal: React.FC<DynamicServiceBookingModalProp
                       ? (formConfig.subtitleBn || 'এই সার্ভিসের জন্য সঠিক তথ্য নির্বাচন করুন যাতে আমাদের টেকনিশিয়ান দল উপযুক্ত সরঞ্জাম নিয়ে আসতে পারে।')
                       : (formConfig.subtitleEn || 'Please provide accurate details so our specialized team arrives with appropriate equipment.')}
                   </p>
-                  {service.startingPrice && (
+                  {(service.verifiedPriceNoteBn || (Number(service.startingPrice) > 0)) && (
                     <div className="mt-1 text-emerald-400 font-bold">
-                      {lang === 'bn' ? `প্রাথমিক মূল্য: ৳${Number(service.startingPrice).toLocaleString()} থেকে শুরু` : `Starts from: ৳${Number(service.startingPrice).toLocaleString()}`}
+                      {lang === 'bn'
+                        ? (service.verifiedPriceNoteBn || `যাচাইকৃত শুরু: ৳${Number(service.startingPrice).toLocaleString('bn-BD')}`)
+                        : (service.verifiedPriceNoteEn || `Verified starting from: ৳${Number(service.startingPrice).toLocaleString()}`)}
                     </div>
                   )}
                 </div>

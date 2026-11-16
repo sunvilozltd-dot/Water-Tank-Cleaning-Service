@@ -40,6 +40,8 @@ export interface ZoneAreaContent {
   waterConditionNoteBn: string;
   practicalAdviceBn: string;
   practicalAdviceEn: string;
+  dispatchConditionsBn?: string;
+  dispatchConditionsEn?: string;
   verifiedFindings: VerifiedFinding[];
   coverageDetails: string[];
   pricingFactors: string[];
@@ -295,11 +297,17 @@ function buildDefaultAreaContent(loc: typeof LOCATIONS_DATA[number]): ZoneAreaCo
     waterConditionNote: loc.waterConditionNote || '',
     waterConditionNoteBn: loc.waterConditionNoteBn || '',
     practicalAdviceBn: isCorridorCity
-      ? `${loc.areaNameBn} এলাকায় ঢাকা থেকে আমাদের মোবাইল টিম নির্ধারিত শিডিউলে সার্ভিস প্রদান করে। প্রতি ৪–৬ মাস অন্তর রিজার্ভ ও ওভারহেড ট্যাংক একসাথে পরিষ্কার রাখুন, ছাদের ট্যাংকের ঢাকনা সিল রাখুন এবং ইনকামিং লাইনে বেশি পলি থাকলে সেডিমেন্ট ফিল্টার ব্যবহার করুন। পানযোগ্যতা যাচাইয়ে ল্যাব টেস্ট জরুরি।`
+      ? `${loc.areaNameBn} এলাকায় ঢাকা থেকে আমাদের মোবাইল টিম নির্ধারিত শিডিউলে সার্ভিস প্রদান করে। প্রতি ৪–৬ মাস অন্তর রিজার্ভ ও ওভারহেড ট্যাংক একসাথে পরিষ্কার রাখুন, ছাদের ট্যাংকের ঢাকনা সিল রাখুন এবং ইনকামিং লাইনে বেশি পলি থাকলে সেডিমেন্ট ফিল্টার ব্যবহার করুন। পানযোগ্যতা যাচাইয়ে অনুমোদিত ল্যাব টেস্ট প্রয়োজন।`
       : `${loc.areaNameBn} এলাকায় আমাদের মোবাইল টিম নির্ধারিত শিডিউলে এসে রিজার্ভার ও ওভারহেড ট্যাংক পরিষ্কার করে। প্রতি ৪–৬ মাস পরপর উভয় ট্যাংক একসাথে পরিষ্কার করুন, প্লাম্বিং লিকেজ মেরামত রাখুন এবং পানযোগ্যতা নিশ্চিত করতে অনুমোদিত ল্যাবে পরীক্ষা করান।`,
     practicalAdviceEn: isCorridorCity
-      ? `Our Dhaka-dispatched mobile crew serves ${loc.areaName} on scheduled bookings. Clean underground and rooftop tanks together every 4–6 months, keep covers UV-sealed, and verify drinking potability through certified lab testing.`
-      : `Our mobile team serves ${loc.areaName} on scheduled appointments. Coordinate underground and overhead cleaning every 4–6 months, fix leaking valves/covers promptly, and rely on certified lab testing for drinking potability.`,
+      ? `Our Dhaka-dispatched mobile crew serves ${loc.areaName} on scheduled bookings. Clean underground and rooftop tanks together every 4–6 months, keep covers sealed, and rely on independent laboratory testing to verify drinking potability.`
+      : `Our mobile team serves ${loc.areaName} on scheduled appointments. Coordinate underground and overhead cleaning every 4–6 months, fix leaking valves/covers promptly, and rely on independent laboratory testing to verify drinking potability.`,
+    dispatchConditionsBn: isCorridorCity
+      ? `${loc.areaNameBn} এলাকায় ঢাকা থেকে যন্ত্রপাতি ও টিম পাঠানো হয়, তাই কাজের অন্তত ১২–২৪ ঘণ্টা আগে বুকিং কনফার্ম করা ভালো। ভবনে বিদ্যুৎ সংযোগ, পরিষ্কার পানি রিন্সের লাইন এবং ড্রেনেজ আউটলেটের প্রবেশাধিকার থাকা প্রয়োজন।`
+      : `${loc.areaNameBn} এলাকায় একই দিন বা পরবর্তী নির্ধারিত স্লটে টিম পাঠানো হয় (চলমান শিডিউলের প্রাপ্যতা সাপেক্ষে)। কাজের সময় ভবনের ছাদ বা রিজার্ভারের ম্যানহোল খোলা রাখা, কাছাকাছি বৈদ্যুতিক সকেট ও ড্রেন লাইন থাকা আবশ্যক।`,
+    dispatchConditionsEn: isCorridorCity
+      ? `Crews and mechanized equipment dispatch from Dhaka to ${loc.areaName} on advance confirmed bookings (typically 12–24 hours ahead). Active water rinse supply, standard power point, and drain access on-site are required.`
+      : `Mobile crews operate in ${loc.areaName} on confirmed same-day or next-day slots subject to active queue. Safe roof/manhole access, standard electrical point for pumps, and drain outlet access are required.`,
     verifiedFindings: [],
     coverageDetails: loc.coverageDetails || [],
     pricingFactors: loc.pricingFactors || [],
@@ -341,6 +349,8 @@ function sanitizeAreaContent(content: ZoneAreaContent): ZoneAreaContent {
     waterConditionNoteBn: sanitizeRichHtml(content.waterConditionNoteBn),
     practicalAdviceBn: sanitizeRichHtml(content.practicalAdviceBn),
     practicalAdviceEn: sanitizeRichHtml(content.practicalAdviceEn),
+    dispatchConditionsBn: content.dispatchConditionsBn ? sanitizeRichHtml(content.dispatchConditionsBn) : '',
+    dispatchConditionsEn: content.dispatchConditionsEn ? sanitizeRichHtml(content.dispatchConditionsEn) : '',
     title: stripHtmlToPlainText(content.title),
     titleBn: stripHtmlToPlainText(content.titleBn),
     metaDesc: stripHtmlToPlainText(content.metaDesc),
@@ -459,12 +469,25 @@ function writeCachedBundle(zones: ServiceZoneRecord[], areas: ZoneAreaRecord[]) 
   }
 }
 
+export function readSnapshotZonesAndAreas(): { zones: ServiceZoneRecord[]; areas: ZoneAreaRecord[] } | null {
+  const globalAny = globalThis as any;
+  const rawZones = globalAny.__INITIAL_ZONES__ ?? (typeof window !== 'undefined' ? (window as any).__INITIAL_ZONES__ : undefined);
+  const rawAreas = globalAny.__INITIAL_AREAS__ ?? (typeof window !== 'undefined' ? (window as any).__INITIAL_AREAS__ : undefined);
+  if (Array.isArray(rawZones) && Array.isArray(rawAreas)) {
+    return {
+      zones: rawZones as ServiceZoneRecord[],
+      areas: rawAreas as ZoneAreaRecord[]
+    };
+  }
+  return null;
+}
+
 async function syncZonesBackupToStorage(zones: ServiceZoneRecord[], areas: ZoneAreaRecord[]) {
   if (!isSupabaseConfigured()) return;
   try {
     const payload = JSON.stringify({ zones, areas, updatedAt: new Date().toISOString() });
     const blob = new Blob([payload], { type: 'application/json' });
-    await supabase.storage.from('media').upload(STORAGE_ZONES_PATH, blob, { upsert: true, cacheControl: '60' });
+    await supabase.storage.from('site-media').upload(STORAGE_ZONES_PATH, blob, { upsert: true, cacheControl: '60' });
   } catch {
     // Non-blocking cloud backup
   }
@@ -532,6 +555,10 @@ export async function fetchZonesAndAreas(options: { includeDrafts?: boolean } = 
 
       if (!includeDrafts) {
         writeCachedBundle(zones, areas);
+        if (typeof window !== 'undefined') {
+          (window as any).__INITIAL_ZONES__ = zones;
+          (window as any).__INITIAL_AREAS__ = areas;
+        }
       }
       return { zones, areas, fromDatabase: true };
     }
@@ -682,6 +709,9 @@ export async function publishZone(zone: ServiceZoneRecord): Promise<{
       await syncZonesBackupToStorage(bundle.zones, bundle.areas);
     }
 
+    const { invalidateServerSeoCache } = await import('./indexnowService');
+    await invalidateServerSeoCache().catch(() => {});
+
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(ZONES_CHANGED_EVENT));
     }
@@ -820,6 +850,9 @@ export async function publishArea(area: ZoneAreaRecord): Promise<{
       await syncZonesBackupToStorage(bundle.zones, bundle.areas);
     }
 
+    const { invalidateServerSeoCache } = await import('./indexnowService');
+    await invalidateServerSeoCache().catch(() => {});
+
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(ZONES_CHANGED_EVENT));
     }
@@ -879,6 +912,7 @@ export async function toggleAreaVisibility(area: ZoneAreaRecord, isVisible: bool
       writeCachedBundle(bundle.zones, bundle.areas);
       await syncZonesBackupToStorage(bundle.zones, bundle.areas);
     }
+    import('./indexnowService').then(({ invalidateServerSeoCache }) => invalidateServerSeoCache()).catch(() => {});
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(ZONES_CHANGED_EVENT));
     }
@@ -918,6 +952,7 @@ export async function deleteZoneArea(area: ZoneAreaRecord): Promise<boolean> {
       writeCachedBundle(bundle.zones, bundle.areas);
       await syncZonesBackupToStorage(bundle.zones, bundle.areas);
     }
+    import('./indexnowService').then(({ invalidateServerSeoCache }) => invalidateServerSeoCache()).catch(() => {});
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(ZONES_CHANGED_EVENT));
     }
@@ -950,6 +985,7 @@ export async function reorderZones(zones: ServiceZoneRecord[]): Promise<boolean>
     const bundle = await fetchZonesAndAreas({ includeDrafts: false });
     writeCachedBundle(bundle.zones, bundle.areas);
     await syncZonesBackupToStorage(bundle.zones, bundle.areas);
+    import('./indexnowService').then(({ invalidateServerSeoCache }) => invalidateServerSeoCache()).catch(() => {});
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(ZONES_CHANGED_EVENT));
     }
@@ -1027,6 +1063,7 @@ export async function createSlugRedirect(
       { onConflict: 'from_path' }
     );
     if (error) return { success: false, error: error.message };
+    import('./indexnowService').then(({ invalidateServerSeoCache }) => invalidateServerSeoCache()).catch(() => {});
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err?.message || 'রিডাইরেক্ট যোগ করা যায়নি।' };
@@ -1037,6 +1074,9 @@ export async function deleteUrlRedirect(id: string): Promise<boolean> {
   if (!isSupabaseConfigured()) return false;
   try {
     const { error } = await supabase.from('url_redirects').delete().eq('id', id);
+    if (!error) {
+      import('./indexnowService').then(({ invalidateServerSeoCache }) => invalidateServerSeoCache()).catch(() => {});
+    }
     return !error;
   } catch {
     return false;

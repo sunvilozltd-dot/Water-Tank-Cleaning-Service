@@ -571,6 +571,18 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ onGoToHeroVideo }) => 
             />
           </div>
         </div>
+
+        <div className="p-3.5 rounded-lg bg-slate-950/80 border border-slate-800 space-y-1.5 text-[11px] text-slate-300">
+          <div className="font-bold text-cyan-300">
+            Search Console বনাম Google Business Profile ভেরিফিকেশন চেকলিস্ট (আলাদা প্রক্রিয়া):
+          </div>
+          <ol className="list-decimal pl-4 space-y-1 text-slate-400">
+            <li>নিচের বক্সে Google Search Console-এর <span className="font-mono text-slate-200">google-site-verification</span> মেটা টোকেন বসিয়ে সেভ করুন (এটি শুধু Search Console মালিকানা ও <span className="font-mono text-slate-200">/sitemap.xml</span> সাবমিশনের জন্য)।</li>
+            <li>Google Search Console ড্যাশবোর্ডে গিয়ে <span className="font-mono text-slate-200">https://sunvilozcleancare.com/sitemap.xml</span> জমা দিন এবং মূল সার্ভিস ও এরিয়া URL ইনসপেকশন করুন।</li>
+            <li>Google Business Profile-এর পোস্টকার্ড বা ভিডিও ভেরিফিকেশন সম্পূর্ণ না হওয়া পর্যন্ত উপরের <strong>GBP Verified</strong> সুইচটি <strong>Off</strong> রাখুন—নাহলে ভুয়া Maps/Review/AggregateRating দেখাবে না।</li>
+            <li>GBP ভেরিফাইড হয়ে গেলে প্রকৃত GBP, Reviews ও Maps URL পেস্ট করে <strong>GBP Verified</strong> চালু করুন এবং Save All Settings চাপুন।</li>
+          </ol>
+        </div>
       </div>
 
       {/* Search Console & Bing Webmaster Verification + Global OG */}

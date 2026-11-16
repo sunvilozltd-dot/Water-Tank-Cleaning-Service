@@ -38,18 +38,18 @@ export const BUSINESS_CONFIG = {
     { en: 'Transparent Quotation', bn: 'স্বচ্ছ ও সাশ্রয়ী কোটেশন' },
   ],
 
-  // Pricing configuration
+  // Pricing configuration (0 = quote upon review until Admin sets verified pricing)
   pricing: {
-    rooftopStartingPrice: 1200,
-    rooftopPvcStartingPrice: 1200,
-    rooftopRccStartingPrice: 1800,
-    undergroundStartingPrice: 2500,
-    bothStartingPrice: 3700,
-    pipelineStartingPrice: 1500,
-    maintenanceAnnualPrice: 3500,
-    buildingBulkStartingPrice: 4500,
-    disclaimerEn: 'Final pricing may depend on tank size, number of tanks, location, accessibility and cleaning requirements.',
-    disclaimerBn: 'ট্যাংকের সাইজ, সংখ্যা, অবস্থান ও ময়লার পরিমাণের ওপর ভিত্তি করে চূড়ান্ত কোটেশন নির্ধারিত হয়।'
+    rooftopStartingPrice: 0,
+    rooftopPvcStartingPrice: 0,
+    rooftopRccStartingPrice: 0,
+    undergroundStartingPrice: 0,
+    bothStartingPrice: 0,
+    pipelineStartingPrice: 0,
+    maintenanceAnnualPrice: 0,
+    buildingBulkStartingPrice: 0,
+    disclaimerEn: 'Final pricing depends on tank size, material, number of tanks, location, accessibility and cleaning requirements.',
+    disclaimerBn: 'ট্যাংকের ধরন, ধারণক্ষমতা, সংখ্যা, অবস্থান ও ময়লার পরিমাণের ওপর ভিত্তি করে চূড়ান্ত কোটেশন নির্ধারিত হয়।'
   }
 };
 
@@ -1037,10 +1037,10 @@ export const FAQS_DATA: FaqItem[] = [
   },
   {
     id: 6,
-    question: 'How much does water tank cleaning cost?',
-    questionBn: 'ট্যাংক পরিষ্কারের সার্ভিস চার্জ কত?',
-    answer: 'Our rooftop tank cleaning starts from ৳ 1,200 for standard residential sizes, while underground reserve tanks start from ৳ 2,500. The exact price depends on tank capacity, the number of tanks, your area in Dhaka, and accessibility. You can request a fast free quote on our website or over WhatsApp for an exact quotation.',
-    answerBn: 'ছাদের সাধারণ পিভিসি ট্যাংক ১২০০ টাকা থেকে শুরু এবং মাটির নিচের রিজার্ভার ২৫০০ টাকা থেকে শুরু। ট্যাংকের সাইজ, সংখ্যা ও অবস্থানের ওপর নির্ভর করে সঠিক কোটেশন পেতে আমাদের ওয়েবসাইটে কোটেশন ফর্ম পূরণ করুন অথবা হোয়াটসঅ্যাপে জানান।',
+    question: 'How is water tank cleaning cost determined?',
+    questionBn: 'ট্যাংক পরিষ্কারের সার্ভিস চার্জ কীভাবে নির্ধারণ করা হয়?',
+    answer: 'Pricing depends on tank type (overhead PVC/RCC or underground reserve), capacity in liters, number of tanks, location, sediment buildup, and rooftop/manhole accessibility. Submit our quick quote form or message us on WhatsApp with tank details for a clear written quotation before booking.',
+    answerBn: 'ট্যাংকের ধরন (ছাদের পিভিসি/আরসিসি বা আন্ডারগ্রাউন্ড রিজার্ভার), ধারণক্ষমতা (লিটার), ট্যাংকের সংখ্যা, এলাকা এবং ময়লার অবস্থা অনুযায়ী চার্জ নির্ধারিত হয়। কাজের আগেই স্পষ্ট কোটেশন পেতে ওয়েবসাইটের ফর্ম পূরণ করুন অথবা WhatsApp-এ বিবরণ জানান।',
     category: 'Pricing'
   },
   {

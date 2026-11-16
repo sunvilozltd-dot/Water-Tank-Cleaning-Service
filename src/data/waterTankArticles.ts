@@ -258,19 +258,19 @@ Pricing for residential and commercial water tank cleaning in Dhaka depends on s
 
 ---
 
-## ২. ঢাকা শহরে গড় খরচের তালিকা (আনুমানিক রেট)
+## ২. ঢাকা শহরে ট্যাংক অনুযায়ী কোটেশনের কাঠামো ও কাজের পরিধি
 
-সানভিলোজ ক্লিন কেয়ারের স্বচ্ছ মূল্যকাঠামো অনুযায়ী সাধারণ রেট নিচে দেওয়া হলো:
+কাজের আগে কোন ধরনের ট্যাংকে কী কী বিষয় যাচাই করে কোটেশন দেওয়া হয় তা নিচে দেওয়া হলো:
 
-| ট্যাংকের ধরন ও ধারণক্ষমতা | আনুমানিক সার্ভিস খরচ (BDT) | সেবার বিবরণ |
+| ট্যাংকের ধরন ও ধারণক্ষমতা | কোটেশন নির্ধারক বিষয় | সেবার পরিধি |
 | :--- | :--- | :--- |
-| ছাদের পিভিসি ট্যাংক (৫০০–১,০০০ লিটার) | ৳ ১,২০০ – ১,৫০০ | রোটারি জেট ওয়াশ, শেওলা স্ক্রাবিং ও স্যানিটাইজিং |
-| ছাদের ট্যাংক (১,৫০০–২,০০০ লিটার) | ৳ ১,৫০০ – ২,০০০ | ডিপ ভ্যাকুয়াম, প্রেসার ওয়াশ ও জীবানুমুক্তকরণ |
-| ছাদের বড় আরসিসি ট্যাংক (৩,০০০–৫,০০০ লিটার) | ৳ ২,৫০০ – ৪,০০০ | দেয়াল ও মেঝের ভারী দাগ নিস্কাশন |
-| আন্ডারগ্রাউন্ড রিজার্ভার (৫,০০০–১০,০০০ লিটার) | ৳ ৩,৫০০ – ৫,৫০০ | হেভি স্লাজ পাম্পে কাদা সেচ ও ফ্রেশ এয়ার ব্লোয়ার |
-| বড় বাণিজ্যিক/অ্যাপার্টমেন্ট রিজার্ভার (১৫,০০০+ লিটার) | সাইট ভিজিট ও কাস্টম কোটেশন | সম্পূর্ণ মেকানাইজড সল্যুশন |
+| ছাদের পিভিসি ট্যাংক (৫০০–১,০০০ লিটার) | ট্যাংকের সংখ্যা ও ছাদে যাতায়াতের সুবিধা | রোটারি জেট ওয়াশ, শ্যাওলা স্ক্রাবিং ও স্যানিটাইজিং |
+| ছাদের বড় পিভিসি/মডুলার ট্যাংক (১,৫০০–২,০০০+ লিটার) | কাদার পুরুত্ব ও রিফিল পাইপ সংযোগ | ডিপ ভ্যাকুয়াম, প্রেসার ওয়াশ ও নিরাপদ স্যানিটাইজেশন |
+| ছাদের আরসিসি/কংক্রিট ট্যাংক (৩,০০০–৫,০০০ লিটার) | দেয়ালের শ্যাওলা ও ম্যানহোল আকার | দেয়াল ও মেঝের ভারী পলি ও দাগ নিষ্কাশন |
+| আন্ডারগ্রাউন্ড রিজার্ভার (৫,০০০–১৫,০০০+ লিটার) | স্লাজের গভীরতা, ভেন্টিলেশন ও পানির স্তর | হেভি স্লাজ পাম্পে কাদা সেচ ও ফ্রেশ এয়ার ব্লোয়ার |
+| বড় অ্যাপার্টমেন্ট/বাণিজ্যিক রিজার্ভার | ট্যাংকের প্রকৃত মাপ ও শিডিউল সময় | কাজের বিবরণ বা ছবি দেখে লিখিত কাস্টম কোটেশন |
 
-*বিশেষ দ্রষ্টব্য: একই ভবনে যদি ছাদের ট্যাংক ও মাটির নিচের রিজার্ভার একসাথে পরিষ্কার করানো হয়, তবে কম্বো প্যাকেজে আকর্ষণীয় ডিসকাউন্ট পাওয়া যায়।*
+*বিশেষ দ্রষ্টব্য: একই ভবনে ছাদের ওভারহেড ট্যাংক, আন্ডারগ্রাউন্ড রিজার্ভার বা পাইপলাইন ফ্লাশিং একসাথে নেওয়া হলে যৌথ কোটেশনে সমন্বিত রেট প্রদান করা হয়। চূড়ান্ত রেট কাজের আগে ছবি বা বিবরণ দেখে জানিয়ে দেওয়া হয়।*
 
 ---
 
@@ -328,7 +328,7 @@ Pricing for residential and commercial water tank cleaning in Dhaka depends on s
     images: [],
     content: `## Safe Guidelines for Underground Water Tank Cleaning
 
-Subterranean water reservoirs in residential and commercial properties require specialized equipment and certified safety protocols due to confined space hazards.
+Subterranean water reservoirs in residential and commercial properties require specialized equipment and confined-space safety protocols due to confined space hazards.
 
 ### Crucial Safety Precautions:
 * **Forced Air Ventilation:** Prior to entry, industrial blowers must clear accumulated marsh gases (methane, CO2) and supply fresh oxygen.
@@ -949,5 +949,294 @@ Relying on untrained day-laborers armed with harsh hydrochloric acid and abrasiv
 
 ### ৩. কাজের পর কি ফলাফল সরাসরি পরীক্ষা করা যায়?
 অবশ্যই। আমাদের টেকনিশিয়ানরা ট্যাংক রিফিল করার আগে লাইট ফেলে আপনাকে ট্যাংকের ভেতরের দেয়াল ও মেঝের পরিষ্কার অবস্থা স্বচক্ষে দেখিয়ে হ্যান্ডওভার করবে।`
+  },
+
+  // 11. Draft Article: লালচে বা মরিচার মতো পানি
+  {
+    id: 'art-draft-rusty-water',
+    slug: 'reddish-rusty-tap-water-tank-or-pipeline-guide',
+    category: 'Pipeline Cleaning',
+    categoryBn: 'পাইপলাইন ও পানির সমস্যা',
+    title: 'Reddish or Rusty Tap Water in Dhaka: Is the Problem in Your Tank or Pipeline?',
+    titleBn: 'লালচে বা মরিচার মতো পানি: সমস্যা কি ট্যাংকে নাকি পাইপলাইনে?',
+    excerpt: 'ট্যাপ খুললেই লালচে, ঘোলাটে বা আয়রনযুক্ত পানি বের হলে কীভাবে বুঝবেন সমস্যা ছাদের ট্যাংকে, মাটির নিচের রিজার্ভারে নাকি ভেতরের পাইপলাইনে?',
+    excerptBn: 'ট্যাপে লালচে বা আয়রনযুক্ত পানি আসলে আগে ছাদের ট্যাংক, রিজার্ভার নাকি ডিস্ট্রিবিউশন পাইপলাইন পরীক্ষা করবেন—বাস্তবসম্মত দিকনির্দেশনা।',
+    imageUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+    imageAlt: 'ট্যাপে লালচে পানি ও পাইপলাইনে আয়রন জমার সমাধান গাইড',
+    imageCaption: 'পাইপলাইন ও ট্যাংক পরিদর্শনের মাধ্যমে পানির লালচে রঙের উৎস শনাক্ত করা হয়।',
+    author: 'সানভিলোজ টেকনিক্যাল টিম',
+    publishedAt: '2026-11-16',
+    readTime: '5 min read',
+    readTimeBn: '৫ মিনিট পাঠ',
+    featured: false,
+    published: false,
+    seo: {
+      metaTitle: 'লালচে বা মরিচার মতো পানি: সমস্যা কি ট্যাংকে নাকি পাইপলাইনে?',
+      metaDescription: 'ট্যাপে লালচে বা আয়রনযুক্ত পানি বের হলে কীভাবে ট্যাংক ও পাইপলাইনের সমস্যা আলাদা করবেন—ঘরোয়া চেকলিস্ট ও সমাধান।',
+      keywords: ['লালচে পানি সমাধান', 'Water Pipeline Cleaning Service in Dhaka', 'পাইপলাইন ফ্লাশিং ঢাকা'],
+      canonicalUrl: 'https://sunvilozcleancare.com/blog/reddish-rusty-tap-water-tank-or-pipeline-guide',
+      imageAlt: 'Reddish water diagnostic guide',
+      imageCaption: 'ট্যাংক ও পাইপলাইন সমস্যা নির্ণয়'
+    },
+    images: [],
+    content: `**Direct Answer:** If rusty or reddish water appears from all taps right after pump refilling, sediment inside your underground or overhead tank is usually stirring up. If only certain bathrooms or older lines release brown streaks even when the overhead tank looks clear, iron scale and biofilm inside the distribution pipeline are the primary cause.
+
+### Practical Checks Before Booking
+* **Test One Glass Straight from the Overhead Outlet:** Check clarity directly at the roof tank outlet versus bathroom faucets.
+* **Compare Hot and Cold Lines:** Metal geyser fittings or old GI risers corrode faster than UPVC/CPVC pipes.
+* **Inspect Supply Line Silt:** Heavy sand or iron in municipal or borewell inflow settles first inside the [underground reserve tank](/services/underground-water-tank-cleaning).
+
+### Next Recommended Action
+Depending on where sediment sits, combining tank desludging with non-destructive [water pipeline cleaning](/services/pipeline-cleaning) clears accumulated scale without breaking bathroom tiles. Request a quick assessment via our [online quotation form](/get-quote) or browse [verified case studies](/portfolio).`,
+    contentBn: `**সরাসরি উত্তর:** ট্যাংক ভরার সাথে সাথেই ভবনের সব ট্যাপ দিয়ে লালচে বা ঘোলা পানি বের হলে সাধারণত [আন্ডারগ্রাউন্ড রিজার্ভার](/services/underground-water-tank-cleaning) বা ছাদের ট্যাংকের তলদেশের কাদা-পলি নেড়ে উঠেছে। আর ছাদের ট্যাংক পরিষ্কার থাকা সত্ত্বেও যদি নির্দিষ্ট কিছু বাথরুম বা কিচেনের ট্যাপ দিয়ে মরিচার মতো লালচে দাগ বা আয়রনের কণা বের হয়, তবে মূল সমস্যাটি ভবনের ভেতরের ডিস্ট্রিবিউশন পাইপলাইনে জমে থাকা স্কেল ও বায়োফিল্ম।
+
+---
+
+## ১. সমস্যাটি ট্যাংকে নাকি পাইপে—ঘরে বসেই ৩টি সহজ পরীক্ষা
+
+1. **ছাদের ট্যাংকের ঢাকনা খুলে সরাসরি দেখা:** টর্চলাইট দিয়ে দেখুন ট্যাংকের তলদেশে লালচে পলি বা আয়রনের স্তর জমে আছে কি না।
+2. **সব ফ্ল্যাট বনাম নির্দিষ্ট একটি লাইন:** পুরো ভবনেই লালচে পানি আসলে ট্যাংক বা মেইন সাপ্লাই পাম্পের ইনটেক দায়ী। শুধু এক-দুটি বাথরুমে হলে সেই ব্রাঞ্চ পাইপে জং বা স্কেল জমেছে।
+3. **সকালের প্রথম ট্যাপ ছাড়ার রঙ:** সারারাত পানি স্থির থাকার পর সকালে প্রথম ৩০ সেকেন্ড বেশি লালচে পানি বের হয়ে পরে হালকা হলে পাইপের ভেতরের গায়ে আয়রন জমেছে বোঝা যায়।
+
+---
+
+## ২. কখন পাইপলাইন ফ্লাশিং, কখন ট্যাংক পরিষ্কার ও কখন প্লাম্বিং মেরামত দরকার?
+
+* **ট্যাংকের তলায় কাদা থাকলে:** আগে [পেশাদার ওয়াটার ট্যাংক পরিষ্কার](/services/water-tank-cleaning) ও [ওভারহেড ট্যাংক ক্লিনিং](/services/overhead-tank-cleaning) করানো জরুরি।
+* **ট্যাংক পরিষ্কার তবুও লালচে পানি বা আয়রন কণা:** দেয়াল বা টাইলস না ভেঙে [ওয়াটার পাইপলাইন ফ্লাশিং সার্ভিস](/services/pipeline-cleaning) নিলে জমে থাকা নরম স্লাজ ও আয়রনের স্তর বের হয়ে আসে।
+* **পুরনো GI পাইপ ফুটো হয়ে মরিচা পড়লে:** যদি ধাতব পাইপ ভেতর থেকে ক্ষয়ে যায়, তবে ফ্লাশিংয়ে কাজ হবে না—সেক্ষেত্রে দক্ষ প্লাম্বার দিয়ে সেই অংশের পাইপ বদলাতে হবে।
+
+আপনার এলাকার [সার্ভিস কভারেজ](/service-areas/mirpur) যাচাই করতে বা সমস্যার ছবি পাঠিয়ে পরামর্শ নিতে [ফ্রি কোটেশন ফর্ম](/get-quote) পূরণ করুন।`
+  },
+
+  // 12. Draft Article: ট্যাংকে পোকা, কেঁচো বা ভাসমান ময়লা
+  {
+    id: 'art-draft-tank-insects',
+    slug: 'insects-worms-debris-in-water-tank-what-to-do',
+    category: 'Water Hygiene',
+    categoryBn: 'পানি সুরক্ষা',
+    title: 'Insects, Worms or Floating Debris in Your Water Tank: Causes & Immediate Steps',
+    titleBn: 'পানির ট্যাংকে পোকা, কেঁচো বা ভাসমান ময়লা দেখা গেলে করণীয়',
+    excerpt: 'পানির ট্যাংকে ছোট পোকা, মশার লার্ভা বা কেঁচো দেখা যাওয়ার প্রধান কারণ কী এবং পুনরায় প্রবেশ ঠেকাতে ঢাকনা ও ওভারফ্লো পাইপে কী পরিবর্তন আনবেন?',
+    excerptBn: 'পানির ট্যাংকে পোকা বা ভাসমান ময়লা দেখা দিলে শুধু ট্যাংক ধুয়ে ফেলা যথেষ্ট নয়—কীভাবে প্রবেশপথ বন্ধ করবেন ও নিরাপদে স্যানিটাইজ করবেন জানুন।',
+    imageUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-tank-cleaning_1794133716106.jpg',
+    imageAlt: 'পানির ট্যাংকে পোকা ও ময়লা প্রবেশ বন্ধে পরিষ্কার ও ঢাকনা সিলিং গাইড',
+    imageCaption: 'সঠিক মেকানাইজড পরিষ্কার ও ভেন্ট-নেট সিলিং ছাড়া ট্যাংকে পোকা ফিরে আসতে পারে।',
+    author: 'সানভিলোজ হাইজিন টিম',
+    publishedAt: '2026-11-16',
+    readTime: '5 min read',
+    readTimeBn: '৫ মিনিট পাঠ',
+    featured: false,
+    published: false,
+    seo: {
+      metaTitle: 'পানির ট্যাংকে পোকা বা ভাসমান ময়লা দেখা গেলে করণীয়',
+      metaDescription: 'ট্যাংকে পোকা, মশার লার্ভা বা কেঁচো কোথা থেকে আসে? দ্রুত পরিষ্কার, জীবাণুনাশক ও প্রবেশপথ বন্ধ করার কার্যকর উপায়।',
+      keywords: ['পানির ট্যাংকে পোকা', 'Water Tank Cleaning Service in Dhaka', 'ট্যাংক পরিষ্কার'],
+      canonicalUrl: 'https://sunvilozcleancare.com/blog/insects-worms-debris-in-water-tank-what-to-do',
+      imageAlt: 'Insects in water tank prevention guide',
+      imageCaption: 'পানির ট্যাংকে পোকা প্রতিরোধ'
+    },
+    images: [],
+    content: `**Direct Answer:** Insects, mosquito larvae, or small worms almost never originate inside deep supply pipes alone—they enter through broken or unsealed manhole covers, uncovered overflow pipes, and loose air vents, then breed in settled organic sludge.
+
+### Immediate Steps Homeowners Should Take
+* **Inspect the Manhole Lid & Seal:** Replace cracked concrete lids or broken plastic latches immediately.
+* **Mesh the Overflow & Air Vent:** Cover every overflow outlet and breather pipe with fine stainless-steel mosquito mesh.
+* **Avoid Pouring Excess Bleach Blindly:** Dumping harsh chemicals kills surface insects temporarily while decaying organic matter remains at the bottom.
+
+### Full Evacuation & Structural Prevention
+Draining the tank, pressure washing walls, removing floor sludge, and applying food-grade sanitizer restores tank hygiene cleanly—see our [water tank cleaning service](/services/water-tank-cleaning) or [case studies](/portfolio).`,
+    contentBn: `**সরাসরি উত্তর:** পানির ট্যাংকে পোকা, মশার লার্ভা, তেলাপোকা বা ছোট কেঁচো দেখা যাওয়ার প্রধান কারণ হলো **অসুরক্ষিত ঢাকনা, নেটবিহীন ওভারফ্লো পাইপ বা ভাঙা এয়ার ভেন্ট**, যেখান দিয়ে বাইরের পোকামাকড় ঢুকে তলদেশের কাদা ও শ্যাওলার মধ্যে ডিম পাড়ে।
+
+---
+
+## ১. পোকামাকড় ট্যাংকে ঢোকার প্রধান ৪টি পথ
+
+1. **ভাঙা বা ঢিলা ম্যানহোল ঢাকনা:** আন্ডারগ্রাউন্ড রিজার্ভারের ভারী স্ল্যাবের পাশে ফাঁকা থাকলে গ্যারেজ বা ড্রেনের আশপাশ থেকে পোকামাকড় ও কেঁচো ভেতরে ঢুকে পড়ে।
+2. **জালি ছাড়া ওভারফ্লো ও এয়ার পাইপ:** ছাদের পিভিসি বা আরসিসি ট্যাংকের বাতাস বের হওয়ার পাইপ ও ওভারফ্লো মুখে নেট না থাকলে মশা সহজেই ভেতরে বংশবিস্তার করে।
+3. **তলদেশের কাদা ও পচা পাতা:** ট্যাংকে দীর্ঘদিন পলি ও শ্যাওলা জমলে সেটি পোকামাকড়ের উপযুক্ত প্রজননস্থল তৈরি করে।
+4. **গ্যারেজের ময়লা পানি চুইয়ে ঢোকা:** নিচু ম্যানহোলের চারপাশে রিং উঁচু না থাকলে গাড়ি ধোয়া বা বৃষ্টির নোংরা পানি রিজার্ভারে ঢুকতে পারে।
+
+---
+
+## ২. ভুল পদ্ধতি এড়িয়ে তাৎক্ষণিক করণীয়
+
+* **ট্যাংকে ব্লিচিং পাউডার বা কড়া কেমিক্যাল ঢালবেন না:** এতে পানিতে থাকা লার্ভা মরে গেলেও মৃত পোকা ও তলদেশের পচা কাদা নিচেই থেকে যায় এবং পানিতে তীব্র গন্ধ সৃষ্টি করে।
+* **আগে পানি ড্রেন ও স্লাজ অপসারণ:** [আন্ডারগ্রাউন্ড ট্যাংক পরিষ্কার](/services/underground-water-tank-cleaning) ও [ওভারহেড ট্যাংক পরিষ্কার](/services/overhead-tank-cleaning) প্রক্রিয়ায় তলদেশের সমস্ত কাদা বের করে দেয়াল প্রেশার ওয়াশ ও ফুড-গ্রেড স্যানিটাইজ করতে হয়।
+* **প্রবেশপথ স্থায়ীভাবে বন্ধ করা:** পরিষ্কারের পরপরই ওভারফ্লো ও ভেন্ট পাইপে স্টেইনলেস স্টিলের মিহি জালি ও ঢাকনায় রাবার গ্যাসকেট বা শক্ত লক লাগান।
+
+আপনার ভবনের লোকেশন অনুযায়ী—যেমন [উত্তরা](/service-areas/uttara) বা [ধানমন্ডি](/service-areas/dhanmondi)—দ্রুত ভিজিট ও কোটেশনের জন্য [অনলাইন কোটেশন ফর্ম](/get-quote)-এ বিবরণ পাঠান।`
+  },
+
+  // 13. Draft Article: বাথরুমে প্রেশার কম? পাইপলাইন ফ্লাশিং বনাম প্লাম্বিং
+  {
+    id: 'art-draft-low-pressure',
+    slug: 'low-water-pressure-pipeline-cleaning-vs-plumbing',
+    category: 'Pipeline Cleaning',
+    categoryBn: 'পাইপলাইন ফ্লাশিং',
+    title: 'Low Tap Water Pressure Despite a Full Tank? Pipeline Flushing vs Plumbing Repair',
+    titleBn: 'ট্যাংকে পানি আছে কিন্তু বাথরুমে প্রেশার কম? পাইপলাইন ফ্লাশিং বনাম প্লাম্বিং মেরামত',
+    excerpt: 'ছাদের ট্যাংক ভর্তি থাকার পরও শাওয়ার বা কমোডে পানির গতি কমে গেলে কখন পাইপলাইন ফ্লাশিং কাজ করবে আর কখন প্লাম্বিং মেরামত লাগবে তা বুঝুন।',
+    excerptBn: 'ট্যাংকে পানি থাকা সত্ত্বেও কম পানির প্রেশার? পাইপলাইনের ব্লকেজ, সিল্ট ও প্লাম্বিং ত্রুটির পার্থক্য স্পষ্টভাবে জেনে নিন।',
+    imageUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/water-pipeline-cleaning_1794133710278.jpg',
+    imageAlt: 'বাথরুমে কম পানির প্রেশার ও হাইড্রো-পালস পাইপলাইন ফ্লাশিং গাইড',
+    imageCaption: 'সঠিক ডায়াগনোসিস ছাড়া দেয়াল না ভেঙে আগে ফ্লাশিং নাকি প্লাম্বিং প্রয়োজন তা যাচাই করুন।',
+    author: 'সানভিলোজ টেকনিক্যাল টিম',
+    publishedAt: '2026-11-16',
+    readTime: '6 min read',
+    readTimeBn: '৬ মিনিট পাঠ',
+    featured: false,
+    published: false,
+    seo: {
+      metaTitle: 'বাথরুমে পানির প্রেশার কম? পাইপলাইন ফ্লাশিং বনাম প্লাম্বিং মেরামত',
+      metaDescription: 'ট্যাংক ভর্তি থাকা সত্ত্বেও ট্যাপ বা শাওয়ারে প্রেশার কম হলে পাইপলাইন ফ্লাশিং কখন কার্যকর আর কখন প্লাম্বিং মেরামত জরুরি তা জানুন।',
+      keywords: ['বাথরুমে পানির প্রেশার কম', 'Water Pipeline Cleaning Service in Dhaka', 'পাইপলাইন পরিষ্কার'],
+      canonicalUrl: 'https://sunvilozcleancare.com/blog/low-water-pressure-pipeline-cleaning-vs-plumbing',
+      imageAlt: 'Low water pressure pipeline flushing guide',
+      imageCaption: 'পাইপলাইন প্রেশার সমস্যা সমাধান'
+    },
+    images: [],
+    content: `**Direct Answer:** When low pressure is caused by accumulated iron sludge, sand, or slimy biofilm narrowing internal pipe diameter, pressurized hydro-pulse [water pipeline cleaning](/services/pipeline-cleaning) restores flow without breaking tiles. However, mechanical valve failures, jammed angle stops, or crushed PPR welds require physical plumbing replacement.
+
+### Quick Flow Checklist
+* **Remove Faucet Aerators & Shower Heads First:** Small gravel or gasket debris often clogs just the screen mesh.
+* **Check Gate Valve Opening on the Roof:** Partially closed roof shut-off valves cut pressure across an entire floor.
+* **Compare Adjacent Taps:** If an entire apartment loses flow gradually over months, internal sediment buildup is likely.`,
+    contentBn: `**সরাসরি উত্তর:** ছাদের ট্যাংক ভর্তি থাকার পরও বাথরুম বা রান্নাঘরের ট্যাপে পানির গতি কমে যাওয়ার পেছনে দুটি আলাদা কারণ থাকতে পারে: **(১) পাইপের ভেতরে জমে থাকা আয়রন, বালু ও পিচ্ছিল বায়োফিল্ম**, যেখানে [হাইড্রো-পালস পাইপলাইন ফ্লাশিং](/services/pipeline-cleaning) দেয়াল না ভেঙে সমাধান দেয়; অথবা **(২) নষ্ট অ্যাঙ্গেল স্টপ কক, জ্যাম হওয়া গেট ভালভ বা ভাঙা পাইপ জয়েন্ট**, যেগুলোর জন্য দক্ষ প্লাম্বারের যান্ত্রিক মেরামত প্রয়োজন।
+
+---
+
+## ১. প্রফেশনাল ডাকার আগে নিজেই যা যা পরীক্ষা করবেন
+
+1. **ট্যাপের ফিল্টার (Aerator) ও শাওয়ার হেড খুলে পরিষ্কার করুন:** অনেক সময় ট্যাংক থেকে আসা ছোট বালু বা পলি শুধু ট্যাপের মুখের জালিতে আটকে পুরো প্রেশার কমিয়ে দেয়।
+2. **ছাদের মেইন গেট ভালভ পুরো খোলা আছে কি না দেখুন:** ছাদে কাজের পর কেউ অর্ধেক ভালভ বন্ধ রেখে দিলে নিচের ফ্ল্যাটে পানি ধীরগতিতে নামে।
+3. **শুধু গরম পানির লাইনে নাকি ঠান্ডা লাইনেও প্রেশার কম:** গিজার ইনলেটের নেট ব্লক থাকলে শুধু গরম পানির লাইন ধীর হয়ে যায়।
+
+---
+
+## ২. কখন পাইপলাইন ফ্লাশিং করবেন আর কখন প্লাম্বিং মেরামত?
+
+| সমস্যার লক্ষণ | সম্ভাব্য কারণ | উপযুক্ত সমাধান |
+| :--- | :--- | :--- |
+| সময়ের সাথে ধীরে ধীরে প্রেশার কমা ও সাথে পলি/লালচে কণা আসা | পাইপলাইনের ভেতরে আয়রন স্লাজ, বালু ও বায়োফিল্ম জমা | [হাইড্রো-পালস পাইপলাইন ফ্লাশিং](/services/pipeline-cleaning) |
+| হঠাৎ করেই একটি মাত্র ট্যাপে পানি পুরো বন্ধ হয়ে যাওয়া | স্পিন্ডল ভাঙা, অ্যাঙ্গেল স্টপ কক বা কনসিলড ভালভ জ্যাম | প্লাম্বিং মেরামত বা ভালভ পরিবর্তন |
+| সব ফ্ল্যাটেই দুর্গন্ধযুক্ত ও ধীরগতির পানি | ছাদের ট্যাংকের আউটলেটে শ্যাওলা ও কাদা জমা | [ওভারহেড ট্যাংক ক্লিনিং](/services/overhead-tank-cleaning) + ফ্লাশিং |
+
+সমস্যা যাচাইয়ে আপনার ফ্ল্যাটের বিবরণ ও কাজের ছবি পাঠিয়ে [কোটেশন ও পরামর্শ](/get-quote) নিন অথবা [গুলশান ও আশেপাশের কভারেজ](/service-areas/gulshan) দেখুন।`
+  },
+
+  // 14. Draft Article: ছাদের প্লাস্টিক (PVC) ট্যাংকে সবুজ শ্যাওলা জমার কারণ
+  {
+    id: 'art-draft-pvc-algae',
+    slug: 'rooftop-pvc-tank-algae-prevention-dhaka',
+    category: 'Overhead Tank Cleaning',
+    categoryBn: 'ওভারহেড ট্যাংক যত্ন',
+    title: 'Why Green Algae Grows in Rooftop Plastic (PVC) Water Tanks in Dhaka & Prevention Tips',
+    titleBn: 'ছাদের প্লাস্টিক (PVC) ট্যাংকে সবুজ শ্যাওলা জমার কারণ ও প্রতিরোধ',
+    excerpt: 'ঢাকার প্রখর রোদে ছাদের প্লাস্টিকের ট্যাংকে কেন বারবার সবুজ শ্যাওলা ও পিচ্ছিল স্তর জমে এবং কীভাবে পরিষ্কারের পর দীর্ঘসময় শ্যাওলামুক্ত রাখবেন?',
+    excerptBn: 'ছাদের PVC পানির ট্যাংকে সবুজ শ্যাওলা জমার বিজ্ঞানসম্মত কারণ, সূর্যালোক ও ঢাকনার প্রভাব এবং শ্যাওলা প্রতিরোধের বাস্তব উপায়।',
+    imageUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/overhead-tank-cleaning_1794133728264.png',
+    imageAlt: 'ছাদের প্লাস্টিক পিভিসি পানির ট্যাংকে সবুজ শ্যাওলা পরিষ্কার ও প্রতিরোধ',
+    imageCaption: 'হালকা-নিরোধী ঢাকনা ও নিয়মিত হাই-প্রেসার ওয়াশ ছাড়া পিভিসি ট্যাংকে শ্যাওলা জমে।',
+    author: 'সানভিলোজ হাইজিন টিম',
+    publishedAt: '2026-11-16',
+    readTime: '5 min read',
+    readTimeBn: '৫ মিনিট পাঠ',
+    featured: false,
+    published: false,
+    seo: {
+      metaTitle: 'ছাদের প্লাস্টিক (PVC) ট্যাংকে সবুজ শ্যাওলা জমার কারণ ও প্রতিরোধ',
+      metaDescription: 'ছাদের প্লাস্টিকের পানির ট্যাংকে কেন সবুজ শ্যাওলা ও পিচ্ছিল বায়োফিল্ম হয়? নিরাপদ রোটারি জেট পরিষ্কার ও শ্যাওলা ঠেকানোর কার্যকর কৌশল।',
+      keywords: ['PVC ট্যাংকে শ্যাওলা', 'Overhead Tank Cleaning Dhaka', 'প্লাস্টিক ট্যাংক পরিষ্কার'],
+      canonicalUrl: 'https://sunvilozcleancare.com/blog/rooftop-pvc-tank-algae-prevention-dhaka',
+      imageAlt: 'Rooftop PVC tank algae prevention',
+      imageCaption: 'ছাদের প্লাস্টিক ট্যাংকের শ্যাওলা প্রতিরোধ'
+    },
+    images: [],
+    content: `**Direct Answer:** Green algae thrives in rooftop PVC tanks whenever sunlight penetrates thin single-layer tank walls or broken lids and meets warm, nutrient-rich water—forming slippery biofilm that wire brushes only make worse by scratching plastic grooves.
+
+### Why Scratching PVC Walls Backfires
+* Wire scrubbers create microscopic grooves inside smooth plastic where new algae roots latch on faster.
+* Controlled high-pressure rotary jets lift biofilm without damaging food-grade inner linings.
+* Blocking sunlight through fitted opaque lids, shading, and routine 4–6 month cleaning cuts regrowth dramatically.
+
+Explore our [overhead water tank cleaning service](/services/overhead-tank-cleaning) or [get an inspection quote](/get-quote).`,
+    contentBn: `**সরাসরি উত্তর:** ঢাকার প্রখর রোদে ছাদের প্লাস্টিক (PVC) ট্যাংকে সবুজ শ্যাওলা জমার মূল কারণ হলো **ট্যাংকের ভেতরে সূর্যালোক প্রবেশ (পাতলা সিঙ্গেল-লেয়ার বডি বা ঢাকনা খোলা থাকা) এবং উষ্ণ পানিতে থাকা জৈব কণা**। একবার শ্যাওলা ধরলে তারের ব্রাশ দিয়ে ঘষলে প্লাস্টিকের মসৃণ ভেতরটা খসখসে হয়ে যায়, ফলে পরের বার দ্বিগুণ দ্রুত শ্যাওলা ধরে।
+
+---
+
+## ১. প্লাস্টিক ট্যাংকে দ্রুত শ্যাওলা হওয়ার ৪টি কারণ
+
+1. **পাতলা বা স্বচ্ছপ্রায় দেয়াল:** সাধারণ সিঙ্গেল-লেয়ার ট্যাংকের গা ভেদ করে রোদের আলো ভেতরে পৌঁছায়—যা শ্যাওলার সালোকসংশ্লেষণের জন্য যথেষ্ট।
+2. **ঢিলা বা ভেঙে যাওয়া ঢাকনা:** ঢাকনা ঠিকমতো বন্ধ না থাকলে আলো, ধুলাবালি ও বাতাসের স্পোর সরাসরি পানিতে মিশে যায়।
+3. **নিচের রিজার্ভার থেকে শ্যাওলার বীজ আসা:** মাটির নিচের ট্যাংক অপরিষ্কার থাকলে সেখান থেকে জৈব পলি ছাদের ট্যাংকে উঠে আসে।
+4. **রোগজীবাণু ও বায়োফিল্মের স্তর:** শ্যাওলা পচে ট্যাংকের দেয়ালে পিচ্ছিল আস্তরণ তৈরি করে, যা পানির গন্ধ ও স্বাদ নষ্ট করে দেয়।
+
+---
+
+## ২. প্লাস্টিক ট্যাংকের ক্ষতি না করে শ্যাওলা পরিষ্কার ও প্রতিরোধের উপায়
+
+* **তারের ব্রাশ নয়, রোটারি জেট ওয়াশ:** [ওভারহেড ট্যাংক ক্লিনিং](/services/overhead-tank-cleaning)-এ উচ্চচাপের রোটারি ওয়াটার জেট প্লাস্টিকের গায়ে আঁচড় না ফেলে শিকড়সমেত শ্যাওলা তুলে ফেলে।
+* **অতিরিক্ত রোদ থেকে ছায়া বা মাল্টি-লেয়ার ট্যাংক:** ছাদে সম্ভব হলে ট্যাংকের ওপর হালকা শেড দিন এবং কালো বা ফোম-ইনসুলেটেড ঢাকনা শক্ত করে আটকান।
+* **৪–৬ মাস পরপর রুটিন পরিষ্কার:** বড় আকারের শ্যাওলার চাদর জমার আগেই [রুটিন ওয়াটার ট্যাংক পরিষ্কার](/services/water-tank-cleaning) করিয়ে নিলে পানি স্বচ্ছ থাকে।
+
+আপনার ভবনের [সার্ভিস এরিয়া](/service-areas) দেখে [পেশাদার কোটেশন](/get-quote) অনুরোধ করতে পারেন।`
+  },
+
+  // 15. Draft Article: আন্ডারগ্রাউন্ড রিজার্ভার ও ওভারহেড ট্যাংক একসাথে পরিষ্কার
+  {
+    id: 'art-draft-combined-cleaning',
+    slug: 'underground-and-overhead-tank-combined-cleaning-guide',
+    category: 'Building Maintenance',
+    categoryBn: 'ভবন রক্ষণাবেক্ষণ',
+    title: 'Why Cleaning Underground Reservoirs and Overhead Tanks Together Matters',
+    titleBn: 'আন্ডারগ্রাউন্ড রিজার্ভার ও ছাদের ওভারহেড ট্যাংক একসাথে পরিষ্কার করা কেন জরুরি?',
+    excerpt: 'শুধু ছাদের ট্যাংক পরিষ্কার করে নিচের রিজার্ভার বাদ রাখলে কয়েক দিনেই কেন পানি আবার ময়লা হয়ে যায়? যৌথ ক্লিনিংয়ের বাস্তব কারণ জানুন।',
+    excerptBn: 'আন্ডারগ্রাউন্ড রিজার্ভার অপরিষ্কার রেখে শুধু ওভারহেড ট্যাংক পরিষ্কার করলে কেন সুফল দীর্ঘস্থায়ী হয় না—সম্পূর্ণ ব্যাখ্যা ও শিডিউল প্ল্যান।',
+    imageUrl: 'https://ldzhzeyeuthdkobzxzlm.supabase.co/storage/v1/object/public/site-media/services/underground-water-tank-cleaning_1794133736994.png',
+    imageAlt: 'আন্ডারগ্রাউন্ড রিজার্ভার ও ছাদের ওভারহেড ট্যাংক একসাথে পরিষ্কারের গুরুত্ব',
+    imageCaption: 'নিচের রিজার্ভার পরিষ্কার না থাকলে মোটর চালানোর সাথেই পলি ছাদের ট্যাংকে উঠে আসে।',
+    author: 'সানভিলোজ ইঞ্জিনিয়ারিং টিম',
+    publishedAt: '2026-11-16',
+    readTime: '5 min read',
+    readTimeBn: '৫ মিনিট পাঠ',
+    featured: false,
+    published: false,
+    seo: {
+      metaTitle: 'আন্ডারগ্রাউন্ড রিজার্ভার ও ওভারহেড ট্যাংক একসাথে পরিষ্কার কেন জরুরি?',
+      metaDescription: 'আন্ডারগ্রাউন্ড ট্যাংক বাদ দিয়ে শুধু ছাদের ট্যাংক ধুলে কী সমস্যা হয়? ভবন ও অ্যাপার্টমেন্টের পানির পূর্ণ নিরাপত্তা পরিকল্পনা জানুন।',
+      keywords: ['রিজার্ভার ও ওভারহেড ট্যাংক পরিষ্কার', 'Underground Water Tank Cleaning Dhaka', 'Overhead Tank Cleaning Dhaka'],
+      canonicalUrl: 'https://sunvilozcleancare.com/blog/underground-and-overhead-tank-combined-cleaning-guide',
+      imageAlt: 'Combined underground and overhead tank cleaning',
+      imageCaption: 'একসাথে রিজার্ভার ও ওভারহেড পরিষ্কার'
+    },
+    images: [],
+    content: `**Direct Answer:** Every drop inside your rooftop tank is pumped directly from the underground reservoir—if you only clean the rooftop tank while leaving thick mud in the basement sump, the water pump immediately pushes fresh sediment and biofilm right back upstairs within days.
+
+### Practical Maintenance Sequence for Multi-Storey Buildings
+1. **Clean the Underground Reservoir First:** Remove deep sludge and sanitize the main intake sump ([underground tank cleaning](/services/underground-water-tank-cleaning)).
+2. **Refill & Pump Clean Water Upward After Overhead Scrubbing:** Finish [overhead tank cleaning](/services/overhead-tank-cleaning) in the same service visit so clean water moves into a clean rooftop vessel.
+3. **Flush Main Branches When Needed:** If fixtures still show rusty streaks, pair with [pipeline flushing](/services/pipeline-cleaning).
+
+Read our [verified work portfolio](/portfolio) or request a combined building schedule via our [quotation form](/get-quote).`,
+    contentBn: `**সরাসরি উত্তর:** ভবনের ছাদের ওভারহেড ট্যাংকে পানি ওঠে মাটির নিচের আন্ডারগ্রাউন্ড রিজার্ভার থেকে মোটরের সাহায্যে। তাই আপনি যদি মাটির নিচের রিজার্ভার অপরিষ্কার রেখে **শুধু ছাদের ট্যাংক পরিষ্কার করেন**, তাহলে পরের বার মোটর চালু করার সাথে সাথেই নিচের কাদা, পলি ও ব্যাকটেরিয়া আবার নতুন করে ছাদের ট্যাংকে উঠে যাবে।
+
+---
+
+## ১. একসাথে উভয় ট্যাংক পরিষ্কার করলে যে ৩টি বাস্তব সুবিধা মেলে
+
+1. **পুনরায় দূষণ (Cross-Contamination) বন্ধ হয়:** নিচের রিজার্ভার ও ছাদের ট্যাংক একই দিনে বা একই ক্রমে পরিষ্কার হলে কেবল পরিষ্কার পানিই ছাদে পৌঁছে।
+2. **পানি অপচয় ও ডাবল ভোগান্তি কমে:** অ্যাপার্টমেন্ট ভবনে দুইবার আলাদা দিনে পানি বন্ধ না করে একটি পরিকল্পিত শিডিউলে কয়েক ঘণ্টার মধ্যেই পুরো সিস্টেম পরিষ্কার হয়ে যায়।
+3. **সমন্বিত কোটেশন সুবিধা:** একই ভবনে দুটি ইউনিট একসাথে সার্ভিস নিলে আমাদের টিমের লজিস্টিক ও সময় সাশ্রয় হয়, যা [কোটেশন কাঠামোতেও](/get-quote) প্রতিফলিত হয়।
+
+---
+
+## ২. বহুতল ভবনের জন্য সঠিক কার্যক্রমের ধাপ
+
+* **ধাপ ১:** সবার আগে [আন্ডারগ্রাউন্ড রিজার্ভার পরিষ্কার](/services/underground-water-tank-cleaning) করে সাপ্লাই ইনটেক ও সাম্প পিট জীবাণুমুক্ত করা হয়।
+* **ধাপ ২:** এরপর [ছাদের ওভারহেড ট্যাংক পরিষ্কার](/services/overhead-tank-cleaning) ও স্যানিটাইজিং সম্পন্ন করা হয়।
+* **ধাপ ৩:** পুরো ভবনের লাইনে পুরনো আয়রন বা পলি জমে থাকলে প্রয়োজন অনুযায়ী [পাইপলাইন ফ্লাশিং](/services/pipeline-cleaning) যুক্ত করা হয়।
+
+আপনার ভবনের ট্যাংকের ধরন ও সাইজ জানিয়ে যৌথ কাজের পরিকল্পনা জানতে [ফ্রি কোটেশন পেজ](/get-quote) ভিজিট করুন অথবা [আমাদের কাজের কেস স্টাডি](/portfolio) দেখুন।`
   }
 ];

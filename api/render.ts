@@ -6,6 +6,7 @@ import {
   render503HtmlFromTemplate,
   normalizePathname
 } from '../src/seo/routeMetadata';
+import { renderSsrAppRootHtml } from '../src/seo/ssrRenderer';
 import { SPA_HTML_TEMPLATE } from './_generated/spaTemplate';
 
 function extractRequestedPath(req: any): string {
@@ -66,7 +67,13 @@ export async function renderPathToResponse(
   }
 
   if (resolution.kind === 'not_found') {
-    const html404 = render404HtmlFromTemplate(templateHtml, dataset);
+    let notFoundRootHtml: string | undefined;
+    try {
+      notFoundRootHtml = renderSsrAppRootHtml('/404-not-found', dataset);
+    } catch (ssrErr: any) {
+      console.warn('[api/render] 404 SSR fallback notice:', ssrErr?.message || ssrErr);
+    }
+    const html404 = render404HtmlFromTemplate(templateHtml, dataset, notFoundRootHtml);
     return {
       statusCode: 404,
       headers: {
@@ -78,7 +85,19 @@ export async function renderPathToResponse(
     };
   }
 
-  const html = renderRouteHtmlFromTemplate(templateHtml, resolution.route, dataset);
+  let renderedRootHtml: string | undefined;
+  try {
+    renderedRootHtml = renderSsrAppRootHtml(resolution.route.path, dataset);
+  } catch (ssrErr: any) {
+    console.warn(`[api/render] React SSR fallback for ${resolution.route.path}:`, ssrErr?.message || ssrErr);
+  }
+
+  const html = renderRouteHtmlFromTemplate(
+    templateHtml,
+    resolution.route,
+    dataset,
+    renderedRootHtml
+  );
   if (resolution.fromLastKnownGood) {
     return {
       statusCode: 200,

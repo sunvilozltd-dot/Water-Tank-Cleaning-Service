@@ -63,8 +63,6 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
     show_in_quote_form: true,
     isPrimary: true,
     popular: true,
-    startingPrice: 1200,
-    startingPriceBn: '৳ ১,২০০',
     seo_title: 'Overhead Water Tank Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE',
     metaTitle: 'Overhead Water Tank Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE',
     meta_description: 'Professional overhead water tank cleaning service for plastic, steel, and concrete tanks in Dhaka. High pressure rotary jet wash and food-grade sanitization.',
@@ -131,6 +129,64 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
       'বাণিজ্যিক ভবন ও কর্পোরেট অফিস',
       'ডুপ্লেক্স বাড়ি ও ছাদের পিভিসি ব্যাটারি ট্যাংক'
     ],
+    includedItems: [
+      'Pre-work inspection of tank lid, float ball valve condition, and inlet/outlet opening',
+      'Controlled dewatering of standing water and sediment sludge at tank bottom',
+      'Manual soft-brush scrubbing and high-pressure rotary water jet washing on walls and ceiling',
+      'Application of approved food-grade non-toxic sanitizer with final fresh water rinse',
+      'Industrial wet vacuum extraction of residual wash water and lid securing'
+    ],
+    includedItemsBn: [
+      'ট্যাংকের ঢাকনা, ফ্লোট বল ভালভ এবং ইনলেট/আউটলেট মুখের প্রাথমিক পরিদর্শন',
+      'ট্যাংকে অবশিষ্ট পানি ও তলদেশের কাদা পাম্পের সাহায্যে নিয়ন্ত্রিত নিষ্কাশন',
+      'নন-স্ক্র্যাচ ব্রাশ ও হাই-প্রেসার রোটারি জেটে দেয়াল ও ছাদের অংশ পরিষ্কার',
+      'খাদ্য-সংস্পর্শ উপযোগী নন-টক্সিক স্যানিটাইজার স্প্রে এবং পরিষ্কার পানির ফাইনাল রিন্স',
+      'ভ্যাকুয়াম এক্সট্র্যাক্টরে শেষ বিন্দু ময়লা অপসারণ ও ঢাকনা সুরক্ষিত করা'
+    ],
+    excludedItems: [
+      'Replacement of broken plumbing pipes, cracked tank body, or faulty float valves',
+      'Structural waterproofing, concrete plastering, or roof masonry repair',
+      'Laboratory potability water testing (can be arranged separately through certified labs)'
+    ],
+    excludedItemsBn: [
+      'ভাঙা পাইপ, ফাটা ট্যাংক বা নষ্ট ফ্লোট বল ভালভ বদলানো ও মেরামতের কাজ',
+      'ট্যাংকের স্ট্রাকচারাল ওয়াটারপ্রুফিং, প্লাস্টারিং বা ছাদ মেরামতের কাজ',
+      'ল্যাবরেটরি পানীয় জলের মাইক্রোবায়োলজিক্যাল বা টিডিএস পরীক্ষা (পৃথক সার্ভিস প্রয়োজন)'
+    ],
+    customerPrep: [
+      'Try to minimize water refill 3-4 hours before arrival so less water is wasted',
+      'Keep rooftop staircase/ladder path and electrical power socket accessible for equipment',
+      'Temporarily pause the pump motor connecting underground reservoir to overhead tank during work'
+    ],
+    customerPrepBn: [
+      'টিম পৌঁছানোর ৩-৪ ঘণ্টা আগে ট্যাংকে নতুন পানি তোলা কমালে পানির অপচয় কম হয়',
+      'ছাদে ওঠার সিঁড়ি ও কাজের সরঞ্জাম চালানোর জন্য একটি বৈদ্যুতিক সকেট সচল রাখুন',
+      'কাজ চলাকালীন নিচ থেকে ছাদে পানি তোলার মোটর সাময়িকভাবে বন্ধ রাখতে হবে'
+    ],
+    durationFactors: [
+      'Tank capacity (e.g., 500L-2,000L PVC vs 5,000L+ multi-chamber RCC)',
+      'Number of connected battery tanks on the rooftop',
+      'Thickness of sun-baked green algae or mineral scale on walls',
+      'Drainage outlet availability and staircase access to the roof'
+    ],
+    durationFactorsBn: [
+      'ট্যাংকের ধারণক্ষমতা (যেমন: ৫০০–২,০০০ লিটার পিভিসি বনাম ৫,০০০+ লিটার আরসিসি)',
+      'ছাদে একাধিক ট্যাংক সংযুক্ত থাকলে তার মোট সংখ্যা',
+      'রোদে জমা সবুজ শ্যাওলা ও তলদেশের পলির পুরুত্ব',
+      'ছাদে ড্রেইনেজ ও পানি নামার সুবিধা এবং সিঁড়ি/লিফটের প্রবেশগম্যতা'
+    ],
+    pricingFactors: [
+      'Tank type and material (rotomold PVC/plastic vs concrete RCC)',
+      'Capacity in liters and total number of rooftop tanks cleaned together',
+      'Sediment accumulation level and time since the previous cleaning',
+      'Combined booking with underground reserve tank or pipeline flushing'
+    ],
+    pricingFactorsBn: [
+      'ট্যাংকের ধরন ও মেটেরিয়াল (পিভিসি/প্লাস্টিক বনাম কংক্রিট আরসিসি)',
+      'ট্যাংকের লিটার ক্ষমতা এবং ছাদে একসাথে কয়টি ট্যাংক পরিষ্কার হবে',
+      'ভেতরে জমে থাকা শ্যাওলা ও পলির স্তর',
+      'একই দিনে আন্ডারগ্রাউন্ড রিজার্ভার বা পাইপলাইনের সাথে কম্বো বুকিং কিনা'
+    ],
     faqs: [
       {
         question: 'Will high-pressure water jet damage my plastic or steel overhead tank?',
@@ -171,8 +227,6 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
     show_in_quote_form: true,
     isPrimary: true,
     popular: true,
-    startingPrice: 2500,
-    startingPriceBn: '৳ ২,৫০০',
     seo_title: 'Underground Water Reserve Tank Cleaning Service Dhaka | Sunviloz Clean Care',
     metaTitle: 'Underground Water Reserve Tank Cleaning Service Dhaka | Sunviloz Clean Care',
     meta_description: 'Specialized subterranean concrete, plastic and steel water reserve tank cleaning in Dhaka. Heavy mud suction, confined space safety, and non-toxic disinfection.',
@@ -241,6 +295,64 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
       'বাণিজ্যিক কমপ্লেক্স, শপিং মল ও কর্পোরেট ভবন',
       'হাসপাতাল, শিল্পপ্রতিষ্ঠান, হোটেল ও শিক্ষাপ্রতিষ্ঠান'
     ],
+    includedItems: [
+      'Pre-entry atmospheric check and continuous fresh air blower ventilation',
+      'Submersible slurry pump evacuation of residual water and settled mud',
+      'Deep sump pit silt vacuuming and 150-bar rotary scouring on concrete walls and pillars',
+      'Odorless food-grade sanitization spray across all interior reservoir walls',
+      'Final fresh water rinse, suction clearance, and manhole cover resealing'
+    ],
+    includedItemsBn: [
+      'কাজের শুরুতে ভেন্টিলেশন পরীক্ষা ও সার্বক্ষণিক ফ্রেশ এয়ার ব্লোয়ার স্থাপন',
+      'সাবমারসিবল স্লাজ পাম্পে অবশিষ্ট পানি ও ভারী কাদা-পলি নিষ্কাশন',
+      'সাম্প পিট ভ্যাকুয়ামিং এবং ১৫০-বার রোটারি ওয়াশারে দেয়াল ও পিলার পরিষ্কার',
+      'ফুড-গ্রেড নিরাপদ অ্যান্টি-ব্যাকটেরিয়াল স্যানিটাইজার স্প্রে ও জীবাণুনাশ',
+      'পরিষ্কার পানিতে ফাইনাল রিন্স, ভ্যাকুয়ামিং এবং ম্যানহোল ঢাকনা সুরক্ষিত করা'
+    ],
+    excludedItems: [
+      'Submersible or centrifugal water pump repair and electrical rewiring',
+      'Concrete crack injection, structural grouting, or broken manhole lid replacement',
+      'WASA street supply line valve repair or municipal meter plumbing'
+    ],
+    excludedItemsBn: [
+      'ভবনের পানির মোটর বা সাবমারসিবল পাম্প মেরামত ও ইলেকট্রিক্যাল কাজ',
+      'রিজার্ভারের ফাটল গ্রাউটিং, ওয়াটারপ্রুফিং বা ভাঙা ম্যানহোল স্ল্যাব পরিবর্তন',
+      'রাস্তার ওয়াসা মূল লাইনের ভালভ বা মিটারের প্লাম্বিং মেরামত'
+    ],
+    customerPrep: [
+      'Ensure residents store drinking water and finish essential usage beforehand as motor pumping will pause during service',
+      'Inform building caretaker/security to keep electrical power and WASA/main valve access ready',
+      'Indicate safe ground floor drain outlet where pumped sludge water can discharge cleanly'
+    ],
+    customerPrepBn: [
+      'কাজ চলাকালীন ছাদে পানি তোলা বন্ধ থাকবে বলে ভবনের বাসিন্দাদের প্রয়োজনীয় পানি আগেই তুলে রাখার অনুরোধ করুন',
+      'কেয়ারটেকার বা সিকিউরিটির মাধ্যমে বৈদ্যুতিক সংযোগ ও মূল ইনলেট ভালভের চাবি প্রস্তুত রাখুন',
+      'পাম্প করা কাদা-পানি নির্গমনের জন্য নিকটস্থ উপযুক্ত ড্রেন বা আউটলেট দেখিয়ে দিন'
+    ],
+    durationFactors: [
+      'Reservoir volume (5,000L residential sump vs 25,000L+ apartment reservoir)',
+      'Depth of compacted municipal silt and gravel in the sump pit',
+      'Number of internal concrete pillars, baffles, or partitioned chambers',
+      'Proximity to drainage discharge point and manhole opening width'
+    ],
+    durationFactorsBn: [
+      'রিজার্ভারের আয়তন (৫,০০০ লিটার বাড়ির ট্যাংক বনাম ২৫,০০০+ লিটার বড় অ্যাপার্টমেন্ট রিজার্ভার)',
+      'তলদেশে জমা কাদা, বালু ও শক্ত স্লাজের পুরুত্ব',
+      'ভেতরে কংক্রিটের পিলার, পার্টিশন বা একাধিক চেম্বারের গঠন',
+      'ম্যানহোলের মাপ ও ড্রেনে পানি নির্গমনের দূরত্ব'
+    ],
+    pricingFactors: [
+      'Reservoir storage capacity (liters / dimensions)',
+      'Thickness of settled sludge (e.g., regular 6-month wash vs multi-year neglected silt)',
+      'Building location across Dhaka, Savar, Gazipur, or Narayanganj',
+      'Accessibility of manhole and ground-level drainage path'
+    ],
+    pricingFactorsBn: [
+      'রিজার্ভারের মোট ধারণক্ষমতা বা দৈর্ঘ্য-প্রস্থ-গভীরতা',
+      'জমে থাকা কাদার পরিমাণ (নিয়মিত পরিষ্কার বনাম বহু বছরের জমা স্লাজ)',
+      'ভবনের অবস্থান (ঢাকা মেট্রো, সাভার, গাজীপুর বা নারায়ণগঞ্জ)',
+      'ম্যানহোল প্রবেশপথ ও পাম্প ড্রেনেজের সুবিধা'
+    ],
     faqs: [
       {
         question: 'How long does cleaning an underground reserve tank take?',
@@ -275,8 +387,6 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
     show_in_quote_form: true,
     isPrimary: false,
     popular: true,
-    startingPrice: 1500,
-    startingPriceBn: '৳ ১,৫০০',
     seo_title: 'Water Pipeline Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE',
     metaTitle: 'Water Pipeline Cleaning Service in Dhaka | SUNVILOZ CLEAN CARE',
     meta_description: 'Non-invasive water pipeline cleaning and descaling in Dhaka. Removes rust and iron deposits without breaking walls or damaging tiles.',
@@ -334,6 +444,62 @@ export const AUTHORITATIVE_SERVICES: ExtensibleServiceItem[] = [
       'যেসব বাসাবাড়িতে আয়রনযুক্ত লালচে বা গন্ধযুক্ত পানি আসে',
       'ভবনের পাইপলাইনের স্বাভাবিক পানির গতি ও প্রেসার ফেরাতে',
       'কল বা শাওয়ারের মুখে আটকে থাকা ময়লা স্থায়ীভাবে পরিষ্কারে'
+    ],
+    includedItems: [
+      'Hydro-pneumatic air-water pulse setup directly from existing faucet/angle-valve points',
+      'Non-invasive flushing of bathroom, kitchen, basin, and shower supply lines without breaking tiles or walls',
+      'Controlled ejection of iron oxide, rust sludge, and biofilm scaling until outlet water runs clear',
+      'Aerator filter cleaning on flushed taps and water flow check after completion'
+    ],
+    includedItemsBn: [
+      'দেয়াল বা টাইলস না ভেঙে বিদ্যমান ট্যাপ বা অ্যাঙ্গেল-ভালভ পয়েন্ট থেকে হাইড্রো-পালস ফ্লাশিং সেটআপ',
+      'বাথরুম, কিচেন সিঙ্ক, বেসিন ও শাওয়ারের লাইনের অভ্যন্তরীণ ময়লা, আয়রন ও বায়ো-স্লাজ অপসারণ',
+      'প্রতিটি আউটলেট দিয়ে স্বচ্ছ পানি বের না হওয়া পর্যন্ত নিয়ন্ত্রিত পালস ফ্লাশিং',
+      'ট্যাপের এরিয়েটর/জালি পরিষ্কার ও কাজ শেষে পানির প্রবাহ পরীক্ষা'
+    ],
+    excludedItems: [
+      'Replacing rusted/corroded concealed GI pipes or cracked underground plumbing joints',
+      'Sanitary fitting replacement (mixing valves, broken faucets, or geyser servicing)',
+      'Sewer or wastewater drainage blockages (service covers clean water supply lines only)'
+    ],
+    excludedItemsBn: [
+      'দেয়ালের ভেতরের ক্ষয়প্রাপ্ত বা ছিদ্র হওয়া জিআই পাইপ বদলানো বা প্লাম্বিং মেরামত',
+      'নষ্ট মিক্সচার কল, ভাঙা অ্যাঙ্গেল ভালভ বা গিজার সার্ভিসিং',
+      'বাথরুমের বর্জ্য বা স্যুয়ারেজ ড্রেন লাইন পরিষ্কার (এই সার্ভিস শুধু বিশুদ্ধ পানির লাইনের জন্য)'
+    ],
+    customerPrep: [
+      'Ensure overhead water tank has sufficient clean water (if tank is dirty, clean the tank first or together)',
+      'Confirm hot-water geyser valves can be bypassed/isolated before flushing begins',
+      'Inform technician of any loose or leaking older GI/plastic joints before connecting the compressor unit'
+    ],
+    customerPrepBn: [
+      'কাজ শুরুর আগে ছাদের ট্যাংকে পর্যাপ্ত পরিষ্কার পানি রাখুন (ট্যাংক অপরিচ্ছন্ন থাকলে একসাথে পরিষ্কার করা উত্তম)',
+      'কিচেন ও বাথরুমের গিজার বা হট-ওয়াটার লাইনের ইনলেট ভালভ আগে থেকে চিহ্নিত রাখুন',
+      'ভবনে খুব পুরোনো বা লিকেজযুক্ত কোনো জয়েন্ট থাকলে টেকনিশিয়ানকে পূর্বেই জানান'
+    ],
+    durationFactors: [
+      'Total number of bathrooms, kitchens, and wash points inside the unit/flat',
+      'Pipe material (CPVC/PPR vs heavily scaled old GI iron pipes)',
+      'Thickness of iron sediment and biofilm buildup in distribution loops',
+      'Main vertical riser cleaning if requested for the whole building'
+    ],
+    durationFactorsBn: [
+      'ফ্ল্যাটের মোট বাথরুম, কিচেন ও ট্যাপ পয়েন্টের সংখ্যা',
+      'পাইপের ধরন (CPVC/PPR বনাম ভারী মরিচাযুক্ত পুরোনো GI পাইপ)',
+      'পাইপের ভেতরে আয়রন ও ময়লার আস্তরণের ঘনত্ব',
+      'শুধু এক ফ্ল্যাট নাকি ভবনের মূল রাইজার লাইন সহ ফ্লাশিং প্রয়োজন'
+    ],
+    pricingFactors: [
+      'Number of bathrooms/kitchen lines and water outlet points',
+      'Flat size vs full building vertical riser flushing scope',
+      'Pipe condition (standard scale vs heavy iron blockage)',
+      'Area location and whether bundled with rooftop/underground tank cleaning'
+    ],
+    pricingFactorsBn: [
+      'বাথরুম, কিচেন ও পানির পয়েন্টের সংখ্যা',
+      'একক ফ্ল্যাট সার্ভিস নাকি পুরো ভবনের মেইন ড্রপ-লাইন সহ কাজ',
+      'পাইপের মেটেরিয়াল ও আয়রন জমার তীব্রতা',
+      'এলাকা এবং ট্যাংক পরিষ্কার সার্ভিসের সাথে যৌথ বুকিং কিনা'
     ],
     faqs: [
       {

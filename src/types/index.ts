@@ -208,6 +208,9 @@ export interface ServiceItem {
   icon?: string;
   startingPrice?: any;
   startingPriceBn?: string;
+  verifiedPriceNote?: string;
+  verifiedPriceNoteEn?: string;
+  verifiedPriceNoteBn?: string;
   isPrimary?: boolean;
   benefits?: string[];
   benefitsBn?: string[];
@@ -215,6 +218,17 @@ export interface ServiceItem {
   processBn?: string[];
   idealFor?: any;
   idealForBn?: string[];
+  includedItems?: string[];
+  includedItemsBn?: string[];
+  excludedItems?: string[];
+  excludedItemsBn?: string[];
+  customerPrep?: string[];
+  customerPrepBn?: string[];
+  durationFactors?: string[];
+  durationFactorsBn?: string[];
+  pricingFactors?: string[];
+  pricingFactorsBn?: string[];
+  extendedContent?: Record<string, any>;
   image?: string;
   videoUrl?: string;
   videoTitle?: string;
@@ -259,6 +273,7 @@ export interface ServiceItem {
     capacityOptions?: string[];
     allowCustomCapacity?: boolean;
     allowUnknownCapacity?: boolean;
+    _serviceDetails?: Record<string, any>;
   };
 }
 
@@ -318,30 +333,47 @@ export interface ArticleItem {
 
 export interface ProjectItem {
   id: string;
+  slug?: string;
   title: string;
   titleBn?: string;
   category?: 'Rooftop' | 'Underground' | 'Pipeline' | 'Apartment' | 'Commercial' | string;
   area?: string;
+  areaSlug?: string;
   location?: string;
   locationBn?: string;
   tankType?: string;
   capacity?: string;
+  duration?: string;
   serviceDate?: string;
   completedDate?: string;
   beforeImg?: string;
   beforeImage?: string;
+  beforeCaption?: string;
+  beforeCaptionBn?: string;
   duringImg?: string;
   afterImg?: string;
   afterImage?: string;
+  afterCaption?: string;
+  afterCaptionBn?: string;
   additionalImages?: string[];
   summary?: string;
   summaryBn?: string;
   description?: string;
   descriptionBn?: string;
+  customerProblem?: string;
+  customerProblemBn?: string;
+  workDone?: string;
+  workDoneBn?: string;
+  actualResult?: string;
+  actualResultBn?: string;
   relatedServiceSlug?: string;
   featured?: boolean;
   videoUrl?: string;
+  status?: 'draft' | 'published';
   customerConsentGranted?: boolean;
+  metaTitle?: string;
+  metaDescription?: string;
+  updatedAt?: string;
   sourceType?: 'verified_job' | 'customer_upload' | 'company_work';
 }
 

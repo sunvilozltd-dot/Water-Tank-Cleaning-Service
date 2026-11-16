@@ -1,15 +1,11 @@
-import fs from 'fs';
-import path from 'path';
-import React from 'react';
-import { renderToString } from 'react-dom/server';
-import App, { AppProps, SsrPageComponents } from '../src/App';
+import fs from 'node:fs';
+import path from 'node:path';
 import { PROBLEM_QA_ITEMS } from '../src/data/problemQaData';
 import {
   CRITICAL_PRERENDER_SLICES,
   fetchLiveSeoDataset,
   getCanonicalBaseUrl,
-  hasUnrecoveredCriticalFailure,
-  isSliceAvailable
+  hasUnrecoveredCriticalFailure
 } from '../src/seo/siteDataFetcher';
 import {
   buildAllRoutes,
@@ -17,76 +13,7 @@ import {
   render404HtmlFromTemplate
 } from '../src/seo/routeMetadata';
 import { buildSitemapXml, buildLlmsTxt } from '../src/seo/seoGenerators';
-import {
-  SsrHomepageSectionComponents,
-  SsrHomepageSectionsProvider
-} from '../src/context/SsrHomepageSectionsContext';
-
-// Synchronous page imports specifically for Node SSR prerendering (bypasses Suspense)
-import { AboutPage } from '../src/pages/AboutPage';
-import { ServicesPage } from '../src/pages/ServicesPage';
-import { WaterTankCleaningPage } from '../src/pages/WaterTankCleaningPage';
-import { PipelineCleaningPage } from '../src/pages/PipelineCleaningPage';
-import { ContactPage } from '../src/pages/ContactPage';
-import { ServiceAreaPage } from '../src/pages/ServiceAreaPage';
-import { LocationDetailPage } from '../src/pages/LocationDetailPage';
-import { BlogPage } from '../src/pages/BlogPage';
-import { BlogPostDetailPage } from '../src/pages/BlogPostDetailPage';
-import { PortfolioPage } from '../src/pages/PortfolioPage';
-import { TermsPage } from '../src/pages/TermsPage';
-import { PrivacyPolicyPage } from '../src/pages/PrivacyPolicyPage';
-import { FaqPage } from '../src/pages/FaqPage';
-import { ServiceDetailPage } from '../src/pages/ServiceDetailPage';
-import { GetQuotePage } from '../src/pages/GetQuotePage';
-import { NotFoundPage } from '../src/pages/NotFoundPage';
-
-// Synchronous below-the-fold homepage sections specifically for Node SSR prerendering
-import { AboutPreviewSection } from '../src/components/AboutPreviewSection';
-import { WhyChooseUsSection } from '../src/components/WhyChooseUsSection';
-import { AllServicesFaqSection } from '../src/components/AllServicesFaqSection';
-import { TrustSection } from '../src/components/TrustSection';
-import { ProjectVideoSliderSection } from '../src/components/ProjectVideoSliderSection';
-import { ReviewsSection } from '../src/components/ReviewsSection';
-import { SmartQuoteWizard } from '../src/components/SmartQuoteWizard';
-import { ServiceAreaSection } from '../src/components/ServiceAreaSection';
-import { BlogSection } from '../src/components/BlogSection';
-import { OurWorkVideosSection } from '../src/components/OurWorkVideosSection';
-import { FinalCtaSection } from '../src/components/FinalCtaSection';
-import { CustomSectionRenderer } from '../src/components/CustomSectionRenderer';
-
-const ssrComponents: SsrPageComponents = {
-  AboutPage,
-  ServicesPage,
-  WaterTankCleaningPage,
-  PipelineCleaningPage,
-  ContactPage,
-  ServiceAreaPage,
-  LocationDetailPage,
-  BlogPage,
-  BlogPostDetailPage,
-  PortfolioPage,
-  TermsPage,
-  PrivacyPolicyPage,
-  FaqPage,
-  ServiceDetailPage,
-  GetQuotePage,
-  NotFoundPage
-};
-
-const ssrHomepageSections: SsrHomepageSectionComponents = {
-  AboutPreviewSection,
-  WhyChooseUsSection,
-  AllServicesFaqSection,
-  TrustSection,
-  ProjectVideoSliderSection,
-  ReviewsSection,
-  SmartQuoteWizard,
-  ServiceAreaSection,
-  BlogSection,
-  OurWorkVideosSection,
-  FinalCtaSection,
-  CustomSectionRenderer
-};
+import { renderSsrAppRootHtml } from '../src/seo/ssrRenderer';
 
 async function runPrerender() {
   const distDir = path.resolve(process.cwd(), 'dist');
@@ -137,58 +64,6 @@ async function runPrerender() {
     process.exit(1);
   }
 
-  // Expose live snapshots globally for synchronous React SSR pass (never leak secrets such as indexNowKey)
-  const publicSiteConfigSnapshot = dataset.siteConfig
-    ? {
-        business: dataset.siteConfig.business || undefined,
-        announcement: dataset.siteConfig.announcement || undefined,
-        hero: dataset.siteConfig.hero || undefined,
-        faqs: dataset.siteConfig.faqs || undefined,
-        images: dataset.siteConfig.images || undefined,
-        seo: dataset.siteConfig.seo ? { ...dataset.siteConfig.seo, indexNowKey: '' } : undefined
-      }
-    : undefined;
-
-  const initialServicesFaqs =
-    dataset.status.configured && isSliceAvailable(dataset.status, 'servicesFaqs')
-      ? dataset.servicesFaqs
-      : undefined;
-  const initialServices =
-    dataset.status.configured && isSliceAvailable(dataset.status, 'services')
-      ? dataset.services
-      : undefined;
-
-  const globalAny = global as any;
-  globalAny.window = globalAny.window || {};
-
-  const assignGlobalSnapshot = (key: string, value: any) => {
-    if (value !== undefined) {
-      globalAny[key] = value;
-      globalAny.window[key] = value;
-    } else {
-      delete globalAny[key];
-      delete globalAny.window[key];
-    }
-  };
-
-  assignGlobalSnapshot('__INITIAL_IMAGE_REGISTRY__', dataset.imageRegistry);
-  assignGlobalSnapshot('__INITIAL_HOMEPAGE_SECTIONS__', dataset.homepageSections);
-  assignGlobalSnapshot('__HOMEPAGE_REVISION__', dataset.homepageRevision);
-  assignGlobalSnapshot('__INITIAL_SERVICES_FAQS__', initialServicesFaqs);
-  assignGlobalSnapshot('__INITIAL_SERVICES__', initialServices);
-  assignGlobalSnapshot('__INITIAL_SITE_CONFIG__', publicSiteConfigSnapshot);
-
-  const renderAppWithSsrProviders = (initialPath: string) =>
-    renderToString(
-      React.createElement(
-        SsrHomepageSectionsProvider,
-        {
-          components: ssrHomepageSections,
-          children: React.createElement<AppProps>(App, { initialPath, ssrComponents })
-        }
-      )
-    );
-
   const baseUrl = getCanonicalBaseUrl();
   const routes = buildAllRoutes(dataset);
   console.log(`[SEO Prerender] Prerendering ${routes.length} authoritative routes...`);
@@ -197,7 +72,7 @@ async function runPrerender() {
   for (const route of routes) {
     let renderedRootHtml: string | undefined;
     try {
-      renderedRootHtml = renderAppWithSsrProviders(route.path);
+      renderedRootHtml = renderSsrAppRootHtml(route.path, dataset);
     } catch (renderError) {
       console.warn(`[SEO Prerender] SSR component fallback for ${route.path}:`, renderError);
     }
@@ -221,7 +96,7 @@ async function runPrerender() {
   // 3. True 404.html fallback
   let notFoundRoot: string | undefined;
   try {
-    notFoundRoot = renderAppWithSsrProviders('/404-not-found');
+    notFoundRoot = renderSsrAppRootHtml('/404-not-found', dataset);
   } catch {
     notFoundRoot = undefined;
   }
@@ -240,6 +115,7 @@ async function runPrerender() {
     zones: dataset.zones,
     areas: dataset.areas,
     articles: dataset.blogPosts,
+    caseStudies: dataset.caseStudies,
     qaItems: PROBLEM_QA_ITEMS
   });
   fs.writeFileSync(path.join(distDir, 'llms.txt'), llmsTxt, 'utf-8');

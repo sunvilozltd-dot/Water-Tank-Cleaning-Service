@@ -11,7 +11,8 @@ import {
   ZoneAreaRecord,
   ZONES_CHANGED_EVENT,
   fetchZonesAndAreas,
-  findAreaBySlug
+  findAreaBySlug,
+  readSnapshotZonesAndAreas
 } from '../services/zoneContentService';
 import { PROBLEM_QA_ITEMS } from '../data/problemQaData';
 import { sanitizeRichHtml, stripHtmlToPlainText } from '../utils/htmlSanitizer';
@@ -21,6 +22,7 @@ import { useSiteConfig } from '../context/SiteConfigContext';
 import { SITE_DOMAIN } from '../config/siteDomain';
 import { trackEvent, trackPhoneClick, trackWhatsAppClick } from '../utils/tracking';
 import { isSupabaseConfigured } from '../utils/supabaseClient';
+import { usePortfolioProjects, isPublicPublishedCaseStudy } from '../utils/portfolioStore';
 import {
   MapPin,
   Phone,
@@ -44,10 +46,14 @@ interface LocationDetailPageProps {
   onNavigate?: (path: string) => void;
 }
 
-function matchSyncDefaultArea(rawSlug: string): { area: ZoneAreaRecord; zone?: ServiceZoneRecord } | null {
+function matchAreaFromList(
+  rawSlug: string,
+  areasList: ZoneAreaRecord[],
+  zonesList: ServiceZoneRecord[]
+): { area: ZoneAreaRecord; zone?: ServiceZoneRecord } | null {
   if (!rawSlug) return null;
   const normalized = rawSlug.toLowerCase().trim().replace(/^water-tank-cleaning-/, '').replace(/-dhaka$/, '');
-  const matched = DEFAULT_ZONE_AREAS.find(
+  const matched = areasList.find(
     a =>
       a.slug === rawSlug ||
       a.slug === normalized ||
@@ -55,7 +61,7 @@ function matchSyncDefaultArea(rawSlug: string): { area: ZoneAreaRecord; zone?: S
       `water-tank-cleaning-${a.slug}` === rawSlug
   );
   if (!matched) return null;
-  const zone = DEFAULT_SERVICE_ZONES.find(z => z.id === matched.zoneId || z.slug === matched.zoneSlug);
+  const zone = zonesList.find(z => z.id === matched.zoneId || z.slug === matched.zoneSlug);
   return { area: matched, zone };
 }
 
@@ -69,21 +75,49 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
   const { isAuthenticated: isAdminAuthenticated } = useAdminAuth();
 
   const isPreviewQuery =
-    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('preview') === '1';
+    typeof window !== 'undefined' &&
+    Boolean(window.location?.search) &&
+    new URLSearchParams(window.location.search).get('preview') === '1';
   const allowDraftPreview = Boolean(isPreviewQuery && isAdminAuthenticated);
 
-  const initialMatch = !isSupabaseConfigured() ? matchSyncDefaultArea(slug) : null;
+  const initialSnapshot = !allowDraftPreview ? readSnapshotZonesAndAreas() : null;
+  const initialBundle =
+    initialSnapshot ||
+    (!isSupabaseConfigured() ? { zones: DEFAULT_SERVICE_ZONES, areas: DEFAULT_ZONE_AREAS } : null);
+  const initialMatch = initialBundle
+    ? matchAreaFromList(slug, initialBundle.areas, initialBundle.zones)
+    : null;
+
   const [resolvedArea, setResolvedArea] = useState<ZoneAreaRecord | null>(initialMatch?.area || null);
   const [resolvedZone, setResolvedZone] = useState<ServiceZoneRecord | undefined>(initialMatch?.zone);
-  const [otherAreas, setOtherAreas] = useState<ZoneAreaRecord[]>(!isSupabaseConfigured() ? DEFAULT_ZONE_AREAS : []);
-  const [loading, setLoading] = useState(!initialMatch);
-  const [notFound, setNotFound] = useState(false);
+  const [otherAreas, setOtherAreas] = useState<ZoneAreaRecord[]>(
+    initialBundle ? initialBundle.areas.filter(a => a.isVisible) : []
+  );
+  const [loading, setLoading] = useState(!initialBundle && isSupabaseConfigured());
+  const [notFound, setNotFound] = useState(Boolean(initialBundle && !initialMatch));
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const { projects: portfolioProjects } = usePortfolioProjects();
 
   useEffect(() => {
     let active = true;
-    const syncMatch = !isSupabaseConfigured() ? matchSyncDefaultArea(slug) : null;
-    if (!syncMatch) {
+    const snapshot = !allowDraftPreview ? readSnapshotZonesAndAreas() : null;
+    const syncBundle =
+      snapshot ||
+      (!isSupabaseConfigured() ? { zones: DEFAULT_SERVICE_ZONES, areas: DEFAULT_ZONE_AREAS } : null);
+    const syncMatch = syncBundle
+      ? matchAreaFromList(slug, syncBundle.areas, syncBundle.zones)
+      : null;
+
+    if (syncBundle) {
+      setResolvedArea(syncMatch?.area || null);
+      setResolvedZone(syncMatch?.zone);
+      setOtherAreas(syncBundle.areas.filter(a => a.isVisible));
+      setNotFound(!syncMatch);
+      setLoading(false);
+    } else {
+      setResolvedArea(null);
+      setResolvedZone(undefined);
+      setNotFound(false);
       setLoading(true);
     }
 
@@ -196,6 +230,24 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
   const practicalAdviceHtml = sanitizeRichHtml(
     lang === 'bn' ? content.practicalAdviceBn || content.practicalAdviceEn : content.practicalAdviceEn || content.practicalAdviceBn
   );
+  const dispatchConditionsHtml = sanitizeRichHtml(
+    lang === 'bn'
+      ? content.dispatchConditionsBn || content.dispatchConditionsEn || ''
+      : content.dispatchConditionsEn || content.dispatchConditionsBn || ''
+  );
+
+  const normalizedAreaName = (resolvedArea.areaName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const normalizedAreaSlug = (resolvedArea.slug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const areaCaseStudies = portfolioProjects.filter((cs) => {
+    if (!isPublicPublishedCaseStudy(cs)) return false;
+    const csAreaSlug = (cs.areaSlug || '').toLowerCase().trim();
+    if (csAreaSlug && csAreaSlug === resolvedArea.slug.toLowerCase()) return true;
+    const csLocNorm = `${cs.area || ''} ${cs.location || ''}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return Boolean(
+      (normalizedAreaName && csLocNorm.includes(normalizedAreaName)) ||
+      (normalizedAreaSlug && csLocNorm.includes(normalizedAreaSlug))
+    );
+  });
 
   const seoTitle =
     content.seoTitle || content.title || `${resolvedArea.areaName} Water Tank Cleaning Service | SUNVILOZ CLEAN CARE`;
@@ -343,7 +395,7 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
             </div>
           )}
 
-          {(potentialCausesHtml || practicalAdviceHtml) && (
+          {(potentialCausesHtml || practicalAdviceHtml || dispatchConditionsHtml) && (
             <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
               {potentialCausesHtml && (
                 <div className="space-y-2">
@@ -371,6 +423,19 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
                   <div
                     className="text-xs sm:text-sm text-[#475569] leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: practicalAdviceHtml }}
+                  />
+                </div>
+              )}
+
+              {dispatchConditionsHtml && (
+                <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5">
+                  <h3 className="text-sm font-bold text-[#123047] flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-[#0D9488]" />
+                    <span>{lang === 'bn' ? 'টিম প্রেরণ ও শিডিউলিং শর্তাবলি' : 'Dispatch & Scheduling Conditions'}</span>
+                  </h3>
+                  <div
+                    className="text-xs sm:text-sm text-[#475569] leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: dispatchConditionsHtml }}
                   />
                 </div>
               )}
@@ -718,6 +783,88 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
         </div>
       </section>
 
+      {/* 8.5 Published Case Studies in this Locality */}
+      <section className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-8 space-y-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <span className="text-xs font-bold text-[#0D9488] uppercase tracking-wider block">
+              {lang === 'bn' ? 'বাস্তব কাজের ডকুমেন্টেশন' : 'Verified Field Documentation'}
+            </span>
+            <h3 className="text-xl sm:text-2xl font-extrabold text-[#123047]">
+              {lang === 'bn'
+                ? `${resolvedArea.areaNameBn} এলাকায় প্রকাশিত কাজের উদাহরণ (Case Studies)`
+                : `Published Case Studies in ${resolvedArea.areaName}`}
+            </h3>
+          </div>
+          <a
+            href="/portfolio"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/portfolio');
+            }}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0D9488] hover:text-[#0F766E] px-3.5 py-2 rounded-xl bg-[#E8F5F3] border border-[#0D9488]/30 w-fit"
+          >
+            <span>{lang === 'bn' ? 'সকল Case Studies দেখুন' : 'View All Case Studies'}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+        </div>
+
+        {areaCaseStudies.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {areaCaseStudies.slice(0, 3).map((cs) => (
+              <a
+                key={cs.id}
+                href={`/portfolio/${cs.slug}`}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  handleNavigate(`/portfolio/${cs.slug}`);
+                }}
+                className="p-4 rounded-2xl bg-[#F8FAFC] hover:bg-[#E8F5F3]/50 border border-[#E2E8F0] hover:border-[#0D9488]/40 transition-all flex flex-col justify-between space-y-3"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-[#0D9488]">
+                    <span>{cs.tankType}</span>
+                    {cs.serviceDate && <span className="text-[#64748B] font-mono">{cs.serviceDate}</span>}
+                  </div>
+                  <h4 className="font-bold text-sm text-[#123047] line-clamp-2">
+                    {lang === 'bn' ? cs.titleBn || cs.title : cs.title}
+                  </h4>
+                  <p className="text-xs text-[#64748B] line-clamp-2">
+                    {lang === 'bn' ? cs.summaryBn || cs.summary || cs.workDoneBn || cs.workDone : cs.summary || cs.workDone}
+                  </p>
+                </div>
+                <span className="text-[11px] font-bold text-[#0D9488] inline-flex items-center gap-1">
+                  <span>{lang === 'bn' ? 'কাজের বিবরণ ও ছবি দেখুন' : 'Read Case Study'}</span>
+                  <ArrowRight className="w-3 h-3" />
+                </span>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#64748B]">
+            <p>
+              {lang === 'bn'
+                ? `${resolvedArea.areaNameBn} এলাকার জন্য এখনো কোনো পাবলিক কেস স্টাডি (গ্রাহকের সম্মতিসহ) প্রকাশিত হয়নি। ঢাকা ও আশেপাশের প্রকাশিত কাজের প্রমাণ দেখতে আমাদের পোর্টফোলিও দেখুন।`
+                : `No customer-consented public case studies are published specifically for ${resolvedArea.areaName} yet. Browse verified case studies across Dhaka and surrounding areas.`}
+            </p>
+            <a
+              href="/portfolio"
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                handleNavigate('/portfolio');
+              }}
+              className="shrink-0 font-bold text-[#0D9488] hover:underline inline-flex items-center gap-1"
+            >
+              <span>{lang === 'bn' ? 'পোর্টফোলিও দেখুন' : 'Browse Portfolio'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        )}
+      </section>
+
       {/* 9. Explore Other Service Locations */}
       <section className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-8 space-y-4 shadow-sm">
         <div className="flex items-center gap-2 text-xs font-bold text-[#0D9488] uppercase tracking-wider">
@@ -745,6 +892,33 @@ export const LocationDetailPage: React.FC<LocationDetailPageProps> = ({
                 <span>{lang === 'bn' ? loc.areaNameBn : loc.areaName}</span>
               </a>
             ))}
+        </div>
+        <div className="pt-2 border-t border-[#E2E8F0] flex flex-wrap items-center gap-3 text-xs font-bold">
+          <a
+            href="/service-areas"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/service-areas');
+            }}
+            className="text-[#0D9488] hover:underline inline-flex items-center gap-1"
+          >
+            <span>{lang === 'bn' ? 'সকল সার্ভিস এরিয়া ম্যাপ ও তালিকা দেখুন' : 'View All Service Areas Hub'}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+          <span className="text-[#CBD5E1]">•</span>
+          <a
+            href="/portfolio"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              handleNavigate('/portfolio');
+            }}
+            className="text-[#123047] hover:text-[#0D9488] hover:underline inline-flex items-center gap-1"
+          >
+            <span>{lang === 'bn' ? 'কাজের কেস স্টাডি (Portfolio)' : 'View Case Studies Portfolio'}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </a>
         </div>
       </section>
 

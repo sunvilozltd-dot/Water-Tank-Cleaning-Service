@@ -19,11 +19,11 @@ export const BlogSection: React.FC<BlogSectionProps> = ({
   const { publishedPosts } = useBlogPosts();
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
-  const categories = ['all', ...Array.from(new Set(publishedPosts.map(p => p.category)))];
+  const categories = ['all', ...Array.from(new Set(publishedPosts.map(p => p.category || 'Water Tank Cleaning')))];
 
   const filteredPosts = activeCategory === 'all'
     ? publishedPosts
-    : publishedPosts.filter(p => p.category === activeCategory);
+    : publishedPosts.filter(p => (p.category || 'Water Tank Cleaning') === activeCategory);
 
   const handlePostClick = (post: BlogPost, e: React.MouseEvent) => {
     e.preventDefault();

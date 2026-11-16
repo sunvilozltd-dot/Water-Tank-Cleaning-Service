@@ -13,6 +13,7 @@ export const OurWorkVideosSection: React.FC<OurWorkVideosSectionProps> = () => {
   const [activeVideoId, setActiveVideoId] = useState<string>(
     featuredVideos.length > 0 && featuredVideos[0].youtubeId ? featuredVideos[0].youtubeId : ''
   );
+  const [playerActivated, setPlayerActivated] = useState(false);
 
   const activeVideo = featuredVideos.find(v => v.youtubeId === activeVideoId) || featuredVideos[0];
 
@@ -43,17 +44,41 @@ export const OurWorkVideosSection: React.FC<OurWorkVideosSectionProps> = () => {
         {/* Video Player & Selection List */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Main Embedded Player */}
+          {/* Main Embedded Player / Click-to-Load Facade */}
           <div className="lg:col-span-8">
             <div className="rounded-3xl overflow-hidden bg-black aspect-video relative shadow-lg border border-[#E2E8F0]">
-              <iframe
-                className="w-full h-full"
-                src={`https://www.youtube-nocookie.com/embed/${activeVideoId}?rel=0&autoplay=0`}
-                title={activeVideo?.title || 'Sunviloz Clean Care Video'}
-                loading="lazy"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+              {playerActivated ? (
+                <iframe
+                  className="w-full h-full"
+                  src={`https://www.youtube-nocookie.com/embed/${activeVideoId}?rel=0&autoplay=1`}
+                  title={activeVideo?.title || 'Sunviloz Clean Care Video'}
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setPlayerActivated(true)}
+                  aria-label={`Play video: ${activeVideo?.titleBn || activeVideo?.title || 'Sunviloz Work Video'}`}
+                  className="relative w-full h-full bg-[#0F2333] flex items-center justify-center group cursor-pointer"
+                >
+                  <img
+                    src={`https://img.youtube.com/vi/${activeVideoId}/hqdefault.jpg`}
+                    alt={activeVideo?.titleBn || activeVideo?.title || 'Sunviloz Clean Care Work Video'}
+                    loading="lazy"
+                    decoding="async"
+                    width={640}
+                    height={360}
+                    className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                  />
+                  <span className="absolute inset-0 bg-black/25 group-hover:bg-black/15 transition-colors flex items-center justify-center">
+                    <span className="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                      <Play className="w-7 h-7 fill-white ml-1" aria-hidden="true" />
+                    </span>
+                  </span>
+                </button>
+              )}
             </div>
             
             {activeVideo && (
@@ -80,7 +105,10 @@ export const OurWorkVideosSection: React.FC<OurWorkVideosSectionProps> = () => {
                   <button
                     key={vid.id}
                     type="button"
-                    onClick={() => setActiveVideoId(vid.youtubeId || '')}
+                    onClick={() => {
+                      setActiveVideoId(vid.youtubeId || '');
+                      setPlayerActivated(true);
+                    }}
                     className={`w-full text-left p-3 rounded-2xl border transition-all flex items-start gap-3 cursor-pointer ${
                       isActive
                         ? 'bg-[#E8F5F3] border-2 border-[#0D9488] text-[#123047] shadow-xs'
